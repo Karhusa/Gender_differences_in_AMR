@@ -528,7 +528,7 @@ ggplot(colData_subset_clean, aes(x = BMI_range_new, y = ARG_div_shan, color = se
 ggsave("Interaction_model_Shannon_ by_BMI_sex.png", width = 8, height = 6, dpi = 300)
 ```
 
-![Interaction model Shannon by BMI sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Interaction_model_Shannon_ by_BMI_sex.png)
+![Interaction model Shannon by BMI sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Interaction_model_Shannon_ by_BMI_sex(1).png)
 
 ---
 
