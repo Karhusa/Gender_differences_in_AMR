@@ -460,7 +460,7 @@ summary(model_int_norm)
 
 **Interaction model:**
 
-| Term                                        | Estimate  | Std. Error | t value | Pr(>|t|) | Significance |
+| Term                                        | Estimate  | Std. Error | t value | Pr(>t) | Significance |
 |---------------------------------------------|-----------|------------|---------|----------|--------------|
 | (Intercept)                                 | 2.05754   | 0.01247    | 165.023 | <2e-16   | ***          |
 | BMI_range_newUnderweight (<18.5)            | 0.04798   | 0.03154    | 1.521   | 0.128    |              |
