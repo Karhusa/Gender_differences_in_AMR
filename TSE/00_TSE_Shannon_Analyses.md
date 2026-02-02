@@ -1,4 +1,4 @@
-ARG Shannon Analysis by Sex
+# ARG Shannon Analysis by Sex
 
 ---
 ## 1. Packages
@@ -502,7 +502,7 @@ counts <- colData_subset_clean %>%
     y_offset = ifelse(sex == "female", 0.02, -0.02)  # separate male/female N labels slightly
   )
 
-line_colors <- c("female" = "#FF6666", "male" = "#6666FF")  
+line_colors <- c("female" = "#B3A2C7", "male" = "#A6D854")  
 
 # Plot Interaction Model
 ggplot(colData_subset_clean, aes(x = BMI_range_new, y = ARG_div_shan, color = sex, group = sex)) +
@@ -537,25 +537,29 @@ ggsave("Interaction_model_Shannon_ by_BMI_sex.png", width = 8, height = 6, dpi =
 ### 7.1 Boxplot of UTI and sex
 ```r
 
-colData_subset_clean <- colData_subset %>% filter(!is.na(UTI_history) & !is.na(sex))
+colData_subset_clean <- colData_new_subset %>%
+  filter(!is.na(UTI_history), !is.na(sex)) %>%
+  mutate(
+    UTI_history = factor(as.character(UTI_history),
+                         levels = c("No", "Yes")),
+    sex = factor(as.character(sex),
+                 levels = c("female", "male"))
+  )
 
-colData_subset_clean$UTI_history <- factor(colData_subset_clean$UTI_history, levels = c("No", "Yes"))
-
-colData_subset_clean$sex <- factor(colData_subset_clean$sex, levels = c("female", "male"))
-
+# 2. Counts for annotation
 counts_uti <- colData_subset_clean %>%
   group_by(UTI_history, sex) %>%
   summarise(N = n(), .groups = "drop") %>%
-  mutate(y_pos = max(colData_subset_clean$ARG_div_shan, na.rm = TRUE) + 0.1)
+  mutate(
+    y_pos = max(colData_subset_clean$ARG_div_shan, na.rm = TRUE) + 0.1
+  )
 
-ggplot(colData_subset_clean, aes(x = UTI_history, y = ARG_div_shan, fill = sex)
-) +
+# 3. Plot
+ggplot(colData_subset_clean,
+       aes(x = UTI_history, y = ARG_div_shan, fill = sex)) +
   geom_boxplot(
     alpha = 0.7,
     position = position_dodge(width = 0.8)
-  ) +
-  scale_fill_manual(
-    values = c("female" = "#B3A2C7", "male" = "#A6D854")
   ) +
   geom_text(
     data = counts_uti,
@@ -564,7 +568,11 @@ ggplot(colData_subset_clean, aes(x = UTI_history, y = ARG_div_shan, fill = sex)
       y = y_pos,
       label = paste0("N=", N)
     ),
-    position = position_dodge(width = 0.8), size = 3
+    position = position_dodge(width = 0.8),
+    size = 3
+  ) +
+  scale_fill_manual(
+    values = c("female" = "#B3A2C7", "male" = "#A6D854")
   ) +
   labs(
     x = "UTI History",
@@ -572,8 +580,7 @@ ggplot(colData_subset_clean, aes(x = UTI_history, y = ARG_div_shan, fill = sex)
     title = "ARG Shannon diversity by UTI History and Sex",
     fill = "Sex"
   ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+  theme_minimal()
 
 ggsave("Shannon_Boxplot_by_UTI_Sex.png", width = 7, height = 5, dpi = 300)
 
@@ -587,8 +594,28 @@ ggsave("Shannon_Boxplot_by_UTI_Sex.png", width = 7, height = 5, dpi = 300)
 lm_uti <- lm(ARG_div_shan ~ UTI_history + sex, data = colData_subset_clean)
 summary(lm_uti)
 ```
-| Section                 | Term           | Estimate / Value | Std. Error | Statistic   | p-value   | Signif. |
-|-------------------------|----------------|----------------|------------|------------|-----------|---------|
+| Term             | Estimate   | Std. Error | t value  | Pr(>t) | Significance |
+|------------------|-----------|------------|---------|----------|--------------|
+| (Intercept)      | 1.903693  | 0.006114   | 311.374 | <2e-16   | ***          |
+| UTI_historyYes   | -0.025704 | 0.033403   | -0.769  | 0.442    |              |
+| sexmale          | -0.034153 | 0.008616   | -3.964  | 7.42e-05 | ***          |
+
+| Min       | 1Q        | Median   | 3Q       | Max      |
+|-----------|----------|----------|----------|----------|
+| -1.88005  | -0.32956 | 0.04864  | 0.37961  | 1.62737  |
+
+| Metric                     | Value        |
+|----------------------------|--------------|
+| Residual Std. Error        | 0.5234       |
+| Degrees of Freedom         | 14772        |
+| Observations Used          | 14775        |
+| Observations Removed       | 9830         |
+| Multiple R²                | 0.001091     |
+| Adjusted R²                | 0.000956     |
+| F-statistic                | 8.065        |
+| Model p-value              | 0.0003157    |
+
+
 
 
 ### 7.3 Interactive model
@@ -598,8 +625,29 @@ lm_uti_int <- lm(ARG_div_shan ~ UTI_history * sex, data = colData_subset_clean)
 summary(lm_uti_int)
 
 ```
-| Section                 | Term                  | Estimate / Value | Std. Error | Statistic   | p-value   | Signif. |
-|-------------------------|----------------------|----------------|------------|------------|-----------|---------|
+
+| Term                     | Estimate   | Std. Error | t value  | Pr(>t) | Significance |
+|--------------------------|-----------|------------|---------|----------|--------------|
+| (Intercept)              | 1.903315  | 0.006138   | 310.064 | <2e-16   | ***          |
+| UTI_historyYes           | -0.007583 | 0.042489   | -0.178  | 0.858353 |              |
+| sexmale                  | -0.033395 | 0.008686   | -3.845  | 0.000121 | ***          |
+| UTI_historyYes:sexmale   | -0.047447 | 0.068753   | -0.690  | 0.490136 |              |
+
+| Min       | 1Q        | Median   | 3Q       | Max      |
+|-----------|----------|----------|----------|----------|
+| -1.87967  | -0.32917 | 0.04817  | 0.37963  | 1.62699  |
+
+| Metric                     | Value        |
+|----------------------------|--------------|
+| Residual Std. Error        | 0.5234       |
+| Degrees of Freedom         | 14771        |
+| Observations Used          | 14774        |
+| Observations Removed       | 9830         |
+| Multiple R²                | 0.001123     |
+| Adjusted R²                | 0.0009201    |
+| F-statistic                | 5.535        |
+| Model p-value              | 0.0008552    |
+
 
 ---
 
@@ -614,22 +662,23 @@ counts_abx <- colData_subset_clean %>%
   mutate(y_pos = max(colData_subset_clean$ARG_div_shan) + 0.1)
 
 ggplot(colData_subset_clean, aes(x = Antibiotics_used, y = ARG_div_shan, fill = sex)) +
-  geom_boxplot(alpha = 0.7, position = position_dodge(width = 0.8)) +
-  scale_fill_manual(values = c("female" = "#B3A2C7", "male" = "#A6D854"))
-  geom_text(
-    data = counts_abx,
-    aes(x = Antibiotics_used, y = y_pos, label = paste0("N=", N)),
-    position = position_dodge(width = 0.8),
-    size = 3
-  ) +
-  labs(
-    x = "Antibiotics Used",
-    y = "ARG Shannon diversity",
-    title = "ARG Shannon diversity by Antibiotics Use and Sex",
-    fill = "Sex"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+    geom_boxplot(alpha = 0.7, position = position_dodge(width = 0.8)) +
+    scale_fill_manual(values = c("female" = "#B3A2C7", "male" = "#A6D854")) +
+    geom_text(
+        data = counts_abx,
+        aes(x = Antibiotics_used, y = y_pos, label = paste0("N=", N)),
+        position = position_dodge(width = 0.8),
+        size = 3
+    ) +
+    labs(
+        x = "Antibiotics Used",
+        y = "ARG Shannon diversity",
+        title = "ARG Shannon diversity by Antibiotics Use and Sex",
+        fill = "Sex"
+    ) +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+
 
 ggsave("Shannon_Boxplot_by_AB_use_Sex.png", width = 7, height = 5, dpi = 300)
 
