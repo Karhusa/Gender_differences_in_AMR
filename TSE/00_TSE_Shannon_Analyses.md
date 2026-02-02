@@ -334,8 +334,9 @@ ggsave("Regression_with_table_ARG_Shannon_by_age_sex.png", width = 8, height = 6
 * A GAM models the outcome as a sum of smooth functions of predictors rather than simple linear effects.
 
 ```r
-
 library(mgcv)
+
+colData_sex_clean <- colData_new_subset %>% filter(!is.na(sex))
 
 gam_model <- gam(
   ARG_div_shan ~ s(age_years) + sex,
@@ -389,7 +390,9 @@ ggsave("GAM_ARG_Shannon_by_age_sex.png", width = 8, height = 6, dpi = 300)
 
 
 ```r
-colData_subset_clean <- colData_subset %>% filter(BMI_range_new != "Normal/Overweight (<30)")
+colData_new_subset$sex[colData_new_subset$BMI_range_new  == "" | colData_new_subset$BMI_range_new  == "NA"] <- NA
+
+colData_subset_clean <- colData_new_subset %>% filter(BMI_range_new != "Normal/Overweight (<30)")
 
 colData_subset_clean$BMI_range_new <- factor(
   colData_subset_clean$BMI_range_new,
@@ -407,10 +410,10 @@ ggplot(colData_subset_clean, aes(x = BMI_range_new, y = ARG_div_shan, fill = sex
   scale_fill_manual(values = c("female" = "#B3A2C7", "male" = "#A6D854")) +
   geom_text(
     data = counts,
-    aes(x = BMI_range_new, y = y_pos, label = paste0("N=", N), color = sex),
+    aes(x = BMI_range_new, y = y_pos, label = paste0("N=", N)),
     position = position_dodge(width = 0.8),
     size = 3) +
-  labs(x = "BMI Category", y = "ARG Shannon", title = "ARG Shannon by BMI Category and Sex", fill = "Sex") +
+  labs(x = "BMI Category", y = "ARG Shannon Diveristy", title = "ARG Shannon by BMI Category and Sex", fill = "Sex") +
   theme_minimal() + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggsave("Shannon_Boxplot_by_BMI_Sex.png", width = 8, height = 6, dpi = 300)
@@ -432,11 +435,57 @@ summary(model_int_norm)
 ```
 **Additive model:**
 
+| Term                               | Estimate  | Std. Error | t value | Pr(>t) | Significance |
+|------------------------------------|-----------|------------|---------|----------|--------------|
+| (Intercept)                        | 2.034651  | 0.010874   | 187.105 | <2e-16   | ***          |
+| BMI_range_newUnderweight (<18.5)   | 0.062869  | 0.024795   | 2.536   | 0.01125  | *            |
+| BMI_range_newOverweight (25–30)    | -0.047084 | 0.016097   | -2.925  | 0.00346  | **           |
+| BMI_range_newObese (>30)           | -0.003632 | 0.016825   | -0.216  | 0.82912  |              |
+| sexmale                            | -0.054192 | 0.012691   | -4.270  | 1.98e-05 | ***          |
 
+| Min     | 1Q       | Median   | 3Q       | Max     |
+|---------|----------|----------|----------|---------|
+| -1.8104 | -0.2862  | 0.0488   | 0.3571   | 1.5165  |
+
+| Metric                    | Value        |
+|---------------------------|--------------|
+| Residual Std. Error       | 0.4984       |
+| Degrees of Freedom        | 6252         |
+| Observations Used         | 6257         |
+| Observations Removed      | 18292        |
+| Multiple R²               | 0.006591     |
+| Adjusted R²               | 0.005956     |
+| F-statistic               | 10.37        |
+| Model p-value             | 2.27e-08     |
 
 **Interaction model:**
-| Term                                   | Estimate  | Std. Error | t value | p-value     | Significance |
-|---------------------------------------|----------|------------|---------|------------|-------------|
+
+| Term                                        | Estimate  | Std. Error | t value | Pr(>|t|) | Significance |
+|---------------------------------------------|-----------|------------|---------|----------|--------------|
+| (Intercept)                                 | 2.05754   | 0.01247    | 165.023 | <2e-16   | ***          |
+| BMI_range_newUnderweight (<18.5)            | 0.04798   | 0.03154    | 1.521   | 0.128    |              |
+| BMI_range_newOverweight (25–30)             | -0.13441  | 0.02451    | -5.483  | 4.34e-08 | ***          |
+| BMI_range_newObese (>30)                    | -0.03130  | 0.02345    | -1.335  | 0.182    |              |
+| sexmale                                     | -0.09972  | 0.01758    | -5.671  | 1.48e-08 | ***          |
+| Underweight (<18.5) × male                  | 0.02365   | 0.05104    | 0.463   | 0.643    |              |
+| Overweight (25–30) × male                   | 0.15349   | 0.03249    | 4.725   | 2.36e-06 | ***          |
+| Obese (>30) × male                          | 0.05546   | 0.03361    | 1.650   | 0.099    | .            |
+
+| Min     | 1Q       | Median   | 3Q       | Max     |
+|---------|----------|----------|----------|---------|
+| -1.7877 | -0.2846  | 0.0499   | 0.3536   | 1.5391  |
+
+| Metric                    | Value        |
+|---------------------------|--------------|
+| Residual Std. Error       | 0.4976       |
+| Degrees of Freedom        | 6249         |
+| Observations Used         | 6257         |
+| Observations Removed      | 18292        |
+| Multiple R²               | 0.01018      |
+| Adjusted R²               | 0.009071     |
+| F-statistic               | 9.181        |
+| Model p-value             | 2.43e-11     |
+
 
 
 ### 6.3 Interaction model plot
