@@ -71,7 +71,6 @@ ggsave("Boxplot_log10ARG_by_sex_ready.png", width = 8, height = 6, dpi = 300)
 ![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_sex_ready.png)
 
 
-
 ### 4.2 Linear model
 
 ```r
@@ -131,10 +130,13 @@ d
 **Results**
 Cohen's D: -0.1123603
 
-# 5.
+---
+
+# 5. Ananlyses of ARGlog10, sex and age
+
+# 5.1 New boxplot of ARGlog10, sex and age
 
 ```r
-
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
 Subset$precise_age_category[Subset$precise_age_category == "" | Subset$precise_age_category == "NA"] <- NA
 
@@ -215,10 +217,104 @@ ggsave("Boxplot_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300
 ```
 ![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_sex_age_ready(1).png)
 
+### 5.2 Loess curve of ARG load by sex and age categories
+```r
 
-# 6. Ananlyses of ARGlog10 index and sex
+Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
+Subset$precise_age_category[Subset$precise_age_category == "" |
+                            Subset$precise_age_category == "NA"] <- NA
 
-## 6.1 Boxbot of ARGlog10 index, income and sex
+Subset$sex <- recode(Subset$sex,
+                     "female" = "Female",
+                     "male"   = "Male")
+
+age_levels <- c(
+  "Infant", "Toddler", "Child", "Teenage",
+  "Young adult", "Middle-Age Adult",
+  "Older Adult", "Oldest Adult"
+)
+
+plot_df <- Subset %>%
+  filter(!is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(precise_age_category),
+         precise_age_category != "NA") %>%
+  mutate(
+    precise_age_category = factor(precise_age_category, levels = age_levels),
+    age_num = as.numeric(precise_age_category),
+    sex = factor(sex, levels = c("Female", "Male"))
+  )
+
+# LOESS curves only
+ggplot(plot_df, aes(x = age_num, y = log10_ARG_load, color = sex, fill = sex)) +
+  geom_smooth(method = "loess", se = TRUE, span = 0.7, alpha = 0.2, size = 1.2) +
+  scale_x_continuous(breaks = 1:length(age_levels), labels = age_levels) +
+  scale_color_npg() +
+  scale_fill_npg() +
+  labs(
+    title = "LOESS Curve of ARG Load by Age and Sex",
+    x = "Age Category",
+    y = expression(log[10]*"(ARG load)"),
+    color = "Sex", fill = "Sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave("Loess_log10ARG_by_sex_age_category_ready.png", width = 8, height = 6, dpi = 300)
+
+```
+![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Loess_log10ARG_by_sex_age_category_ready.png)
+
+
+### 5.3 Loess curve of ARG load by sex and numeric age
+
+```
+Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
+Subset$age_years[Subset$age_years == "" | is.na(Subset$age_years)] <- NA
+
+Subset$sex <- recode(Subset$sex,
+                     "female" = "Female",
+                     "male"   = "Male")
+
+plot_df <- Subset %>%
+  filter(!is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(age_years)) %>%
+  mutate(sex = factor(sex, levels = c("Female", "Male")))
+
+
+# LOESS curves with numeric age
+ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex)) +
+  geom_smooth(method = "loess", se = TRUE, span = 0.7, alpha = 0.2, size = 1.2) +
+  scale_color_npg() +
+  scale_fill_npg() +
+  labs(
+    title = "LOESS Curve of ARG Load by Age (Years) and Sex",
+    x = "Age (years)",
+    y = expression(log[10]*"(ARG load)"),
+    color = "Sex",
+    fill = "Sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
+  )
+
+ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi = 300)
+
+```
+![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Loess_log10ARG_by_sex_age_numeric_ready.png)
+
+
+
+# 6. Ananlyses of ARGlog10 sex and income
+
+## 6.1 Boxbot of ARGlog10 sex and income
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
 Subset$World_Bank_Income_Group[Subset$World_Bank_Income_Group == "" | Subset$World_Bank_Income_Group == "NA"] <- NA
@@ -365,5 +461,8 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 Residual standard error: 0.2981 on 12707 degrees of freedom
 Multiple R-squared:  0.05243,	Adjusted R-squared:  0.05191 
 F-statistic: 100.4 on 7 and 12707 DF,  p-value: < 2.2e-16
+
+
+
 
 
