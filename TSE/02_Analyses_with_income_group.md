@@ -127,10 +127,93 @@ d
 **Results**
 Cohen's D: -0.1123603
 
+# 5.
 
-# 5. Ananlyses of ARGlog10 index and sex
+```r
 
-## 5.1 Boxbot of ARGlog10 index, income and sex
+Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
+Subset$precise_age_category[Subset$precise_age_category == "" | Subset$precise_age_category == "NA"] <- NA
+
+
+Subset$sex <- recode(Subset$sex,
+                     "female" = "Female",
+                     "male"   = "Male")
+
+plot_df <- Subset %>%
+  filter(
+    !is.na(log10_ARG_load),
+    !is.na(sex),
+    !is.na(precise_age_category)
+  ) %>%
+  mutate(
+    precise_age_category = factor(precise_age_category,
+                                  levels = age_levels),
+    sex = factor(sex, levels = c("Female", "Male"))
+  ) %>%
+  droplevels()
+
+plot_df <- plot_df %>%
+  filter(precise_age_category != "NA")
+
+age_levels <- c(
+  "Infant", "Toddler", "Child", "Teenage",
+  "Young adult", "Middle-Age Adult",
+  "Older Adult", "Oldest Adult"
+)
+plot_df <- plot_df %>%
+  mutate(
+    precise_age_category = factor(precise_age_category,
+                                  levels = age_levels),
+    sex = factor(sex, levels = c("Female", "Male"))
+  )
+
+counts <- plot_df %>%
+  group_by(precise_age_category, sex) %>%
+  summarise(N = n(), .groups = "drop") %>%
+  mutate(y_pos = 4.75)  # same level for all counts
+
+ggplot(plot_df, aes(x = precise_age_category, y = log10_ARG_load, fill = sex)) +
+  geom_jitter(
+    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.6),
+    size = 1.2, alpha = 0.25, color = "grey30"
+  ) +
+  geom_boxplot(
+    width = 0.55, outlier.shape = NA, alpha = 0.8,
+    position = position_dodge(width = 0.6)
+  ) +
+  # Add counts under x-axis, aligned horizontally, without legend
+  geom_text(
+    data = counts,
+    aes(x = precise_age_category, y = y_pos, label = N, color = sex),
+    position = position_dodge(width = 0.6),
+    inherit.aes = FALSE,
+    size = 3.5,
+    show.legend = FALSE  # remove color legend for counts
+  ) +
+  scale_fill_npg() +  # boxplot fill colors
+  scale_color_npg() + # text color matches fill
+  labs(
+    title = "ARG Load by Age Category and Sex",
+    x = "Age Category",
+    y = expression(log[10]*"(ARG load)"),
+    fill = "Sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",  # only legend for boxplots
+    plot.title = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+
+```
+
+
+
+
+# 6. Ananlyses of ARGlog10 index and sex
+
+## 6.1 Boxbot of ARGlog10 index, income and sex
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
 Subset$World_Bank_Income_Group[Subset$World_Bank_Income_Group == "" | Subset$World_Bank_Income_Group == "NA"] <- NA
@@ -189,7 +272,7 @@ ggsave("Boxplot_ARG_Load_Sex_Income.png", width = 8, height = 6, dpi = 300)
 
 ```
 
-## 5.1 Linear model of ARGlog10 index, income and sex
+## 6.1 Linear model of ARGlog10 index, income and sex
 
 ```r
 
