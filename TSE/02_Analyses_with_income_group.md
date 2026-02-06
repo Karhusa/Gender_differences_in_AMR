@@ -36,7 +36,7 @@ Subset <- colData_df %>%
 
 ## 4. Ananlyses of ARGlog10 index and sex
 
-### 5.1 Boxplot of ARGlog10 index and sex
+### 4.1 Boxplot of ARGlog10 index and sex
 ```r
 
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -68,7 +68,11 @@ ggplot(plot_df, aes(x = sex, y = log10_ARG_load, fill = sex)) +
 ggsave("Boxplot_log10ARG_by_sex_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
-## 4.1 Linear model
+![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_sex_ready.png)
+
+
+
+### 4.2 Linear model
 
 ```r
 
@@ -93,7 +97,7 @@ summary(model)
 * Multiple R-squared: 0.00322, Adjusted R-squared: 0.003153
 * F-statistic: 47.73 on 1 and 14773 DF, p-value: 5.099e-12
 
-### 4.2 Count Cohen's d
+### 4.3 Count Cohen's d
 ```r
 
 # Group means and SDs
@@ -134,10 +138,15 @@ Cohen's D: -0.1123603
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
 Subset$precise_age_category[Subset$precise_age_category == "" | Subset$precise_age_category == "NA"] <- NA
 
-
 Subset$sex <- recode(Subset$sex,
                      "female" = "Female",
                      "male"   = "Male")
+
+age_levels <- c(
+  "Infant", "Toddler", "Child", "Teenage",
+  "Young adult", "Middle-Age Adult",
+  "Older Adult", "Oldest Adult"
+)
 
 plot_df <- Subset %>%
   filter(
@@ -149,17 +158,12 @@ plot_df <- Subset %>%
     precise_age_category = factor(precise_age_category,
                                   levels = age_levels),
     sex = factor(sex, levels = c("Female", "Male"))
-  ) %>%
-  droplevels()
+  )
 
 plot_df <- plot_df %>%
   filter(precise_age_category != "NA")
 
-age_levels <- c(
-  "Infant", "Toddler", "Child", "Teenage",
-  "Young adult", "Middle-Age Adult",
-  "Older Adult", "Oldest Adult"
-)
+
 plot_df <- plot_df %>%
   mutate(
     precise_age_category = factor(precise_age_category,
@@ -187,8 +191,9 @@ ggplot(plot_df, aes(x = precise_age_category, y = log10_ARG_load, fill = sex)) +
     aes(x = precise_age_category, y = y_pos, label = N, color = sex),
     position = position_dodge(width = 0.6),
     inherit.aes = FALSE,
-    size = 3.5,
-    show.legend = FALSE  # remove color legend for counts
+    size = 2.0,              
+    fontface = "bold",     
+    show.legend = FALSE 
   ) +
   scale_fill_npg() +  # boxplot fill colors
   scale_color_npg() + # text color matches fill
@@ -205,10 +210,10 @@ ggplot(plot_df, aes(x = precise_age_category, y = log10_ARG_load, fill = sex)) +
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
+ggsave("Boxplot_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
-
-
+![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_sex_age_ready(1).png)
 
 
 # 6. Ananlyses of ARGlog10 index and sex
@@ -360,3 +365,5 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 Residual standard error: 0.2981 on 12707 degrees of freedom
 Multiple R-squared:  0.05243,	Adjusted R-squared:  0.05191 
 F-statistic: 100.4 on 7 and 12707 DF,  p-value: < 2.2e-16
+
+
