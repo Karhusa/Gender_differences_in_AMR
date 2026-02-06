@@ -5,7 +5,6 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(ggsci)
-library(effectsize)
 ```
 
 ## 2. Load TSE
@@ -94,7 +93,6 @@ summary(model)
 * Multiple R-squared: 0.00322, Adjusted R-squared: 0.003153
 * F-statistic: 47.73 on 1 and 14773 DF, p-value: 5.099e-12
 
-
 ### 4.2 Count Cohen's d
 ```r
 
@@ -126,28 +124,29 @@ d <- (mean_m - mean_f) / sd_pooled
 d
 # -> -0.1123603
 ```
-
+**Results**
+Cohen's D: -0.1123603
 
 
 # 5. Ananlyses of ARGlog10 index and sex
 
+## 5.1 Boxbot of ARGlog10 index, income and sex
 ```r
-
-# Clean data
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
 Subset$World_Bank_Income_Group[Subset$World_Bank_Income_Group == "" | Subset$World_Bank_Income_Group == "NA"] <- NA
 
-# Filter complete cases
+Subset$sex <- recode(Subset$sex,
+                     "female" = "Female",
+                     "male"   = "Male")
+
 plot_df <- Subset %>%
   filter(!is.na(log10_ARG_load),
          !is.na(sex),
          !is.na(World_Bank_Income_Group))
 
-# Set income group order
 income_levels <- c("Low income", "Lower middle income", "Upper middle income", "High income")
 plot_df$World_Bank_Income_Group <- factor(plot_df$World_Bank_Income_Group, levels = income_levels)
 
-# Sample sizes per group
 n_df <- plot_df %>%
   group_by(World_Bank_Income_Group, sex) %>%
   summarise(n = n(), .groups = "drop")
@@ -186,8 +185,95 @@ ggplot(plot_df, aes(x = x_group, y = log10_ARG_load, fill = sex)) +
   )
 
 
-ggsave(".png", width = 8, height = 6, dpi = 300)
+ggsave("Boxplot_ARG_Load_Sex_Income.png", width = 8, height = 6, dpi = 300)
 
 ```
 
-Boxplot of ARG Shannon Diversity by Sex
+## 5.1 Linear model of ARGlog10 index, income and sex
+
+```r
+
+plot_df <- plot_df %>%
+  mutate(
+    sex = factor(sex, levels = c("Female", "Male")),
+    World_Bank_Income_Group = factor(
+      World_Bank_Income_Group,
+      levels = c("Low income",
+                 "Lower middle income",
+                 "Upper middle income",
+                 "High income")
+    )
+  )
+
+lm_main <- lm(
+  log10_ARG_load ~ sex + World_Bank_Income_Group, data = plot_df)
+
+summary(lm_main)
+
+```
+Call:
+lm(formula = log10_ARG_load ~ sex + World_Bank_Income_Group, 
+    data = plot_df)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.14215 -0.19192  0.00643  0.18917  1.80070 
+
+Coefficients:
+                                            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                                 2.777709   0.021045 131.988  < 2e-16 ***
+sexMale                                    -0.025041   0.005346  -4.684 2.84e-06 ***
+World_Bank_Income_GroupLower middle income  0.152621   0.026204   5.824 5.87e-09 ***
+World_Bank_Income_GroupUpper middle income  0.126062   0.021909   5.754 8.92e-09 ***
+World_Bank_Income_GroupHigh income         -0.042325   0.021036  -2.012   0.0442 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.2982 on 12710 degrees of freedom
+Multiple R-squared:  0.05172,	Adjusted R-squared:  0.05143 
+F-statistic: 173.3 on 4 and 12710 DF,  p-value: < 2.2e-16
+
+## 5.2 Interaction model of ARGlog10 index, income and sex
+```r
+lm_int <- lm(
+  log10_ARG_load ~ sex * World_Bank_Income_Group,
+  data = plot_df
+)
+
+summary(lm_int)
+
+
+```
+
+lm(formula = log10_ARG_load ~ sex * World_Bank_Income_Group, 
+    data = plot_df)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.11536 -0.19214  0.00655  0.19053  1.80383 
+
+Coefficients:
+                                                    Estimate Std. Error t value Pr(>|t|)
+(Intercept)                                         2.735527   0.031600  86.567  < 2e-16
+sexMale                                             0.049505   0.042008   1.178   0.2386
+World_Bank_Income_GroupLower middle income          0.168011   0.038325   4.384 1.18e-05
+World_Bank_Income_GroupUpper middle income          0.162007   0.032649   4.962 7.06e-07
+World_Bank_Income_GroupHigh income                  0.003468   0.031897   0.109   0.9134
+sexMale:World_Bank_Income_GroupLower middle income -0.016688   0.052727  -0.316   0.7516
+sexMale:World_Bank_Income_GroupUpper middle income -0.055994   0.044330  -1.263   0.2066
+sexMale:World_Bank_Income_GroupHigh income         -0.081284   0.042425  -1.916   0.0554
+                                                      
+(Intercept)                                        ***
+sexMale                                               
+World_Bank_Income_GroupLower middle income         ***
+World_Bank_Income_GroupUpper middle income         ***
+World_Bank_Income_GroupHigh income                    
+sexMale:World_Bank_Income_GroupLower middle income    
+sexMale:World_Bank_Income_GroupUpper middle income    
+sexMale:World_Bank_Income_GroupHigh income         .  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.2981 on 12707 degrees of freedom
+Multiple R-squared:  0.05243,	Adjusted R-squared:  0.05191 
+F-statistic: 100.4 on 7 and 12707 DF,  p-value: < 2.2e-16
