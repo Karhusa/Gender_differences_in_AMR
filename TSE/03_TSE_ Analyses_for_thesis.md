@@ -68,7 +68,7 @@ ggplot(plot_df, aes(x = sex, y = log10_ARG_load, fill = sex)) +
 ggsave("Boxplot_log10ARG_by_sex_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
-![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_sex_ready.png)
+![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_sex_ready(1).png)
 
 
 ### 4.2 Linear model
