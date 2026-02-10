@@ -71,6 +71,70 @@ Sex:
 
 ---
 
+
+## ARG Load by sex
+
+
+
+## Shannon index by sex
+
+```r
+
+colData_new_subset$sex[colData_new_subset$sex == "" | colData_new_subset$sex == "NA"] <- NA  # convert empty/NA strings to actual NA
+plot_df <- colData_new_subset %>% filter(!is.na(ARG_div_shan), !is.na(sex))
+
+n_df <- plot_df %>%
+  group_by(sex) %>%
+  summarise(
+    n = n(),
+    y_max = max(ARG_div_shan, na.rm = TRUE)
+  )
+
+ggplot(plot_df, aes(x = sex, y = ARG_div_shan, fill = sex)) +
+  geom_jitter(
+    width = 0.15,
+    size = 1.2,
+    alpha = 0.25,
+    color = "grey30"
+  ) +
+  geom_boxplot(
+    width = 0.55,
+    outlier.shape = NA,
+    alpha = 0.8,
+    color = "grey25"
+  ) +
+  geom_text(
+    data = n_df,
+    aes(
+      x = sex,
+      y = y_max + 0.05,
+      label = paste0("N = ", n)
+    ),
+    inherit.aes = FALSE,
+    size = 4
+  ) +
+  scale_fill_manual(values = c("#B3A2C7", "#A6D854")) +
+  labs(
+    title = "ARG Shannon diversity by Sex",
+    x = "Sex",
+    y = "ARG Shannon diversity"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold"),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10))
+  )
+
+ggsave("Boxplot_Shannon_diversity_by_sex_and_filtered_age.png", width = 8, height = 6, dpi = 300)
+
+```
+![Boxplot of Shannon_index with sex and filtered age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_Shannon_diversity_by_sex_and_filtered_age.png)
+
+
+##
+
 ## 6. Ananlyses of ARGlog10 sex and income
 
 ### 6.1 Boxbot of ARGlog10 sex and income
