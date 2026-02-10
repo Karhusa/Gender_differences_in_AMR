@@ -16,7 +16,7 @@ Includes large datafiles used for combining metadata
 
 00_
 
-Matching Metalog Human Samples to a TSE Object and SRA Metadata
+Matching Metalog to TSE Object, and SRA Metadata by sample identifiers (accession numbers)
 
 Overview:
 This workflow aims to determine whether human samples listed in Metalog are represented in an existing TSE object, and to annotate SRA metadata accordingly.
