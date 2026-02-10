@@ -72,7 +72,7 @@ Sex:
 
 ## 6.1 Boxbot of ARGlog10 sex and income
 ```r
-Subset1$sex[Subset$sex == "" | Subset1$sex == "NA"] <- NA
+Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
 Subset1$World_Bank_Income_Group[Subset1$World_Bank_Income_Group == "" | Subset1$World_Bank_Income_Group == "NA"] <- NA
 
 Subset1$sex <- recode(Subset1$sex,
@@ -298,6 +298,8 @@ ggplot(plot_df, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) +
 
 ggsave("Boxplot_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 ```
+![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_reproductive_sex_age_ready.png)
+
 
 # Loess curve
 ```
