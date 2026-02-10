@@ -34,9 +34,9 @@ Subset <- colData_df %>%
   )
 ```
 
-## 4. Ananlyses of ARGlog10 index and sex
+## 4. Ananlyses of ARGlog10 and sex
 
-### 4.1 Boxplot of ARGlog10 index and sex
+### 4.1 Boxplot of ARGlog10 and sex
 ```r
 
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -69,7 +69,6 @@ ggsave("Boxplot_log10ARG_by_sex_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
 ![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_sex_ready(2).png)
-
 
 ### 4.2 Linear model
 
@@ -132,9 +131,9 @@ Cohen's D: -0.1123603
 
 ---
 
-# 5. Ananlyses of ARGlog10, sex and age
+## 5. Ananlyses of ARGlog10, sex and age
 
-# 5.1 New boxplot of ARGlog10, sex and age categories
+### 5.1 New boxplot of ARGlog10, sex and age categories
 
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -279,7 +278,7 @@ ggplot(plot_df, aes(x = age_num, y = log10_ARG_load, color = sex, fill = sex)) +
 ggsave("Loess_log10ARG_by_sex_age_category_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
-![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Loess_log10ARG_by_sex_age_category_ready.png)
+![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_sex_age_category_ready.png)
 
 
 ### 5.3 Loess curve of ARG load by sex and numeric age
