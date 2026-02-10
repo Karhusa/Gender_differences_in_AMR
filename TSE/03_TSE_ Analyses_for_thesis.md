@@ -311,6 +311,13 @@ ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi
 ![ARG Load by Sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Loess_log10ARG_by_sex_age_numeric_ready.png)
 
 
+### Linear model
+```
+
+lm_full <- lm(log10_ARG_load ~ age_years * sex, data = plot_df)
+summary(lm_full)
+
+
 
 
 
