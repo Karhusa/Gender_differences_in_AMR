@@ -1,4 +1,4 @@
-# Master's thesis: AMR project female
+# Master's thesis: Gender differences in ARG load
 
 Saana Karhula 29.10.2025 -
 
@@ -44,6 +44,14 @@ cleaned_merged_final.tsv
 Goal:
 Create a clean, analysis-ready metadata table with harmonized BMI, age, disease status, infections, and antibiotic usage.
 
+04
+
+
+05
+
+---
+
+## 2. TSE
 
 
 
