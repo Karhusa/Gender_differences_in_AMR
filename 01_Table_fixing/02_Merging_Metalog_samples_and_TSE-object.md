@@ -224,4 +224,4 @@ cleaned_merged_final.tsv contains:
 Summary:
 * 20,339 shared BioSamples identified
 * Many-to-many mapping preserved (multiple runs per sample)
-* Metadata cleaned, filtered, and analysis-ready
+* Metadata cleaned but remaining columns need to be inspected
