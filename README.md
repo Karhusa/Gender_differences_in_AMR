@@ -9,7 +9,9 @@ Includes large datafiles used for combining metadata
 * SRA:SRA_metadata_with_biosample.tsv
 * Metalog: human_all_wide_2025-10-19.tsv.gz
 * merged_all.tsv
-* 
+* TreeSummarisedExperiment(TSE): TSE.rds
+  *Table was too large for github
+  
 ## 1. Table fixing
 
 00_
