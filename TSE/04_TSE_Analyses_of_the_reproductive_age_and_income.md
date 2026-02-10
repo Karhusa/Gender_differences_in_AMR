@@ -128,6 +128,8 @@ ggplot(plot_df, aes(x = x_group, y = log10_ARG_load, fill = sex)) +
 ggsave("Boxplot_ARG_Load_Sex_Income.png", width = 8, height = 6, dpi = 300)
 
 ```
+![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_ARG_Load_Sex_Income.png)
+
 
 ## 6.1 Linear model of ARGlog10 index, income and sex
 
