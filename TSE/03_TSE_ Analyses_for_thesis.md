@@ -134,7 +134,7 @@ Cohen's D: -0.1123603
 
 # 5. Ananlyses of ARGlog10, sex and age
 
-# 5.1 New boxplot of ARGlog10, sex and age
+# 5.1 New boxplot of ARGlog10, sex and age categories
 
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -148,6 +148,17 @@ age_levels <- c(
   "Infant", "Toddler", "Child", "Teenage",
   "Young adult", "Middle-Age Adult",
   "Older Adult", "Oldest Adult"
+)
+
+age_labels <- c(
+  "Infant" = "Infant\n(<1)",
+  "Toddler" = "Toddler\n(1 - 2)",
+  "Child" = "Children\n(3 -11)",
+  "Teenage" = "Teenagers\n(12 - 19)",
+  "Young adult" = "Young Adult\n(20 - 34)",
+  "Middle-Age Adult" = "Middle-Aged Adult\n(35 - 64)",
+  "Older Adult" = "Older Adult\n(65 - 80)",
+  "Oldest Adult" = "Oldest Adult\n(80<)"
 )
 
 plot_df <- Subset %>%
@@ -187,7 +198,6 @@ ggplot(plot_df, aes(x = precise_age_category, y = log10_ARG_load, fill = sex)) +
     width = 0.55, outlier.shape = NA, alpha = 0.8,
     position = position_dodge(width = 0.6)
   ) +
-  # Add counts under x-axis, aligned horizontally, without legend
   geom_text(
     data = counts,
     aes(x = precise_age_category, y = y_pos, label = N, color = sex),
@@ -197,8 +207,9 @@ ggplot(plot_df, aes(x = precise_age_category, y = log10_ARG_load, fill = sex)) +
     fontface = "bold",     
     show.legend = FALSE 
   ) +
-  scale_fill_npg() +  # boxplot fill colors
-  scale_color_npg() + # text color matches fill
+  scale_x_discrete(labels = age_labels) +  # <-- use descriptive labels here
+  scale_fill_npg() +
+  scale_color_npg() +
   labs(
     title = "ARG Load by Age Category and Sex",
     x = "Age Category",
@@ -207,10 +218,11 @@ ggplot(plot_df, aes(x = precise_age_category, y = log10_ARG_load, fill = sex)) +
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    legend.position = "right",  # only legend for boxplots
+    legend.position = "right",
     plot.title = element_text(face = "bold"),
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
+
 
 ggsave("Boxplot_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 
@@ -316,6 +328,102 @@ ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi
 
 lm_full <- lm(log10_ARG_load ~ age_years * sex, data = plot_df)
 summary(lm_full)
+
+```
+
+
+Optional GAM model
+
+```r
+library(mgcv)
+
+Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
+Subset$age_years[Subset$age_years == "" | is.na(Subset$age_years)] <- NA
+
+Subset$sex <- recode(Subset$sex,
+                     "female" = "Female",
+                     "male"   = "Male")
+
+plot_df <- Subset %>%
+  filter(!is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(age_years)) %>%
+  mutate(sex = factor(sex, levels = c("Female", "Male")))
+
+gam_model <- gam(
+  log10_ARG_load ~ sex + s(age_years, by = sex),
+  data = plot_df,
+  method = "REML"
+)
+
+summary(gam_model)
+```
+
+Results:
+
+| Section | Term | Estimate / Value | Std. Error | Statistic | p-value | Signif. |
+|--------|------|------------------|------------|-----------|---------|---------|
+| Model information | Family | Gaussian | – | – | – | – |
+| Model information | Link function | Identity | – | – | – | – |
+| Model information | Formula | log10_ARG_load ~ sex + s(age_years, by = sex) | – | – | – | – |
+| Model information | Sample size (n) | 10069 | – | – | – | – |
+| Parametric coefficients | (Intercept) | 2.751428 | 0.004256 | t = 646.462 | <2e-16 | *** |
+| Parametric coefficients | sexMale | -0.013276 | 0.005966 | t = -2.225 | 0.0261 | * |
+| Smooth terms | s(age_years):sexFemale | – | – | F = 21.80 (edf = 8.301, Ref.df = 8.839) | <2e-16 | *** |
+| Smooth terms | s(age_years):sexMale | – | – | F = 34.52 (edf = 6.733, Ref.df = 7.793) | <2e-16 | *** |
+| Model fit | Adjusted R-squared | 0.0441 | – | – | – | – |
+| Model fit | Deviance explained | 4.56% | – | – | – | – |
+| Model fit | −REML | 2127.9 | – | – | – | – |
+| Model fit | Scale estimate | 0.088636 | – | – | – | – |
+| Significance codes | *** | p < 0.001 | – | – | – | – |
+| Significance codes | ** | p < 0.01 | – | – | – | – |
+| Significance codes | * | p < 0.05 | – | – | – | – |
+| Significance codes | . | p < 0.1 | – | – | – | – |
+
+
+
+```r
+
+ggplot(plot_df, aes(x = age_years, y = log10_ARG_load)) +
+  # raw points
+  geom_point(alpha = 0.2, color = "grey70") +
+  
+  # ribbon from predictions
+  geom_ribbon(
+    data = newdat,
+    aes(x = age_years, ymin = lwr, ymax = upr, fill = sex),
+    alpha = 0.2,
+    color = NA,
+    inherit.aes = FALSE
+  ) +
+  
+  # predicted lines
+  geom_line(
+    data = newdat,
+    aes(x = age_years, y = fit, color = sex),
+    size = 1.5,
+    inherit.aes = FALSE
+  ) +
+  
+  # ggsci palettes
+  scale_color_npg() +
+  scale_fill_npg() +
+  
+  # labels
+  labs(
+    x = "Age (years)",
+    y = expression(log[10]*"(ARG load)"),
+    title = "ARG load vs Age by Sex (GAM)",
+    color = "Sex",
+    fill = "Sex"
+  ) +
+  
+  theme_minimal()
+
+ggsave("GAM_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
+```
+
+![GAM ARG Load by Sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/GAM_log10ARG_by_sex_age_ready.png)
 
 
 
