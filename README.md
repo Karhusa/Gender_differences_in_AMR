@@ -2,6 +2,14 @@
 
 Saana Karhula 29.10.2025 -
 
+## 0. Data
+
+Includes large datafiles used for combining metadata
+
+* SRA:SRA_metadata_with_biosample.tsv
+* Metalog: human_all_wide_2025-10-19.tsv.gz
+* merged_all.tsv
+* 
 ## 1. Table fixing
 
 00_
