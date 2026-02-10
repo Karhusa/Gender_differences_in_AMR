@@ -7,6 +7,7 @@ library(SummarizedExperiment)
 library(dplyr)
 library(ggplot2)
 library(tidyr)
+library(ggsci)
 ```
 ---
 ## 2. Load TSE
@@ -16,6 +17,8 @@ TSE <- readRDS(tse_path)
 ```
 ## 3. Extract colData
 ```r
+colData_df <- as.data.frame(colData(TSE))
+
 Subset1 <- colData_df %>%
   select(
     acc,
@@ -68,9 +71,9 @@ Sex:
 
 ---
 
-# 6. Ananlyses of ARGlog10 sex and income
+## 6. Ananlyses of ARGlog10 sex and income
 
-## 6.1 Boxbot of ARGlog10 sex and income
+### 6.1 Boxbot of ARGlog10 sex and income
 ```r
 Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
 Subset1$World_Bank_Income_Group[Subset1$World_Bank_Income_Group == "" | Subset1$World_Bank_Income_Group == "NA"] <- NA
@@ -153,11 +156,13 @@ lm_main <- lm(
 summary(lm_main)
 
 ```
-## Linear model: log10(ARG load) ~ sex + World Bank income group
+**Results:**
+
+Linear model: log10(ARG load) ~ sex + World Bank income group
 
 Reference group: Female, Low income
 
-### Coefficients
+Coefficients
 
 | Term | Estimate | Std. Error | t value | p-value | Signif. |
 |------|---------:|-----------:|--------:|--------:|:-------:|
@@ -190,8 +195,6 @@ lm_int <- lm(
 )
 
 summary(lm_int)
-
-
 ```
 
 ## Linear model: log10(ARG load) ~ sex × World Bank income group
@@ -225,12 +228,11 @@ Significance codes:
 | F-statistic | 100.4 |
 | Model p-value | < 2.2e-16 |
 
-## 4. Analysis of sex and filtered age (Women of reproductive age (15-49 years))
+## 4. Analysis of ARG load,sex and filtered age (Women of reproductive age (15-49 years))
 
-## 
+### 4.1 Boxplot of ARG load, sex and filtered age 
 
 ```r
-
 Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
 Subset1$AgeGroup[Subset1$AgeGroup == "" | Subset1$AgeGroup == "NA"] <- NA
 
@@ -303,21 +305,74 @@ ggsave("Boxplot_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height =
 
 # Loess curve
 ```
-loess_df <- Subset1 %>%
+Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
+Subset1$AgeGroup[Subset1$AgeGroup == "" | Subset1$AgeGroup == "NA"] <- NA
+
+# Recode sex
+Subset1$sex <- recode(Subset1$sex,
+                      "female" = "Female",
+                      "male"   = "Male")
+age_levels <- c(
+  "15–19", "20–24", "25–29", "30–34",
+  "35–39", "40–44", "45–49"
+)
+
+plot_df <- Subset1 %>%
   filter(
-    !is.na(age_years),
-    age_years >= 15,
-    age_years <= 49,
     !is.na(log10_ARG_load),
-    !is.na(sex)
+    !is.na(sex),
+    !is.na(AgeGroup)
   ) %>%
   mutate(
-    sex = recode(sex,
-                 "female" = "Female",
-                 "male"   = "Male"),
+    AgeGroup = factor(AgeGroup, levels = age_levels),
     sex = factor(sex, levels = c("Female", "Male"))
   )
 
+age_midpoints <- c(
+  "15–19" = 17,
+  "20–24" = 22,
+  "25–29" = 27,
+  "30–34" = 32,
+  "35–39" = 37,
+  "40–44" = 42,
+  "45–49" = 47
+)
 
+plot_df <- plot_df %>%
+  mutate(AgeNum = age_midpoints[as.character(AgeGroup)])
 
+sex_counts <- plot_df %>%
+  group_by(sex) %>%
+  summarise(N = n(), .groups = "drop") %>%
+  mutate(label = paste0(sex, " (N=", N, ")"))
+
+plot_df <- plot_df %>%
+  mutate(sex_label = factor(sex, levels = sex_counts$sex, labels = sex_counts$label))
+
+# --- Plot LOESS curves only ---
+ggplot(plot_df, aes(x = AgeNum, y = log10_ARG_load, color = sex_label, fill = sex_label)) +
+  geom_smooth(
+    method = "loess",
+    se = TRUE,
+    span = 0.7,
+    alpha = 0.2,
+    linewidth = 1.2
+  ) +
+  scale_color_npg() +
+  scale_fill_npg() +
+  labs(
+    title = "LOESS Curve of ARG Load by Age and Sex",
+    x = "Age (years)",
+    y = expression(log[10]*"(ARG load)"),
+    color = "Sex",
+    fill = "Sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
+  )
+
+ggsave("Loess_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 ```
+![Loess of ARG load with sex and filtered age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Loess_log10ARG_by_reproductive_sex_age_ready.png)
