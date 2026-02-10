@@ -39,7 +39,7 @@ This workflow extracts human-related metadata from a large SRA attributes file, 
 
 02_
 
-Linking SRA Metadata with SPIRE Human Metadata via BioSample IDs
+Linking SRA Metadata with Metalog Human Metadata via BioSample IDs
 
 Overview:
 This workflow links SRA run-level metadata to SPIRE human metadata using shared BioSample IDs (SAMN, SAMD, SAMEA).
