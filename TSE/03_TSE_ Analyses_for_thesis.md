@@ -330,6 +330,24 @@ summary(lm_full)
 
 ```
 
+| Section | Term | Estimate / Value | Std. Error | Statistic | p-value | Signif. |
+|--------|------|-----------------|------------|-----------|---------|---------|
+| Model information | Formula | log10_ARG_load ~ age_years * sex | – | – | – | – |
+| Model information | Residual standard error | 0.3024 (df = 10065) | – | – | – | – |
+| Model information | Observations deleted | 311 | – | – | – | – |
+| Model information | Multiple R-squared | 0.01433 | – | – | – | – |
+| Model information | Adjusted R-squared | 0.01404 | – | – | – | – |
+| Model information | F-statistic | 48.79 (3, 10065 DF) | – | – | <2.2e-16 | – |
+| Parametric coefficients | (Intercept) | 2.7052081 | 0.0081720 | t = 331.032 | <2e-16 | *** |
+| Parametric coefficients | age_years | 0.0011343 | 0.0001834 | t = 6.185 | 6.45e-10 | *** |
+| Parametric coefficients | sexMale | -0.0336205 | 0.0114390 | t = -2.939 | 0.0033 | ** |
+| Parametric coefficients | age_years:sexMale | 0.0006515 | 0.0002519 | t = 2.587 | 0.0097 | ** |
+| Significance codes | *** | p < 0.001 | – | – | – | – |
+| Significance codes | ** | p < 0.01 | – | – | – | – |
+| Significance codes | * | p < 0.05 | – | – | – | – |
+| Significance codes | . | p < 0.1 | – | – | – | – |
+
+
 
 Optional GAM model
 
