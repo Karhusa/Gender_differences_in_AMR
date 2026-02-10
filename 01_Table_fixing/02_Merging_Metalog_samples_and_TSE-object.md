@@ -28,7 +28,7 @@ wc -l sra_biosample_ids.txt
 
 ## 2. Inspect human_all_wide_2025-10-19.tsv.gz
 
-This file contains wide-format SPIRE human metadata.
+This file contains wide-format Metalog human metadata.
 
 ### 2.1 File Dimensions
 ```bash
@@ -50,7 +50,7 @@ gzcat human_all_wide_2025-10-19.tsv.gz | grep -oE '\bSAM(N|D|EA)[0-9]+' | sort -
 ```
 ## 3. Identify Shared BioSample IDs
 
-Find BioSample IDs present in both SRA and SPIRE datasets.
+Find BioSample IDs present in both SRA and Metalog datasets.
 ```bash
 
 sort biosample_ids.txt > biosample_ids_sorted.txt
@@ -61,7 +61,7 @@ comm -12 biosample_ids_sorted.txt sra_biosample_ids_sorted.txt > matched_biosamp
 wc -l matched_biosamples.txt
 # matches: 20339
 ```
-## 4. Merge SRA and SPIRE Metadata
+## 4. Merge SRA and Metalog Metadata
 
 Overview of Strategy:
 * Subset both datasets using shared BioSample IDs
@@ -83,7 +83,7 @@ sra_file = "SRA_metadata_with_biosample_corrected.txt"
 matched_file = "matched_biosamples.txt"
 final_output = "cleaned_merged_final.tsv"
 
-id_col_human = "spire_sample_name"
+id_col_human = "metalog_sample_name"
 id_col_sra = "biosample"
 
 chunksize = 20000  # safe for large files
@@ -136,7 +136,7 @@ matched_set = set(matched_biosamples[id_col_sra])
 print(f"Matched BioSamples: {len(matched_set)}")
 # 20339
 ```
-### 4.6 Subset SPIRE Human Metadata (Chunked)
+### 4.6 Subset Metalog Human Metadata (Chunked)
 ```python
 
 # 2. Subset human metadata by chunk
@@ -184,7 +184,7 @@ More rows than unique BioSamples reflect multiple SRA accessions per BioSample.
 ### 4.9 Filter Columns by Relevance
 Column selection rules
 * Always keep SRA columns and BioSample ID
-* Keep SPIRE columns containing relevant keywords
+* Keep Metalog columns containing relevant keywords
 * Exclude columns with sensitive or irrelevant terms
 ```python
 def keep_keyword(c):
@@ -217,7 +217,7 @@ Final Output
 
 cleaned_merged_final.tsv contains:
 * All matched SRA accessions
-* Linked SPIRE human metadata
+* Linked Metalog human metadata
 * Demographic, clinical, and antibiotic-related variables
 * Reduced from ~2800 to 465 curated columns
 
