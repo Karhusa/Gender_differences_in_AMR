@@ -42,7 +42,12 @@ colData_new_subset <- colData_df %>%
 colData_new_subset$sex[colData_new_subset$sex == "" | colData_new_subset$sex == "NA"] <- NA  # convert empty/NA strings to actual NA
 plot_df <- colData_new_subset %>% filter(!is.na(ARG_div_shan), !is.na(sex))
 
-n_df <- plot_df %>% count(sex)
+n_df <- plot_df %>%
+  group_by(sex) %>%
+  summarise(
+    n = n(),
+    y_max = max(ARG_div_shan, na.rm = TRUE)
+  )
 
 ggplot(plot_df, aes(x = sex, y = ARG_div_shan, fill = sex)) +
   geom_jitter(
