@@ -50,10 +50,9 @@ Subset1 <- colData_df %>%
 table(Subset1$AgeGroup)
 
 table(Subset1$sex)
-
-table(Subset1$sex)
 ```
 **Results:**
+
 AgeGroup:
 * 15–19 803
 * 20–24 1115
@@ -67,21 +66,28 @@ Sex:
 * Female 2342
 * Male 2102
 
-
-
 ---
 
-
-## ARG Load by sex
-
+##
 
 
-## Shannon index by sex
+## . Shannon diversity by sex in filtered age
+
+## Shannon diversity by sex in filtered age
 
 ```r
 
-colData_new_subset$sex[colData_new_subset$sex == "" | colData_new_subset$sex == "NA"] <- NA  # convert empty/NA strings to actual NA
-plot_df <- colData_new_subset %>% filter(!is.na(ARG_div_shan), !is.na(sex))
+Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
+Subset1$sex[Subset1$ARG_div_shan == "" | Subset1$ARG_div_shan == "NA"] <- NA
+
+Subset1$sex <- recode(Subset1$sex,
+                     "female" = "Female",
+                     "male"   = "Male")
+
+plot_df <- Subset1 %>%
+  filter(!is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(ARG_div_shan))
 
 n_df <- plot_df %>%
   group_by(sex) %>%
@@ -89,6 +95,10 @@ n_df <- plot_df %>%
     n = n(),
     y_max = max(ARG_div_shan, na.rm = TRUE)
   )
+
+npg_cols <- pal_npg("nrc")(4)[3:4]
+
+npg_cols <- pal_npg("nrc")(4)[3:4]
 
 ggplot(plot_df, aes(x = sex, y = ARG_div_shan, fill = sex)) +
   geom_jitter(
@@ -113,7 +123,7 @@ ggplot(plot_df, aes(x = sex, y = ARG_div_shan, fill = sex)) +
     inherit.aes = FALSE,
     size = 4
   ) +
-  scale_fill_manual(values = c("#B3A2C7", "#A6D854")) +
+  scale_fill_manual(values = npg_cols) +
   labs(
     title = "ARG Shannon diversity by Sex",
     x = "Sex",
@@ -131,6 +141,58 @@ ggsave("Boxplot_Shannon_diversity_by_sex_and_filtered_age.png", width = 8, heigh
 
 ```
 ![Boxplot of Shannon_index with sex and filtered age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_Shannon_diversity_by_sex_and_filtered_age.png)
+
+### Do we have repeated samples?
+
+```r
+plot_df %>%
+  count(Acc) %>%
+  summarise(
+    n_subjects = n(),
+    max_samples_per_subject = max(n),
+    median_samples_per_subject = median(n),
+    subjects_with_repeats = sum(n > 1)
+  )
+
+```
+**Results:***
+* n_subjects: 4444
+* max_samples_per_subject: 1
+* median_samples_per_subject:1 
+* subjects_with_repeats :0
+
+```
+### Wilcoxon rank-sum test
+```r
+wilcox.test(ARG_div_shan ~ sex, data = plot_df)
+```
+
+**Results:**
+* W = 2996053
+* p-value < 2.2e-16
+
+### Cound Cohens d
+```r
+group1 <- plot_df$ARG_div_shan[plot_df$sex == "Female"]
+group2 <- plot_df$ARG_div_shan[plot_df$sex == "Male"]
+
+# Means and SDs
+mean1 <- mean(group1, na.rm = TRUE)
+mean2 <- mean(group2, na.rm = TRUE)
+sd1   <- sd(group1, na.rm = TRUE)
+sd2   <- sd(group2, na.rm = TRUE)
+n1    <- length(group1)
+n2    <- length(group2)
+
+# Pooled SD
+pooled_sd <- sqrt(((n1-1)*sd1^2 + (n2-1)*sd2^2) / (n1 + n2 - 2))
+
+# Cohen's d
+cohen_d <- (mean1 - mean2) / pooled_sd
+cohen_d
+```
+**Results:***
+* 0.4051338
 
 
 ##
