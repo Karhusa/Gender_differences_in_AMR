@@ -299,7 +299,7 @@ ggplot(colData_sex_clean, aes(x = age_years, y = log10_ARG_load)
 ggsave("Regression_with_table_ARG_load_by_age_sex.png", width = 8, height = 6, dpi = 300)
 ```
 
-![Regression analysis with table ARG Load by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Regression_with_table_ARG_load_by_age_sex.png)
+![Regression analysis with table ARG Load by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/ARG_Load_Analyses/Regression_with_table_ARG_load_by_age_sex.png)
 
 | Section                 | Term        | Estimate / Value | Std. Error | Statistic   | p-value | Signif. |
 |-------------------------|------------|----------------|------------|------------|---------|---------|
@@ -349,7 +349,7 @@ ggplot(colData_sex_clean, aes(x = age_years, y = log10_ARG_load)) +
 
 ggsave("GAM_ARG_load_by_age_sex.png", width = 8, height = 6, dpi = 300)
 ```
-![Regression analysis with table ARG Load by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/GAM_ARG_load_by_age_sex.png)
+![Regression analysis with table ARG Load by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/ARG_Load_Analyses/GAM_ARG_load_by_age_sex.png)
 
 | Section | Term | Estimate / Value | Std. Error | Statistic | p-value | Signif. |
 |--------|------|------------------|------------|-----------|---------|---------|
