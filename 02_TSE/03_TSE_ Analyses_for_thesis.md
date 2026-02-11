@@ -238,7 +238,7 @@ ggplot(plot_df, aes(x = precise_age_category, y = log10_ARG_load, fill = sex)) +
 ggsave("Boxplot_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
-![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_sex_age_ready(1).png)
+![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Boxplot_log10ARG_by_sex_age_ready.png)
 
 ### 2.3.2 Loess curve of ARG load by sex and age categories
 ```r
@@ -290,7 +290,7 @@ ggplot(plot_df, aes(x = age_num, y = log10_ARG_load, color = sex, fill = sex)) +
 ggsave("Loess_log10ARG_by_sex_age_category_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
-![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_sex_age_category_ready.png)
+![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/AGR_Load_Analyses/Boxplot_log10ARG_by_sex_age_category_ready.png)
 
 
 ### 2.3.3 Loess curve of ARG load by sex and numeric age
@@ -585,9 +585,9 @@ cohen_d
 Cohen's D: 0.06485994
 
 ---
-## 3.1. Analyses of shannon index, sex and age
+## 3.2. Analyses of shannon index, sex and age
 
-### 3.1.1 Boxplot of shannon index, categorial sex and age
+### 3.2.1 Boxplot of shannon index, categorial sex and age
 
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -680,4 +680,106 @@ ggsave("Boxplot_Shannon_diversity_by_age_categry_sex.png", width = 8, height = 6
 
 ![Shannon diversity by sex by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Boxplot_Shannon_diversity_by_age_categry_sex.png)
 
+LOESS
+
+```
+
+Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
+Subset$age_years[Subset$age_years == "" | is.na(Subset$age_years)] <- NA
+
+Subset$sex <- recode(Subset$sex,
+                     "female" = "Female",
+                     "male"   = "Male")
+
+plot_df <- Subset %>%
+  filter(!is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(age_years)) %>%
+  mutate(sex = factor(sex, levels = c("Female", "Male")))
+
+
+# LOESS curves with numeric age
+ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex)) +
+  geom_smooth(method = "loess", se = TRUE, span = 0.7, alpha = 0.2, size = 1.2) +
+  scale_color_npg() +
+  scale_fill_npg() +
+  labs(
+    title = "LOESS Curve of ARG Load by Age (Years) and Sex",
+    x = "Age (years)",
+    y = expression(log[10]*"(ARG load)"),
+    color = "Sex",
+    fill = "Sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
+  )
+
+ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi = 300)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### 3.2.2 Regression analysis of shannon index and sex
+```r
+lm_sex_age <- lm(ARG_div_shan ~ sex + precise_age_category, data = plot_df)
+summary(lm_sex_age)
+
+lm_interact <- lm(ARG_div_shan ~ sex * precise_age_category, data = plot_df)
+summary(lm_interact)
+
+```
+**Results:**
+
+| Outcome | Predictor | Reference group | Effect estimate | p-value | Variance explained (R²) |
+|--------|-----------|-----------------|-----------------|---------|--------------------------|
+| ARG Shannon diversity | Sex (Male vs Female) | Female | −0.034 | 8.1 × 10⁻⁵ | 0.001 |
+
+
+| Model | Formula | Observations | Residual SE | DF |
+|------|--------|--------------|-------------|----|
+| Linear regression | ARG_div_shan ~ sex | 14,775 | 0.523 | 14,773 |
+
+| Term | Estimate | Std. Error | t value | p-value | Significance |
+|------|---------:|-----------:|--------:|--------:|:------------:|
+| Intercept (Female) | 1.903 | 0.006 | 313.34 | < 2 × 10⁻¹⁶ | *** |
+| Sex (Male vs Female) | −0.034 | 0.009 | −3.94 | 8.12 × 10⁻⁵ | *** |
+
+| Metric | Value |
+|-------|-------|
+| R² | 0.00105 |
+| Adjusted R² | 0.00098 |
+| F-statistic | 15.54 |
+| Model p-value | 8.12 × 10⁻⁵ |
+
+| Min | 1Q | Median | 3Q | Max |
+|----:|---:|-------:|---:|----:|
+| −1.88 | −0.33 | 0.05 | 0.38 | 1.63 |
 
