@@ -420,7 +420,7 @@ ggplot(colData_subset_clean, aes(x = BMI_range_new, y = log10_ARG_load, fill = s
 ggsave("Boxplot_by_BMI_sex.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Boxplot by BMI and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Boxplot_by_BMI_sex.png)
+![Boxplot by BMI and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/ARG_Load_Analyses/Boxplot_by_BMI_sex.png)
 
 ## 7.2 Calclulations
 
