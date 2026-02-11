@@ -157,7 +157,7 @@ ggplot(plot_df, aes(x = sex, y = log10_ARG_load, fill = sex)) + geom_jitter(widt
 ggsave("ARG_load_by_sex.png", width = 8, height = 6, dpi = 300)
 
 ```
-![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_load_by_sex.png)
+![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/ARG_load_by_sex.png)
 
 ### 5.2. Descriptive statistics
 ```r
@@ -185,31 +185,13 @@ wilcox_res <- wilcox.test(log10_ARG_load ~ sex, data = plot_df)
 p_label <- paste0("Wilcoxon p = ", signif(wilcox_res$p.value, 3))
 
 ```
-## 5.4 Boxplot with wilcoxon test value
-```r
-
-ggplot(plot_df, aes(x = sex, y = log10_ARG_load, fill = sex)) +
-  geom_jitter(width = 0.15, size = 1.2, alpha = 0.25, color = "grey30") +
-  geom_boxplot(width = 0.55, outlier.shape = NA, alpha = 0.8) +
-  geom_text(data = n_df, aes(x = sex, y = max(plot_df$log10_ARG_load) + 0.15, label = paste0("N = ", n)),
-    inherit.aes = FALSE, size = 4) +
-  
-  # p-value 
-  annotate("text", x = 1.5, y = max(plot_df$log10_ARG_load) + 0.35, label = p_label, size = 4.2, fontface = "italic") +
-  
-  labs(title = "ARG Load by Sex", x = "Sex", y = expression(log[10]*"(ARG load)")) +
-  
-  theme_minimal(base_size = 13) + theme(legend.position = "none", plot.title = element_text(face = "bold"))
-
-ggsave("wilcoxon_ARG_load_by_sex.png", width = 8, height = 6, dpi = 300)
-```
-![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Wilcoxon_ARG_load_by_sex.png)
-
+**Results**
+* p-value
 
 --
 ## 6. Analyses of ARG Load by Age and Sex
 
-### 6.1 Boxplot of ARG Load by Category and Sex
+### 6.1 Boxplot of ARG Load by Age Category and Sex
 
 ```r
 colData_subset$sex <- factor(colData_subset$sex, levels = c("female", "male"))  # make it a factor
@@ -250,7 +232,7 @@ ggplot(colData_subset, aes(x = precise_age_category, y = log10_ARG_load, fill = 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 setwd("/scratch/project_2008149/USER_WORKSPACES/karhula/DATA")
-ggsave("ARG_load_by_age_sex.png", width = 8, height = 6, dpi = 300)
+ggsave("ARG_load_by_age_category_sex.png", width = 8, height = 6, dpi = 300)
 ```
 ![ARG Load by Age and Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/ARG_load_by_age_sex.png)
 
@@ -277,7 +259,7 @@ ggplot(colData_sex_clean,
   theme_minimal()
 ```
 
-![Regression analysis ARG Load by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Regression_ARG_load_by_age_sex.png)
+![Regression analysis ARG Load by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/ARG_Load_Analyses/Regression_ARG_load_by_age_sex.png)
 
 ### 6.3 Linear regression with results
 ```
