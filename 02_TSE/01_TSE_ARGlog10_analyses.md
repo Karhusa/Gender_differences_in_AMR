@@ -495,7 +495,7 @@ ggsave("Interaction_model_by_BMI_sex.png", width = 8, height = 6, dpi = 300)
 
 ```
 
-![Interaction model by BMI sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Interaction_model_by_BMI_sex.png)
+![Interaction model by BMI sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/ARG_Load_Analyses/Interaction_model_by_BMI_sex.png)
 
 
 ---
@@ -559,7 +559,7 @@ ggsave("Boxplot_by_UTI_sex_muted.png", width = 7, height = 5, dpi = 300)
 
 ```
 
-![Boxplot ARG Load by UTI_history and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/ARG_Load_Analysis/Boxplot_by_UTI_sex_muted.png)
+![Boxplot ARG Load by UTI_history and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/ARG_Load_Analyses/Boxplot_by_UTI_sex_muted.png)
 
 ### 8.2 Linear model 
 
@@ -640,7 +640,7 @@ ggsave("Boxplot_by_AB_Use_sex.png", width = 7, height = 5, dpi = 300)
 
 ```
 
-![Boxplot ARG Load by AB Use and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/ARG_Load_Analysis/Boxplot_by_AB_Use_sex.png)
+![Boxplot ARG Load by AB Use and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/ARG_Load_Analyses/Boxplot_by_AB_Use_sex.png)
 
 ### 9.2 Linear model 
 
