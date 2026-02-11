@@ -89,7 +89,7 @@ ggplot(plot_df, aes(x = sex, y = ARG_div_shan, fill = sex)) +
 ggsave("Boxplot_Shannon_diversity_by_sex.png", width = 8, height = 6, dpi = 300)
 ```
 
-![Boxplot of ARG Shannon Diversity by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_Shannon_diversity_by_sex.png)
+![Boxplot of ARG Shannon Diversity by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Boxplot_Shannon_diversity_by_sex.png)
 
 
 ### 4.2. Descriptive statistics (Shannon x Sex)
@@ -158,7 +158,7 @@ ggplot(plot_df, aes(x = sex, y = ARG_div_shan, fill = sex)) +
 ggsave("wilcoxon_Boxplot_Shannon_diversity_by_sex.png", width = 8, height = 6, dpi = 300)
 ```
 
-![Boxplot of ARG Shannon Diversity by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/wilcoxon_Boxplot_Shannon_diversity_by_sex.png)
+![Boxplot of ARG Shannon Diversity by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/wilcoxon_Boxplot_Shannon_diversity_by_sex.png)
 
 ## 5. Analyses of ARG Shannon index by Age and Sex
 
@@ -204,7 +204,7 @@ setwd("/scratch/project_2008149/USER_WORKSPACES/karhula/DATA")
 
 ggsave("Boxplot_Shannon_diversity_by_age_sex.png", width = 8, height = 6, dpi = 300)
 ```
-![Boxplot of ARG Shannon Diversity by Age and Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_Shannon_diversity_by_age_sex.png)
+![Boxplot of ARG Shannon Diversity by Age and Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Boxplot_Shannon_diversity_by_age_sex.png)
 
 * N values can be removed. I left N values there so that it would be easier to interpret results.
 
@@ -253,7 +253,7 @@ ggsave("Boxplot_Shannon_diversity_by_age_sex_no_NA.png", width = 8, height = 6, 
 
 ```
 
-![Boxplot of ARG Shannon Diversity by Age and Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_Shannon_diversity_by_age_sex_no_NA.png)
+![Boxplot of ARG Shannon Diversity by Age and Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Boxplot_Shannon_diversity_by_age_sex_no_NA.png)
 
 
 
@@ -281,7 +281,7 @@ ggsave("Regression_Shannon_diversity_by_age_sex.png", width = 8, height = 6, dpi
 
 ```
 
-![Regression analysis ARG Shannon diversity by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Regression_Shannon_diversity_by_age_sex.png)
+![Regression analysis ARG Shannon diversity by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Shannon_Analyses/Regression_Shannon_diversity_by_age_sex.png)
 
 ### 5.3 Linear regression with results
 ```
@@ -320,7 +320,7 @@ ggplot(colData_sex_clean, aes(x = age_years, y = ARG_div_shan)
 ggsave("Regression_with_table_ARG_Shannon_by_age_sex.png", width = 8, height = 6, dpi = 300)
 ```
 
-![Regression analysis with table ARG Shannon index by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Regression_with_table_ARG_Shannon_by_age_sex.png)
+![Regression analysis with table ARG Shannon index by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Shannon_Analyses/Regression_with_table_ARG_Shannon_by_age_sex.png)
 
 | Term       | Estimate| Std. Error | t value | Pr(>t)   | Significance|
 |------------|---------|------------|---------|------------|-------------|
@@ -367,7 +367,7 @@ ggplot(colData_sex_clean, aes(x = age_years, y = ARG_div_shan)) +
 ggsave("GAM_ARG_Shannon_by_age_sex.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Gam analysis ARG Shannon by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/GAM_ARG_Shannon_by_age_sex.png)
+![Gam analysis ARG Shannon by Age and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Shannon_Analyses/GAM_ARG_Shannon_by_age_sex.png)
 
 | Term       | Estimate | Std. Error | t value | Pr(>t) | Significance|
 | ---------- |----------| ---------- | ------- | -------- | ----------- |
@@ -424,7 +424,7 @@ ggplot(colData_subset_clean, aes(x = BMI_range_new, y = ARG_div_shan, fill = sex
 ggsave("Shannon_Boxplot_by_BMI_Sex.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Shannon Boxplot by BMI and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Shannon_Boxplot_by_BMI_Sex.png)
+![Shannon Boxplot by BMI and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Shannon_Analyses/Shannon_Boxplot_by_BMI_Sex.png)
 
 ## 6.2 Calclulations
 
@@ -533,7 +533,7 @@ ggplot(colData_subset_clean, aes(x = BMI_range_new, y = ARG_div_shan, color = se
 ggsave("Interaction_model_Shannon_ by_BMI_sex.png", width = 8, height = 6, dpi = 300)
 ```
 
-![Interaction model Shannon by BMI sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Interaction_model_Shannon_ by_BMI_sex(1).png)
+![Interaction model Shannon by BMI sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Shannon_Analyses/Interaction_model_Shannon_ by_BMI_sex(1).png)
 
 ---
 
@@ -591,7 +591,7 @@ ggsave("Shannon_Boxplot_by_UTI_Sex.png", width = 7, height = 5, dpi = 300)
 
 ```
 
-![Boxplot ARG Load by UTI_history and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Shannon_Boxplot_by_UTI_Sex.png)
+![Boxplot ARG Load by UTI_history and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Shannon_Analyses/Shannon_Boxplot_by_UTI_Sex.png)
 
 ### 7.2 Linear model 
 
@@ -689,7 +689,7 @@ ggsave("Shannon_Boxplot_by_AB_use_Sex.png", width = 7, height = 5, dpi = 300)
 
 ```
 
-![Boxplot ARG Load by AB Use and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Shannon_Boxplot_by_AB_use_Sex.png)
+![Boxplot ARG Load by AB Use and Sex](https://github.com/Karhusa/Gender_differences_in_AMR/blob/main/Results/Shannon_Analyses/Shannon_Boxplot_by_AB_use_Sex.png)
 
 ### 9.2 Linear model 
 
