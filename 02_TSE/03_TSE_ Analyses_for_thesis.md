@@ -40,10 +40,21 @@ Subset <- colData_df %>%
 ```r
 
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
+Subset$sex[Subset$log10_ARG_load == "" | Subset$log10_ARG_load == "NA"] <- NA
+
+Subset$sex <- recode(Subset$sex,
+                     "female" = "Female",
+                     "male"   = "Male")
 
 plot_df <- Subset %>% filter(!is.na(log10_ARG_load), !is.na(sex))
 
-n_df <- plot_df %>% count(sex)
+
+n_df <- plot_df %>%
+  group_by(sex) %>%
+  summarise(
+    n = n(),
+    y_max = max(ARG_div_shan, na.rm = TRUE)
+  )
 
 ggplot(plot_df, aes(x = sex, y = log10_ARG_load, fill = sex)) +
   geom_jitter(width = 0.15, size = 1.2, alpha = 0.25, color = "grey30") +
@@ -68,66 +79,64 @@ ggplot(plot_df, aes(x = sex, y = log10_ARG_load, fill = sex)) +
 ggsave("Boxplot_log10ARG_by_sex_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
-![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Boxplot_log10ARG_by_sex_ready(2).png)
+![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Boxplot_log10ARG_by_sex_ready.png)
 
-### 4.2 Linear model
+### 4.2 Do we have repeated samples?
 
 ```r
+plot_df %>%
+  count(acc) %>%
+  summarise(
+    n_subjects = n(),
+    max_samples_per_subject = max(n),
+    median_samples_per_subject = median(n),
+    subjects_with_repeats = sum(n > 1)
+  )
 
-# Confirmation for the analysis
-any(duplicated(plot_df$acc))
-# False
-table(table(plot_df$acc))
-# 1 
-# 14775
-
-model <- lm(log10_ARG_load ~ sex, data = plot_df)
-summary(model)
 ```
-| Term | Estimate | Std. Error | t value | Pr(>t) |
-|------------|-----------|------------|----------|-------------|
-| (Intercept) | 2.750388 | 0.003608 | 762.201 | < 2e-16 *** |
-| sexmale | -0.035347 | 0.005117 | -6.908 | 5.1e-12 *** |
+**Results:***
+* n_subjects: 14775
+* max_samples_per_subject: 1
+* median_samples_per_subject:1 
+* subjects_with_repeats :0
 
-**Model summary:**
 
-* Residual standard error: 0.311 on 14773 degrees of freedom
-* Multiple R-squared: 0.00322, Adjusted R-squared: 0.003153
-* F-statistic: 47.73 on 1 and 14773 DF, p-value: 5.099e-12
+
+### 4.3 Wilcoxon rank-sum test
+```r
+wilcox.test(log10_ARG_load ~ sex, data = plot_df)
+```
+**Results:**
+
+* W = 29258084
+* p-value = 2.864e-14
 
 ### 4.3 Count Cohen's d
 ```r
 
-# Group means and SDs
-group_stats <- plot_df %>%
-  group_by(sex) %>%
-  summarise(
-    mean_ARG = mean(log10_ARG_load, na.rm = TRUE),
-    sd_ARG   = sd(log10_ARG_load, na.rm = TRUE),
-    n        = n()
-  )
+### Cound Cohens d
+```r
+group1 <- plot_df$log10_ARG_load[plot_df$sex == "Female"]
+group2 <- plot_df$log10_ARG_load[plot_df$sex == "Male"]
 
-group_stats
-
-# Pooled standard deviation
-mean_f <- 2.750
-mean_m <- 2.715
-sd_f   <- 0.311
-sd_m   <- 0.312
-n_f    <- 7426
-n_m    <- 7349
+# Means and SDs
+mean1 <- mean(group1, na.rm = TRUE)
+mean2 <- mean(group2, na.rm = TRUE)
+sd1   <- sd(group1, na.rm = TRUE)
+sd2   <- sd(group2, na.rm = TRUE)
+n1    <- length(group1)
+n2    <- length(group2)
 
 # Pooled SD
-sd_pooled <- sqrt( ((n_f - 1)*sd_f^2 + (n_m - 1)*sd_m^2) / (n_f + n_m - 2) )
-sd_pooled
-# -> 0.3114978
+pooled_sd <- sqrt(((n1-1)*sd1^2 + (n2-1)*sd2^2) / (n1 + n2 - 2))
 
-d <- (mean_m - mean_f) / sd_pooled
-d
-# -> -0.1123603
+# Cohen's d
+cohen_d <- (mean1 - mean2) / pooled_sd
+cohen_d
 ```
+# -> 0.1136723
 **Results**
-Cohen's D: -0.1123603
+Cohen's D: 0.1136723
 
 ---
 
