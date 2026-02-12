@@ -1,7 +1,7 @@
 
+# 1. Prepare the data
 
-
-## 1. Packages
+### 1.2 Packages
 ```r
 library(SummarizedExperiment)
 library(dplyr)
@@ -10,12 +10,12 @@ library(tidyr)
 library(ggsci)
 ```
 ---
-## 2. Load TSE
+### 1.2 Load TSE
 ```r
 tse_path <- "/scratch/project_2008149/USER_WORKSPACES/karhula/DATA/TSE.rds"
 TSE <- readRDS(tse_path)
 ```
-## 3. Extract colData
+### 1.3 Extract colData
 ```r
 colData_df <- as.data.frame(colData(TSE))
 
@@ -44,7 +44,7 @@ Subset1 <- colData_df %>%
 )
 
 ```
-## 4. Inspect the values
+### 1.4. Inspect the values
 
 ```r
 table(Subset1$AgeGroup)
@@ -68,12 +68,11 @@ Sex:
 
 ---
 
-##
+# 2. Shannon diveristy
 
+## 2.1 Shannon Diversity by sex and filtered age
 
-## . Shannon diversity by sex in filtered age
-
-## Shannon diversity by sex in filtered age
+## Boxplot of Shannon Diversity by sex in filtered age
 
 ```r
 
@@ -135,7 +134,7 @@ ggplot(plot_df, aes(x = sex, y = ARG_div_shan, fill = sex)) +
 ggsave("Boxplot_Shannon_diversity_by_sex_and_filtered_age.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Boxplot of Shannon_index with sex and filtered age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_Shannon_diversity_by_sex_and_filtered_age.png)
+![Boxplot of Shannon_index with sex and filtered age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Boxplot_Shannon_diversity_by_sex_and_filtered_age.png)
 
 ### Do we have repeated samples?
 
@@ -188,8 +187,39 @@ cohen_d
 **Results:***
 * 0.4051338
 
+### Regression analysis of shannon index and sex
 
-##
+```r
+plot_df$sex <- factor(plot_df$sex, levels = c("Female", "Male"))
+lm_sex <- lm(ARG_div_shan ~ sex, data = plot_df)
+summary(lm_sex)
+
+```
+**Results:**
+
+
+Residuals:
+     Min       1Q   Median 
+-1.80947 -0.32482  0.04131 
+      3Q      Max 
+ 0.35574  1.60629 
+
+Coefficients:
+            Estimate Std. Error
+(Intercept)  1.94464    0.01061
+sexMale     -0.20809    0.01543
+            t value Pr(>|t|)    
+(Intercept)  183.23   <2e-16 ***
+sexMale      -13.48   <2e-16 ***
+---
+Signif. codes:  
+  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’
+  0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.5136 on 4442 degrees of freedom
+Multiple R-squared:  0.03932,	Adjusted R-squared:  0.03911 
+F-statistic: 181.8 on 1 and 4442 DF,  p-value: < 2.2e-16
+
 
 ## 6. Ananlyses of ARGlog10 sex and income
 
@@ -254,7 +284,7 @@ ggsave("Boxplot_ARG_Load_Sex_Income.png", width = 8, height = 6, dpi = 300)
 ![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_ARG_Load_Sex_Income.png)
 
 
-## 6.1 Linear model of ARGlog10 index, income and sex
+## 6.1 Regression analysis of ARGlog10 index, income and sex
 
 ```r
 
@@ -270,10 +300,13 @@ plot_df <- plot_df %>%
     )
   )
 
-lm_main <- lm(
-  log10_ARG_load ~ sex + World_Bank_Income_Group, data = plot_df)
-
+# Additive mdoel
+lm_main <- lm(log10_ARG_load ~ sex + World_Bank_Income_Group, data = plot_df)
 summary(lm_main)
+
+# Interaction model
+lm_int <- lm(log10_ARG_load ~ sex * World_Bank_Income_Group, data = plot_df)
+summary(lm_int)
 
 ```
 **Results:**
@@ -306,16 +339,6 @@ Significance codes:
 | F-statistic | 173.3 |
 | Model p-value | < 2.2e-16 |
 
-
-## 5.2 Interaction model of ARGlog10 index, income and sex
-```r
-lm_int <- lm(
-  log10_ARG_load ~ sex * World_Bank_Income_Group,
-  data = plot_df
-)
-
-summary(lm_int)
-```
 
 ## Linear model: log10(ARG load) ~ sex × World Bank income group
 
@@ -382,7 +405,7 @@ counts <- plot_df %>%
   group_by(AgeGroup, sex) %>%
   summarise(N = n(), .groups = "drop") %>%
   mutate(
-    y_pos = max(plot_df$log10_ARG_load, na.rm = TRUE) + 0.1
+    y_pos = max(AgeGroup, na.rm = TRUE) + 0.15,
   )
 
 ggplot(plot_df, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) +
