@@ -84,10 +84,7 @@ Subset1$sex <- recode(Subset1$sex,
                      "female" = "Female",
                      "male"   = "Male")
 
-plot_df <- Subset1 %>%
-  filter(!is.na(log10_ARG_load),
-         !is.na(sex),
-         !is.na(ARG_div_shan))
+plot_df <- Subset1 %>% filter(!is.na(sex),!is.na(ARG_div_shan))
 
 n_df <- plot_df %>%
   group_by(sex) %>%
@@ -95,8 +92,6 @@ n_df <- plot_df %>%
     n = n(),
     y_max = max(ARG_div_shan, na.rm = TRUE)
   )
-
-npg_cols <- pal_npg("nrc")(4)[3:4]
 
 npg_cols <- pal_npg("nrc")(4)[3:4]
 
@@ -146,7 +141,7 @@ ggsave("Boxplot_Shannon_diversity_by_sex_and_filtered_age.png", width = 8, heigh
 
 ```r
 plot_df %>%
-  count(Acc) %>%
+  count(acc) %>%
   summarise(
     n_subjects = n(),
     max_samples_per_subject = max(n),
@@ -161,7 +156,6 @@ plot_df %>%
 * median_samples_per_subject:1 
 * subjects_with_repeats :0
 
-```
 ### Wilcoxon rank-sum test
 ```r
 wilcox.test(ARG_div_shan ~ sex, data = plot_df)
