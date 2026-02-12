@@ -560,7 +560,7 @@ summary(lm_sex)
 
 
 
-### 3.1.3 Cohen's  of shannon index and sex
+### 3.1.3 Cohen's d of shannon index categorized age and, sex
 
 ```r
 group1 <- plot_df$ARG_div_shan[plot_df$sex == "Female"]
@@ -582,12 +582,12 @@ cohen_d <- (mean1 - mean2) / pooled_sd
 cohen_d
 ```
 **Results**
-Cohen's D: 0.06485994
+Cohen's d: 0.06485994
 
 ---
-## 3.2. Analyses of shannon index, sex and age
+## 3.2. Analyses of shannon index, sex and, categorized age
 
-### 3.2.1 Boxplot of shannon index, categorial sex and age
+### 3.2.1 Boxplot of of shannon index, sex and, categorized age
 
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -680,35 +680,129 @@ ggsave("Boxplot_Shannon_diversity_by_age_categry_sex.png", width = 8, height = 6
 
 ![Shannon diversity by sex by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Boxplot_Shannon_diversity_by_age_categry_sex.png)
 
+### 3.2.2 Regression analysis of shannon index, sex and, categorized age
+```r
+#Additive model
+lm_sex_age <- lm(ARG_div_shan ~ sex + precise_age_category, data = plot_df)
+summary(lm_sex_age)
+
+#Interaction model
+lm_interact <- lm(ARG_div_shan ~ sex * precise_age_category, data = plot_df)
+summary(lm_interact)
+
+```
+**Results:**
+
+**Table X.** Linear regression analysis of ARG Shannon diversity as a function of sex and age category. Female sex and the youngest age category were used as reference levels.
+
+| Term                              | Estimate (β) | Std. Error | t value | p value        |
+|-----------------------------------|--------------|------------|---------|----------------|
+| Intercept                         | 1.840        | 0.019      | 97.10   | < 2.2 × 10⁻¹⁶ |
+| Sex (Male vs Female)              | −0.057       | 0.010      | −5.92   | 3.24 × 10⁻⁹   |
+| Toddler                           | −0.164       | 0.048      | −3.38   | 7.25 × 10⁻⁴   |
+| Child                             | −0.069       | 0.026      | −2.66   | 7.76 × 10⁻³   |
+| Teenage                           | −0.088       | 0.023      | −3.77   | 1.62 × 10⁻⁴   |
+| Young adult                       | −0.004       | 0.021      | −0.18   | 0.854         |
+| Middle-aged adult                 | 0.211        | 0.020      | 10.46   | < 2.2 × 10⁻¹⁶ |
+| Older adult                       | 0.283        | 0.022      | 13.05   | < 2.2 × 10⁻¹⁶ |
+| Oldest adult                      | 0.394        | 0.038      | 10.31   | < 2.2 × 10⁻¹⁶ |
+
+
+| Predictor            | β (Estimate) | p value        |
+|----------------------|--------------|----------------|
+| Sex (Male)           | −0.057       | 3.24 × 10⁻⁹   |
+| Age category         | —            | < 2.2 × 10⁻¹⁶ |
+
+
+**Model statistics**
+
+- Significance codes:  
+  `***` p < 0.001, `**` p < 0.01, `*` p < 0.05, `.` p < 0.1
+
+**Residual standard error:** 0.485 on 103371 degrees of freedom  
+**Multiple R-squared:** 0.084, Adjusted R-squared: 0.084  
+**F-statistic:** 119.6 (df= 15, and 10371), p-value: < 2.2 × 10⁻¹⁶
+
+**Additive model**
+
+| Term                                  | Estimate (β) | Std. Error | t value | p value        |
+|---------------------------------------|--------------|------------|---------|----------------|
+| Intercept                             | 1.827        | 0.026      | 71.32   | < 2.2 × 10⁻¹⁶ |
+| Sex (Male vs Female)                  | −0.030       | 0.036      | −0.82   | 0.411          |
+| Toddler                               | −0.184       | 0.075      | −2.44   | 1.46 × 10⁻²   |
+| Child                                 | −0.081       | 0.037      | −2.17   | 3.03 × 10⁻²   |
+| Teenage                               | −0.031       | 0.033      | −0.96   | 0.339          |
+| Young adult                           | 0.116        | 0.029      | 4.03    | 5.67 × 10⁻⁵   |
+| Middle-aged adult                      | 0.169        | 0.028      | 6.01    | 1.94 × 10⁻⁹   |
+| Older adult                            | 0.222        | 0.031      | 7.19    | 6.84 × 10⁻¹³  |
+| Oldest adult                           | 0.381        | 0.056      | 6.76    | 1.50 × 10⁻¹¹  |
+| SexMale:Toddler                        | 0.028        | 0.098      | 0.29    | 0.773          |
+| SexMale:Child                           | 0.019        | 0.052      | 0.36    | 0.717          |
+| SexMale:Teenage                         | −0.111       | 0.046      | −2.40   | 1.65 × 10⁻²   |
+| SexMale:Young adult                     | −0.258       | 0.041      | −6.27   | 3.81 × 10⁻¹⁰  |
+| SexMale:Middle-Age Adult                | 0.084        | 0.040      | 2.11    | 3.46 × 10⁻²   |
+| SexMale:Older Adult                      | 0.104        | 0.043      | 2.42    | 1.54 × 10⁻²   |
+| SexMale:Oldest Adult                     | 0.020        | 0.076      | 0.26    | 0.796          |
+
+**Significance codes:** 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1  
+
+**Residual standard error:** 0.480 (df = 10,364)  
+**Multiple R²:** 0.104  
+**Adjusted R²:** 0.103  
+**F-statistic:** 80.51 (df = 15, 10,364), p < 2.2 × 10⁻¹⁶
+
+
+
+
+## LOESS curve 
+
+```r
+
+
+N_sex <- colData_sex_clean %>%
+  filter(!is.na(age_years), !is.na(ARG_div_shan)) %>%
+  count(sex)
+
+ggplot(colData_sex_clean,
+       aes(x = age_years, y = log10_ARG_load, color = sex)) +
+  geom_point(alpha = 0.25, size = 1) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 1.4, alpha = 0.15
+  ) +
+  scale_color_manual(
+    values = c("female" = "#D55E00", "male" = "#0072B2")
+  ) +
+  labs(x = "Age (years)", y = "Log10 ARG load", title = "ARG load vs Age by Sex", color = "Sex"
+  ) +
+  theme_minimal()
+```
+
+
 LOESS
 
 ```
 
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
-Subset$age_years[Subset$age_years == "" | is.na(Subset$age_years)] <- NA
+Subset$ARG_div_shan[Subset$ARG_div_shan == "" | Subset$ARG_div_shan == "NA"] <- NA
+Subset$precise_age_category[
+  Subset$precise_age_category == "" | Subset$precise_age_category == "NA"
+] <- NA
 
-Subset$sex <- recode(Subset$sex,
-                     "female" = "Female",
-                     "male"   = "Male")
+plot_df_loess <- Subset %>%
+  dplyr::filter(
+    !is.na(age_years),
+    !is.na(ARG_div_shan),
+    !is.na(sex)
+  )
+npg_cols <- pal_npg("nrc")(4)[3:4]
 
-plot_df <- Subset %>%
-  filter(!is.na(log10_ARG_load),
-         !is.na(sex),
-         !is.na(age_years)) %>%
-  mutate(sex = factor(sex, levels = c("Female", "Male")))
-
-
-# LOESS curves with numeric age
-ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex)) +
-  geom_smooth(method = "loess", se = TRUE, span = 0.7, alpha = 0.2, size = 1.2) +
-  scale_color_npg() +
-  scale_fill_npg() +
+ggplot(plot_df_loess, aes(x = age_years, y = ARG_div_shan)) +
+  geom_point(alpha = 0.3, size = 1.5, color = "grey50") +  # grey dots
+  geom_smooth(aes(color = sex), method = "loess", span = 0.3, se = TRUE) +
+  scale_color_manual(values = npg_cols) +  # LOESS curves in NPG colors
   labs(
-    title = "LOESS Curve of ARG Load by Age (Years) and Sex",
     x = "Age (years)",
-    y = expression(log[10]*"(ARG load)"),
-    color = "Sex",
-    fill = "Sex"
+    y = "ARG Shannon diversity",
+    title = "LOESS Curve of ARG Shannon diversity across age by sex"
   ) +
   theme_minimal(base_size = 13) +
   theme(
@@ -716,70 +810,54 @@ ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex))
     plot.title = element_text(face = "bold")
   )
 
-ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi = 300)
+#Without dots:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### 3.2.2 Regression analysis of shannon index and sex
-```r
-lm_sex_age <- lm(ARG_div_shan ~ sex + precise_age_category, data = plot_df)
-summary(lm_sex_age)
-
-lm_interact <- lm(ARG_div_shan ~ sex * precise_age_category, data = plot_df)
-summary(lm_interact)
-
+ggplot(plot_df_loess, aes(x = age_years, y = ARG_div_shan)) +
+  geom_smooth(aes(color = sex), method = "loess", span = 0.3, se = TRUE, size = 1.2) +
+  scale_color_manual(values = npg_cols) +  # LOESS curves in NPG colors
+  labs(
+    x = "Age (years)",
+    y = "ARG Shannon diversity",
+    title = "LOESS Curve of ARG Shannon diversity across age by sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",             # legend on the right
+    plot.title = element_text(face = "bold")
+  )
+  
+ggsave("Loess_Shannon_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi = 300)
 ```
-**Results:**
 
-| Outcome | Predictor | Reference group | Effect estimate | p-value | Variance explained (R²) |
-|--------|-----------|-----------------|-----------------|---------|--------------------------|
-| ARG Shannon diversity | Sex (Male vs Female) | Female | −0.034 | 8.1 × 10⁻⁵ | 0.001 |
+![LOESS curve of Shannon diversity by sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Loess_Shannon_by_sex_age_numeric_ready.jpeg)
 
 
-| Model | Formula | Observations | Residual SE | DF |
-|------|--------|--------------|-------------|----|
-| Linear regression | ARG_div_shan ~ sex | 14,775 | 0.523 | 14,773 |
 
-| Term | Estimate | Std. Error | t value | p-value | Significance |
-|------|---------:|-----------:|--------:|--------:|:------------:|
-| Intercept (Female) | 1.903 | 0.006 | 313.34 | < 2 × 10⁻¹⁶ | *** |
-| Sex (Male vs Female) | −0.034 | 0.009 | −3.94 | 8.12 × 10⁻⁵ | *** |
 
-| Metric | Value |
-|-------|-------|
-| R² | 0.00105 |
-| Adjusted R² | 0.00098 |
-| F-statistic | 15.54 |
-| Model p-value | 8.12 × 10⁻⁵ |
 
-| Min | 1Q | Median | 3Q | Max |
-|----:|---:|-------:|---:|----:|
-| −1.88 | −0.33 | 0.05 | 0.38 | 1.63 |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
