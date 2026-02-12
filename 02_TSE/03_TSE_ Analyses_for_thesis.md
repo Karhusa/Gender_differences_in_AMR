@@ -7,6 +7,7 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(ggsci)
+library(mgcv)
 ```
 
 ## 1.2 Load TSE
@@ -812,29 +813,52 @@ ggplot(plot_df_loess, aes(x = age_years, y = ARG_div_shan)) +
 
 #Without dots:
 
-ggplot(plot_df_loess, aes(x = age_years, y = ARG_div_shan)) +
-  geom_smooth(aes(color = sex), method = "loess", span = 0.3, se = TRUE, size = 1.2) +
-  scale_color_manual(values = npg_cols) +  # LOESS curves in NPG colors
+ggplot(plot_df_loess, aes(x = age_years, y = ARG_div_shan, color = sex, fill = sex)) +
+  geom_smooth(method = "loess", span = 0.3, se = TRUE, size = 1.2) +
+  scale_color_manual(values = npg_cols) +
+  scale_fill_manual(values = npg_cols) +
   labs(
     x = "Age (years)",
     y = "ARG Shannon diversity",
-    title = "LOESS Curve of ARG Shannon diversity across age by sex"
+    title = "LOESS curve of ARG Shannon diversity across age by sex"
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    legend.position = "right",             # legend on the right
+    legend.position = "right",
     plot.title = element_text(face = "bold")
   )
   
 ggsave("Loess_Shannon_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi = 300)
 ```
 
-![LOESS curve of Shannon diversity by sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Loess_Shannon_by_sex_age_numeric_ready.jpeg)
+![LOESS curve of Shannon diversity by sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Loess_Shannon_by_sex_age_numeric_ready.png)
 
 
+# GAM Model
+
+```r
+
+gam_model <- gam(ARG_div_shan ~ sex + s(age_years, k = 10), 
+                 data = plot_df_loess, 
+                 method = "REML")
+
+# Summary of the model
+summary(gam_model)
 
 
+```
 
+| Term               | Type       | Estimate / edf | Std. Error / Ref.df | t / F  | p-value       | Significance |
+| ------------------ | ---------- | -------------- | ------------------- | ------ | ------------- | ------------ |
+| (Intercept)        | Parametric | 1.9466         | 0.0069              | 282.43 | < 2.2 × 10⁻¹⁶ | ***          |
+| sexMale            | Parametric | -0.0639        | 0.0097              | -6.60  | 4.47 × 10⁻¹¹  | ***          |
+| s(age_years)       | Smooth     | 7.99 (edf)     | 8.69                | 115.3  | < 2.2 × 10⁻¹⁶ | ***          |
+| **Model fit**      | —          | —              | —                   | —      | —             | —            |
+| Adjusted R²        | Fit        | 0.093          | —                   | —      | —             | —            |
+| Deviance explained | Fit        | 9.38%          | —                   | —      | —             | —            |
+| Scale estimate     | Fit        | 0.234          | —                   | —      | —             | —            |
+| −REML              | Fit        | 7000.7         | —                   | —      | —             | —            |
+| Sample size (n)    | Fit        | 10,069         | —                   | —      | —             | —            |
 
 
 
