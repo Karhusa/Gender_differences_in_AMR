@@ -332,7 +332,7 @@ ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex))
 ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
-![LOESS ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results//Loess_log10ARG_by_sex_age_numeric_ready(2).png)
+![LOESS ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Loess_log10ARG_by_sex_age_numeric_ready(2).png)
 
 
 ### 2.3.4 Linear model
@@ -453,7 +453,7 @@ ggplot(plot_df, aes(x = age_years, y = log10_ARG_load)) +
 ggsave("GAM_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 ```
 
-![GAM ARG Load by Sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/GAM_log10ARG_by_sex_age_ready.png)
+![GAM ARG Load by Sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/GAM_log10ARG_by_sex_age_ready.png)
 
 
 
