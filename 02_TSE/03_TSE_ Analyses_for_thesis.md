@@ -291,7 +291,7 @@ ggplot(plot_df, aes(x = age_num, y = log10_ARG_load, color = sex, fill = sex)) +
 ggsave("Loess_log10ARG_by_sex_age_category_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
-![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/AGR_Load_Analyses/Boxplot_log10ARG_by_sex_age_category_ready.png)
+![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/AGR_Load_Analyses/LOESS_log10ARG_by_sex_age_category_ready.png)
 
 
 ### 2.3.3 Loess curve of ARG load by sex and numeric age
