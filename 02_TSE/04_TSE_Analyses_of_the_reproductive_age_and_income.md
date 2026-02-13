@@ -603,7 +603,7 @@ ggplot(sex_age_income_counts, aes(x = AgeGroup, y = N, fill = sex)) +
 ggsave("Boxplot_counts_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
+![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
 
 
 ## 6. Analysis of ARG load,sex and, BMI, and filtered age (Women of reproductive age (15-49 years))
@@ -679,7 +679,7 @@ ggplot(colData_subset_clean, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) 
 ggsave("Boxplot_counts_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
+![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_counts_ARG_load_sex_BMI_filtered_age.png.png)
 
 
 
