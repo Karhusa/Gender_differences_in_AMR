@@ -655,7 +655,7 @@ ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex))
   scale_fill_npg() +
   facet_wrap(~World_Bank_Income_Group, scales = "free_x") +
   labs(
-    title = "LOESS Curve of ARG Load by Age (continuous), Sex, and Income Group",
+    title = "LOESS Curve of ARG Load by Age, Sex, and Income Group",
     x = "Age (years)",
     y = expression(log[10]*"(ARG load)"),
     color = "Sex",
@@ -673,12 +673,12 @@ ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex))
 
 ggsave("LOESS_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dpi = 300)
 ```
-![LOESS of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/LOESS_ARG_load_sex_income_filtered_age.png.png)
+![LOESS of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/LOESS_ARG_load_sex_income_filtered_age.png)
 
 
 ## 6. Analysis of ARG load,sex and, BMI, and filtered age (Women of reproductive age (15-49 years))
 
-### 5.1 Boxplot of ARG load, sex, BMI and filtered age 
+### 6.1 Boxplot of ARG load, sex, BMI and filtered age 
 
 ```
 colData_subset_clean <- Subset1 %>%
@@ -749,7 +749,7 @@ ggplot(colData_subset_clean, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) 
 ggsave("Boxplot_counts_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_counts_ARG_load_sex_BMI_filtered_age.png.png)
+![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_counts_ARG_load_sex_BMI_filtered_age.png)
 
 
 
