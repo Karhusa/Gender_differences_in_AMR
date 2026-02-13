@@ -774,7 +774,7 @@ Model Information:
 
 Parametric Coefficients:
 
-| Term | Estimate | Std. Error | t value | Pr(>|t|) | Significance |
+| Term | Estimate | Std. Error | t value | Pr(>t) | Significance |
 |-----|---------:|-----------:|--------:|---------:|:------------|
 | (Intercept) | 2.835366 | 0.037788 | 75.033 | < 2e-16 | *** |
 | sexMale | -0.071526 | 0.008878 | -8.057 | 1.01e-15 | *** |
