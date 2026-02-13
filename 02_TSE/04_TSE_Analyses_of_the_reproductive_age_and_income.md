@@ -155,7 +155,7 @@ plot_df %>%
   )
 
 ```
-**Results:***
+**Results:**
 * n_subjects: 4444
 * max_samples_per_subject: 1
 * median_samples_per_subject:1 
@@ -190,7 +190,7 @@ pooled_sd <- sqrt(((n1-1)*sd1^2 + (n2-1)*sd2^2) / (n1 + n2 - 2))
 cohen_d <- (mean1 - mean2) / pooled_sd
 cohen_d
 ```
-**Results:***
+**Results:**
 * 0.4051338
 
 ### 2.1.5 Regression analysis of shannon index and sex
@@ -302,11 +302,8 @@ lm_int <- lm(log10_ARG_load ~ sex * World_Bank_Income_Group, data = plot_df)
 summary(lm_int)
 
 ```
-**Results:**
-
-Linear model: log10(ARG load) ~ sex + World Bank income group
-
-Reference group: Female, Low income
+**Results: Additive model**
+* Reference group: Female, Low income
 
 Coefficients
 
@@ -321,7 +318,7 @@ Coefficients
 Significance codes:  
 *** p < 0.001, ** p < 0.01, * p < 0.05, . p < 0.1
 
-### Model fit
+Model Fit
 
 | Metric | Value |
 |--------|-------|
@@ -333,11 +330,10 @@ Significance codes:
 | Model p-value | < 2.2e-16 |
 
 
-## Linear model: log10(ARG load) ~ sex × World Bank income group
+**Results: interaction model**
+* Reference group: Female, Low income
 
-Reference group: Female, Low income
-
-### Coefficients
+Coefficients
 
 | Term | Estimate | Std. Error | t value | p-value | Signif. |
 |------|---------:|-----------:|--------:|--------:|:-------:|
@@ -503,7 +499,9 @@ ggsave("Loess_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height = 6
 lm_num <- lm(log10_ARG_load ~ age_years * sex, data = Subset1)
 summary(lm_num)
 ```
-# Linear Model Summary: log10(ARG load) ~ AgeNum * sex
+Linear Model
+* log10(ARG load) ~ AgeNum * sex
+
 | Term | Estimate | Std. Error | t value | Pr(>t) | Significance |
 |-------------------|-----------|------------|---------|----------|--------------|
 | (Intercept) | 2.5328 | 0.01955 | 129.549 | < 2e-16 | *** |
@@ -512,7 +510,6 @@ summary(lm_num)
 | age_years:sexMale | -0.00319 | 0.000941 | -3.387 | 0.000711 | *** |
 
 Model statistics:
-
 * Residual standard error: 0.2952 on 4440 df
 * Multiple R-squared: 0.04155
 * Adjusted R-squared: 0.0409
@@ -534,21 +531,25 @@ summary(gam_model)
 **Formula:** `log10_ARG_load ~ sex + s(age_years, by = sex)`  
 **Sample size:** 4,444  
 
-#### Parametric Coefficients
+Parametric Coefficients
 
 | Term        | Estimate | Std. Error | t value | p-value       |
 |------------ |---------:|-----------:|--------:|---------------|
 | (Intercept) | 2.736069 | 0.006116   | 447.33  | < 2e-16 ***   |
 | sexMale     | -0.058478 | 0.008915  | -6.56   | 6.01e-11 ***  |
 
-#### Smooth Terms (Approximate Significance)
+Smooth Terms (Approximate Significance)
 
 | Term                     | edf   | Ref.df | F value | p-value     |
 |-------------------------- |------:|-------:|--------:|------------|
 | s(age_years):sexFemale    | 6.307 | 7.429  | 19.61   | < 2e-16 *** |
 | s(age_years):sexMale      | 8.111 | 8.762  | 12.13   | < 2e-16 *** |
 
-**Model fit:** Adjusted R² = 0.0637, Deviance explained = 6.69%, REML = 866.66, Scale est. = 0.08506  
+Model fit:
+* Adjusted R² = 0.0637
+* Deviance explained = 6.69%
+* REML = 866.66
+* Scale est. = 0.08506  
 
 ---
 
@@ -650,20 +651,21 @@ lm_cov <- lm(log10_ARG_load ~ age_years * sex + World_Bank_Income_Group, data = 
 summary(lm_cov)
 
 ```
-**Additive**
+**Additive Model**
+
 | Term        | Estimate   | Std. Error | t value | p-value      |
 |------------|-----------:|-----------:|--------:|-------------|
 | (Intercept)| 2.5909485 | 0.0150759 | 171.861 | < 2e-16 *** |
 | age_years  | 0.0050173 | 0.0004902 | 10.235  | < 2e-16 *** |
 | sexMale    | -0.0702190| 0.0091225 | -7.697  | 1.72e-14 *** |
 
-**Model statistics:**  
+Model statistics:
 - Residual standard error = 0.2947 on 4191 DF  
 - Multiple R-squared = 0.03661, Adjusted R-squared = 0.03615  
 - F-statistic = 79.63 on 2 and 4191 DF, p-value < 2.2e-16
 
 
-**Interaction**
+**Interaction Model:**
 
 | Term            | Estimate   | Std. Error | t value | p-value      |
 |-----------------|-----------:|-----------:|--------:|-------------|
@@ -672,12 +674,12 @@ summary(lm_cov)
 | sexMale         | 0.0295811 | 0.0291830 | 1.014   | 0.310812    |
 | age_years:sexMale | -0.0035270 | 0.0009798 | -3.600 | 0.000322 *** |
 
-**Model statistics:**  
+Model statistics: 
 - Residual standard error = 0.2942 on 4190 DF  
 - Multiple R-squared = 0.03958, Adjusted R-squared = 0.03889  
 - F-statistic = 57.56 on 3 and 4190 DF, p-value < 2.2e-16
 
-**Covariete**
+**Covariete Model**
 
 | Term                                      | Estimate   | Std. Error | t value | p-value     |
 |------------------------------------------|-----------:|-----------:|--------:|------------|
@@ -689,18 +691,15 @@ summary(lm_cov)
 | World_Bank_Income_GroupHigh income       | -0.1261621| 0.0380131 | -3.319  | 0.000911 ***|
 | age_years:sexMale                         | -0.0034764| 0.0009485 | -3.665  | 0.000250 ***|
 
-**Model statistics:**  
+Model statistics:
 - Residual standard error = 0.2845 on 4187 degrees of freedom  
 - Multiple R-squared = 0.1029, Adjusted R-squared = 0.1016  
 - F-statistic = 80.01 on 6 and 4187 DF, p-value < 2.2e-16  
 
 
-
-
 ### 5.4 LOESS of ARG load, sex, income, and filtered age 
 
-```
-
+```r
 plot_df <- Subset1 %>%
   filter(!is.na(log10_ARG_load),
          !is.na(sex),
@@ -758,12 +757,14 @@ gam_income <- gam(
 )
 
 summary(gam_income)
-
 ```
 
-# Generalized Additive Model Results: ARG Load
+** Generalized Additive Model Results: ARG Load**
+Reference groups: 
+- Sex: Female  
+- World Bank income group: Low income  
 
-## Model Information
+Model Information:
 
 | Item | Value |
 |-----|------|
@@ -771,9 +772,7 @@ summary(gam_income)
 | Link function | identity |
 | Formula | `log10_ARG_load ~ sex + World_Bank_Income_Group + s(age_years, by = sex)` |
 
----
-
-## Parametric Coefficients
+Parametric Coefficients:
 
 | Term | Estimate | Std. Error | t value | Pr(>|t|) | Significance |
 |-----|---------:|-----------:|--------:|---------:|:------------|
@@ -783,23 +782,15 @@ summary(gam_income)
 | Upper middle income | 0.183807 | 0.044000 | 4.177 | 3.01e-05 | *** |
 | High income | -0.123971 | 0.037794 | -3.280 | 0.00105 | ** |
 
-**Reference groups:**  
-- Sex: Female  
-- World Bank income group: Low income  
-
 **Significance codes:**  
 `***` p < 0.001, `**` p < 0.01, `*` p < 0.05, `.` p < 0.1
 
----
-
-## Smooth Terms
+Smooth Terms:
 
 | Smooth term | edf | Ref.df | F | p-value | Significance |
 |------------|----:|-------:|--:|--------:|:------------|
 | s(age_years):sexFemale | 7.567 | 8.48 | 14.062 | < 2e-16 | *** |
 | s(age_years):sexMale | 8.102 | 8.78 | 9.3_
-
-
 
 
 ## 6. Analysis of ARG load,sex and, BMI, and filtered age (Women of reproductive age (15-49 years))
@@ -877,7 +868,7 @@ ggsave("Boxplot_counts_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6
 ```
 ![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_counts_ARG_load_sex_BMI_filtered_age.png)
 
-## 6.2 LOESS curve
+## 6.2 LOESS curve of ARG load, sex, BMI and filtered age 
 ```
 
 df <- Subset1 %>%
@@ -939,7 +930,7 @@ ggsave("Loess_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6, dpi = 3
 ```
 ![Loess of ARG load, sex, BMI and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Loess_ARG_load_sex_BMI_filtered_age.png)
 
-### 6.3 Linear model
+### 6.3 Linear model of ARG load, sex, BMI and filtered age 
 
 * Three way interaction model
 
@@ -952,9 +943,9 @@ lm_3way <- lm(
 summary(lm_3way)
 ```
 
-# Linear Model Key Results: ARG Load
+** Linear Model Key Results: ARG Load **
 
-| Term | Estimate | Std. Error | t value | Pr(>|t|) | Significance | Interpretation |
+| Term | Estimate | Std. Error | t value | Pr(>t) | Significance | Interpretation |
 |------|---------|-----------|--------|---------|:------------|----------------|
 | (Intercept) | 2.815 | 0.099 | 28.42 | <2e-16 | *** | Baseline ARG load for Female Underweight at age 0 |
 | BMI Normal (18.5–25) | -0.443 | 0.105 | -4.21 | 2.66e-05 | *** | Lower ARG load than Underweight females |
@@ -974,14 +965,9 @@ summary(lm_3way)
 * F-statistic: 23.57 on 15 and 2480 DF,  p-value: < 2.2e-16
 
 
-## Combination
+## Combination Boxplot of ARG load, sex, BMI, income groups, and filtered age 
 
 ```
-library(dplyr)
-library(ggplot2)
-library(ggsci)
-
-# Filter and prepare dataset
 colData_subset_clean <- Subset1 %>%
   filter(BMI_range_new != "Normal/Overweight (<30)",
          !is.na(log10_ARG_load),
@@ -1004,7 +990,6 @@ colData_subset_clean <- Subset1 %>%
                                                 "Upper middle income", "High income"))
   )
 
-# Compute counts
 counts <- colData_subset_clean %>%
   group_by(BMI_range_new, AgeGroup, sex, World_Bank_Income_Group) %>%
   summarise(N = n(), .groups = "drop") %>%
@@ -1052,7 +1037,7 @@ ggsave("Boxplot_ARG_load_sex_BMI_income_filtered_age.png", width = 8, height = 6
 ```
 ![Boxplot of ARG load, sex, BMI and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_ARG_load_sex_BMI_income_filtered_age.png)
 
-### Heatmap
+### Heatmap of ARG load, sex, BMI, income groups, and filtered age (RE DO!)
 
 ```r
 # Aggregate data for heatmap
