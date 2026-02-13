@@ -161,7 +161,7 @@ plot_df %>%
 * median_samples_per_subject:1 
 * subjects_with_repeats :0
 
-### 2.1.3Wilcoxon rank-sum test
+### 2.1.3 Wilcoxon rank-sum test
 ```r
 wilcox.test(ARG_div_shan ~ sex, data = plot_df)
 ```
@@ -193,7 +193,7 @@ cohen_d
 **Results:***
 * 0.4051338
 
-### Regression analysis of shannon index and sex
+### 2.1.5 Regression analysis of shannon index and sex
 
 ```r
 plot_df$sex <- factor(plot_df$sex, levels = c("Female", "Male"))
@@ -442,7 +442,7 @@ ggsave("Boxplot_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height =
 ![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_log10ARG_by_reproductive_sex_age_ready.png)
 
 
-# 4.2 Loess curve of ARG load, sex and filtered age 
+### 4.2 Loess curve of ARG load, sex and filtered age 
 ```
 Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
 Subset1$AgeGroup[Subset1$age_years == "" | Subset1$age_years == "NA"] <- NA
@@ -529,9 +529,6 @@ gam_model <- gam(
 summary(gam_model)
 
 ```
-
-### GAM Model Summary
-
 **Family:** gaussian  
 **Link function:** identity  
 **Formula:** `log10_ARG_load ~ sex + s(age_years, by = sex)`  
@@ -553,7 +550,7 @@ summary(gam_model)
 
 **Model fit:** Adjusted R² = 0.0637, Deviance explained = 6.69%, REML = 866.66, Scale est. = 0.08506  
 
-
+---
 
 ## 5. Analysis of ARG load, sex, income and filtered age (Women of reproductive age (15-49 years))
 
@@ -635,11 +632,82 @@ ggsave("Boxplot_counts_ARG_load_sex_income_filtered_age.png", width = 8, height 
 ```
 ![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
 
-
-### 5.2 LOESS of ARG load, sex, income, and filtered age 
+### 5.3 Linear models
 
 ```
-plot_df$sex <- factor(plot_df$sex, levels = c("Female", "Male"))
+# Additive
+lm_additive <- lm(log10_ARG_load ~ age_years + sex, data = plot_df)
+summary(lm_additive)
+
+# Interaction
+lm_interaction <- lm(log10_ARG_load ~ age_years * sex, data = plot_df)
+summary(lm_interaction)
+
+# Covariete
+lm_cov <- lm(log10_ARG_load ~ age_years * sex + World_Bank_Income_Group, data = plot_df)
+summary(lm_cov)
+
+```
+**Additive**
+| Term        | Estimate   | Std. Error | t value | p-value      |
+|------------|-----------:|-----------:|--------:|-------------|
+| (Intercept)| 2.5909485 | 0.0150759 | 171.861 | < 2e-16 *** |
+| age_years  | 0.0050173 | 0.0004902 | 10.235  | < 2e-16 *** |
+| sexMale    | -0.0702190| 0.0091225 | -7.697  | 1.72e-14 *** |
+
+**Model statistics:**  
+- Residual standard error = 0.2947 on 4191 DF  
+- Multiple R-squared = 0.03661, Adjusted R-squared = 0.03615  
+- F-statistic = 79.63 on 2 and 4191 DF, p-value < 2.2e-16
+
+
+**Interaction**
+
+| Term            | Estimate   | Std. Error | t value | p-value      |
+|-----------------|-----------:|-----------:|--------:|-------------|
+| (Intercept)     | 2.5435866 | 0.0199937 | 127.219 | < 2e-16 *** |
+| age_years       | 0.0067090 | 0.0006786 | 9.887   | < 2e-16 *** |
+| sexMale         | 0.0295811 | 0.0291830 | 1.014   | 0.310812    |
+| age_years:sexMale | -0.0035270 | 0.0009798 | -3.600 | 0.000322 *** |
+
+**Model statistics:**  
+- Residual standard error = 0.2942 on 4190 DF  
+- Multiple R-squared = 0.03958, Adjusted R-squared = 0.03889  
+- F-statistic = 57.56 on 3 and 4190 DF, p-value < 2.2e-16
+
+**Covariete**
+
+| Term                                      | Estimate   | Std. Error | t value | p-value     |
+|------------------------------------------|-----------:|-----------:|--------:|------------|
+| (Intercept)                               | 2.6776108 | 0.0428770 | 62.449  | < 2e-16 *** |
+| age_years                                 | 0.0056514 | 0.0006593 | 8.571   | < 2e-16 *** |
+| sexMale                                   | 0.0231541 | 0.0282596 | 0.819   | 0.412641    |
+| World_Bank_Income_GroupLower middle income | 0.1101279 | 0.0426455 | 2.582   | 0.009845 ** |
+| World_Bank_Income_GroupUpper middle income | 0.1847557 | 0.0443868 | 4.162   | 3.21e-05 ***|
+| World_Bank_Income_GroupHigh income       | -0.1261621| 0.0380131 | -3.319  | 0.000911 ***|
+| age_years:sexMale                         | -0.0034764| 0.0009485 | -3.665  | 0.000250 ***|
+
+**Model statistics:**  
+- Residual standard error = 0.2845 on 4187 degrees of freedom  
+- Multiple R-squared = 0.1029, Adjusted R-squared = 0.1016  
+- F-statistic = 80.01 on 6 and 4187 DF, p-value < 2.2e-16  
+
+
+
+
+### 5.4 LOESS of ARG load, sex, income, and filtered age 
+
+```
+
+plot_df <- Subset1 %>%
+  filter(!is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(age_years),
+         !is.na(World_Bank_Income_Group)) %>%
+  mutate(
+    AgeGroup = factor(AgeGroup, levels = age_levels),
+    sex = factor(sex, levels = c("Female", "Male"))
+  )
 
 # LOESS curves with individual points and faceted by income group
 ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex)) +
@@ -674,6 +742,62 @@ ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex))
 ggsave("LOESS_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dpi = 300)
 ```
 ![LOESS of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/LOESS_ARG_load_sex_income_filtered_age.png)
+
+### 5.5 GAM model
+```
+gam_income <- gam(
+  log10_ARG_load ~ 
+    sex +
+    World_Bank_Income_Group +
+    s(age_years, by = sex),
+  family = gaussian(),
+  data = plot_df,
+  method = "REML"
+)
+
+summary(gam_income)
+
+```
+
+# Generalized Additive Model Results: ARG Load
+
+## Model Information
+
+| Item | Value |
+|-----|------|
+| Family | gaussian |
+| Link function | identity |
+| Formula | `log10_ARG_load ~ sex + World_Bank_Income_Group + s(age_years, by = sex)` |
+
+---
+
+## Parametric Coefficients
+
+| Term | Estimate | Std. Error | t value | Pr(>|t|) | Significance |
+|-----|---------:|-----------:|--------:|---------:|:------------|
+| (Intercept) | 2.835366 | 0.037788 | 75.033 | < 2e-16 | *** |
+| sexMale | -0.071526 | 0.008878 | -8.057 | 1.01e-15 | *** |
+| Lower middle income | 0.113561 | 0.042316 | 2.684 | 0.00731 | ** |
+| Upper middle income | 0.183807 | 0.044000 | 4.177 | 3.01e-05 | *** |
+| High income | -0.123971 | 0.037794 | -3.280 | 0.00105 | ** |
+
+**Reference groups:**  
+- Sex: Female  
+- World Bank income group: Low income  
+
+**Significance codes:**  
+`***` p < 0.001, `**` p < 0.01, `*` p < 0.05, `.` p < 0.1
+
+---
+
+## Smooth Terms
+
+| Smooth term | edf | Ref.df | F | p-value | Significance |
+|------------|----:|-------:|--:|--------:|:------------|
+| s(age_years):sexFemale | 7.567 | 8.48 | 14.062 | < 2e-16 | *** |
+| s(age_years):sexMale | 8.102 | 8.78 | 9.3_
+
+
 
 
 ## 6. Analysis of ARG load,sex and, BMI, and filtered age (Women of reproductive age (15-49 years))
@@ -751,36 +875,48 @@ ggsave("Boxplot_counts_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6
 ```
 ![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_counts_ARG_load_sex_BMI_filtered_age.png)
 
-
-
-## 5.2 LOESS curve
+## 6.2 LOESS curve
 ```
-age_midpoints <- c(
-  "15–19" = 17,
-  "20–24" = 22,
-  "25–29" = 27,
-  "30–34" = 32,
-  "35–39" = 37,
-  "40–44" = 42,
-  "45–49" = 47
-)
 
-plot_df <- colData_subset_clean %>%
-  mutate(AgeNum = age_midpoints[as.character(AgeGroup)])
+df <- Subset1 %>%
+  filter(BMI_range_new != "Normal/Overweight (<30)",
+         !is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(age_years),
+         !is.na(BMI_range_new)) %>%
+  mutate(
+    sex = recode(sex,
+                 "female" = "Female",
+                 "male" = "Male"),
+    sex = factor(sex, levels = c("Female", "Male")),
+    BMI_range_new = factor(BMI_range_new,
+                           levels = c("Underweight (<18.5)",
+                                      "Normal (18.5-25)",
+                                      "Overweight (25-30)",
+                                      "Obese (>30)"))
+  )
 
-ggplot(plot_df, aes(x = AgeNum, y = log10_ARG_load, color = sex, fill = sex)) +
+ggplot(df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex)
+) +
+  geom_jitter(
+    width = 0.3,
+    height = 0,
+    alpha = 0.2,
+    size = 1.2,
+    color = "grey30"
+  ) +
   geom_smooth(
     method = "loess",
     se = TRUE,
     span = 0.7,
-    linewidth = 1.2,
-    alpha = 0.2
+    alpha = 0.2,
+    linewidth = 1.2
   ) +
-  facet_wrap(~BMI_range_new, scales = "free_x") +
   scale_color_npg() +
   scale_fill_npg() +
+  facet_wrap(~ BMI_range_new, scales = "free_x") +
   labs(
-    title = "LOESS Curves of ARG Load by Age, Sex, and BMI Range",
+    title = "LOESS Curve of ARG Load by Age, Sex, and BMI Category",
     x = "Age (years)",
     y = expression(log[10]*"(ARG load)"),
     color = "Sex",
@@ -788,24 +924,21 @@ ggplot(plot_df, aes(x = AgeNum, y = log10_ARG_load, color = sex, fill = sex)) +
   ) +
   theme_minimal(base_size = 13) +
   theme(
-    strip.background = element_rect(fill = "grey90", color = "black", size = 1),
+    strip.background = element_rect(fill = "grey90", color = "black", linewidth = 1),
     strip.text = element_text(face = "bold"),
-    panel.border = element_rect(color = "black", fill = NA, size = 0.8),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
     panel.spacing = unit(1.2, "lines"),
-    plot.title = element_text(face = "bold"),
-    legend.position = "right"
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
   )
 
 ggsave("Loess_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Loess of counts for ARG load, sex, BMI and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Loess_ARG_load_sex_BMI_filtered_age.png)
+![Loess of ARG load, sex, BMI and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Loess_ARG_load_sex_BMI_filtered_age.png)
 
 ### 5.3 Linear model
 
 * Three way interaction model
   
-```
 
-
-```
