@@ -504,7 +504,7 @@ lm_num <- lm(log10_ARG_load ~ age_years * sex, data = Subset1)
 summary(lm_num)
 ```
 # Linear Model Summary: log10(ARG load) ~ AgeNum * sex
-| Term | Estimate | Std. Error | t value | Pr(>|t|) | Significance |
+| Term | Estimate | Std. Error | t value | Pr(>t) | Significance |
 |-------------------|-----------|------------|---------|----------|--------------|
 | (Intercept) | 2.5328 | 0.01955 | 129.549 | < 2e-16 | *** |
 | age_years | 0.00710 | 0.000658 | 10.798 | < 2e-16 | *** |
@@ -513,13 +513,10 @@ summary(lm_num)
 
 Model statistics:
 
-Residual standard error: 0.2952 on 4440 df
-
-Multiple R-squared: 0.04155
-
-Adjusted R-squared: 0.0409
-
-F-statistic: 64.16 on 3 and 4440 DF, p-value: < 2.2e-16
+* Residual standard error: 0.2952 on 4440 df
+* Multiple R-squared: 0.04155
+* Adjusted R-squared: 0.0409
+* F-statistic: 64.16 on 3 and 4440 DF, p-value: < 2.2e-16
 
 ### 4.4 GAM model of of ARG load, sex and filtered age
 ```r
@@ -614,19 +611,14 @@ ggsave("Boxplot_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dp
 ```
 ![Boxplot of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_ARG_load_sex_income_filtered_age.png)
 
-### 5.2 Table for counts for 
+### 5.2 Table for counts for boxplot of ARG load, sex, income, and filtered age 
 ```r
-sex_age_income_counts <- plot_df %>%
-  group_by(World_Bank_Income_Group, AgeGroup, sex) %>%
-  summarise(N = n(), .groups = "drop") %>%
-  arrange(World_Bank_Income_Group, AgeGroup, sex)
-
-sex_age_income_counts <- plot_df %>%
-  group_by(World_Bank_Income_Group, AgeGroup, sex) %>%
-  summarise(N = n(), .groups = "drop")
-
 ggplot(sex_age_income_counts, aes(x = AgeGroup, y = N, fill = sex)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
+  geom_text(aes(label = N),
+            position = position_dodge(width = 0.8),
+            vjust = -0.5,  # slightly above the bar
+            size = 3) +
   scale_fill_npg() +
   facet_wrap(~World_Bank_Income_Group, scales = "free_x") +
   labs(title = "Sample Counts by Age, Sex, and Income Group",
@@ -642,6 +634,46 @@ ggsave("Boxplot_counts_ARG_load_sex_income_filtered_age.png", width = 8, height 
 
 ```
 ![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
+
+
+### 5.2 LOESS of ARG load, sex, income, and filtered age 
+
+```
+plot_df$sex <- factor(plot_df$sex, levels = c("Female", "Male"))
+
+# LOESS curves with individual points and faceted by income group
+ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex)) +
+  geom_jitter(width = 0.3, height = 0, alpha = 0.2, size = 1.2, color = "grey30") +  # show points
+  geom_smooth(
+    method = "loess",
+    se = TRUE,
+    span = 0.7,
+    alpha = 0.2,
+    linewidth = 1.2
+  ) +
+  scale_color_npg() +
+  scale_fill_npg() +
+  facet_wrap(~World_Bank_Income_Group, scales = "free_x") +
+  labs(
+    title = "LOESS Curve of ARG Load by Age (continuous), Sex, and Income Group",
+    x = "Age (years)",
+    y = expression(log[10]*"(ARG load)"),
+    color = "Sex",
+    fill = "Sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.background = element_rect(fill = "grey90", color = "black", size = 1),
+    strip.text = element_text(face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.8),
+    panel.spacing = unit(1.2, "lines"),
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
+  )
+
+ggsave("LOESS_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dpi = 300)
+```
+![LOESS of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
 
 
 ## 6. Analysis of ARG load,sex and, BMI, and filtered age (Women of reproductive age (15-49 years))
