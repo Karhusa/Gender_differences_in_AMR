@@ -72,7 +72,7 @@ Sex:
 
 ## 2.1 Shannon Diversity by sex and filtered age
 
-## Boxplot of Shannon Diversity by sex in filtered age
+## Boxplot of Shannon Diversity by sex and filtered age
 
 ```r
 
@@ -197,28 +197,17 @@ summary(lm_sex)
 ```
 **Results:**
 
+Coefficients
 
-Residuals:
-     Min       1Q   Median 
--1.80947 -0.32482  0.04131 
-      3Q      Max 
- 0.35574  1.60629 
+| Term | Estimate | Std. Error | t value | Pr(>|t|) | Significance |
+|-------------|---------:|-----------:|--------:|---------:|:------------|
+| (Intercept) | 1.94464 | 0.01061 | 183.23 | < 2e-16 | *** |
+| sexMale | -0.20809 | 0.01543 | -13.48 | < 2e-16 | *** |
 
-Coefficients:
-            Estimate Std. Error
-(Intercept)  1.94464    0.01061
-sexMale     -0.20809    0.01543
-            t value Pr(>|t|)    
-(Intercept)  183.23   <2e-16 ***
-sexMale      -13.48   <2e-16 ***
----
-Signif. codes:  
-  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’
-  0.05 ‘.’ 0.1 ‘ ’ 1
 
-Residual standard error: 0.5136 on 4442 degrees of freedom
-Multiple R-squared:  0.03932,	Adjusted R-squared:  0.03911 
-F-statistic: 181.8 on 1 and 4442 DF,  p-value: < 2.2e-16
+* Residual standard error: 0.5136 on 4442 degrees of freedom
+* Multiple R-squared:  0.03932,	Adjusted R-squared:  0.03911 
+* F-statistic: 181.8 on 1 and 4442 DF,  p-value: < 2.2e-16
 
 
 ## 6. Ananlyses of ARGlog10 sex and income
@@ -281,7 +270,7 @@ ggplot(plot_df, aes(x = x_group, y = log10_ARG_load, fill = sex)) +
 ggsave("Boxplot_ARG_Load_Sex_Income.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_ARG_Load_Sex_Income.png)
+![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_ARG_Load_Sex_Income.png)
 
 
 ## 6.1 Regression analysis of ARGlog10 index, income and sex
@@ -516,7 +505,7 @@ ggplot(plot_df, aes(x = AgeNum, y = log10_ARG_load, color = sex_label, fill = se
 
 ggsave("Loess_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 ```
-![Loess of ARG load with sex and filtered age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Loess_log10ARG_by_reproductive_sex_age_ready.png)
+![Loess of ARG load with sex and filtered age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Loess_log10ARG_by_reproductive_sex_age_ready.png)
 
 ### 4.2 Linear model of of ARG load, sex and filtered age
 ```r
@@ -585,7 +574,7 @@ ggplot(plot_df, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) +
 
 ggsave("Boxplot_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dpi = 300)
 ```
-![Boxplot of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_ARG_load_sex_income_filtered_age.png)
+![Boxplot of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/ResultsARG_filtered_Age_Analyses/Boxplot_ARG_load_sex_income_filtered_age.png)
 
 ### 5.2 Table for counts for 
 ```r
