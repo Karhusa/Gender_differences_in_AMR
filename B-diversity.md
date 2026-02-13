@@ -59,13 +59,13 @@ head(row_sums)
 
 
 ```
-# summary(row_sums)
-#     Min.   1st Qu.    Median Mean   3rd Qu.      Max. 
-#    50.02    316.68    509.45 713.97    827.73 115515.58 
+summary(row_sums)
+Min.   1st Qu.    Median Mean   3rd Qu.      Max. 
+50.02    316.68    509.45 713.97    827.73 115515.58 
      
-# head(row_sums)
-# DRR070899 DRR070900 DRR070901 DRR070902 DRR070903 DRR070904 
-#  760.1088  581.5741  600.2330  647.9989  567.5491  767.9853 
+head(row_sums)
+DRR070899 DRR070900 DRR070901 DRR070902 DRR070903 DRR070904 
+760.1088  581.5741  600.2330  647.9989  567.5491  767.9853 
 
 
 ## 2.6 Convert counts to relative abundance per sample
