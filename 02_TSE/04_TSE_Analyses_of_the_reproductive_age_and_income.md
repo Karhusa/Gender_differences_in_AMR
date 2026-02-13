@@ -199,7 +199,7 @@ summary(lm_sex)
 
 Coefficients
 
-| Term | Estimate | Std. Error | t value | Pr(>|t|) | Significance |
+| Term | Estimate | Std. Error | t value | Pr(>t) | Significance |
 |-------------|---------:|-----------:|--------:|---------:|:------------|
 | (Intercept) | 1.94464 | 0.01061 | 183.23 | < 2e-16 | *** |
 | sexMale | -0.20809 | 0.01543 | -13.48 | < 2e-16 | *** |
