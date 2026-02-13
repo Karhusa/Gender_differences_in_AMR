@@ -520,9 +520,9 @@ ggsave("Loess_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height = 6
 ```
 
 
-## 5. Analysis of ARG load,sex and, income and filtered age (Women of reproductive age (15-49 years))
+## 5. Analysis of ARG load, sex, income and filtered age (Women of reproductive age (15-49 years))
 
-### 5.1 Boxplot of ARG load, sex, income and filtered age 
+### 5.1 Boxplot of ARG load, sex, income, and filtered age 
 
 ```r
 Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
@@ -574,7 +574,7 @@ ggplot(plot_df, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) +
 
 ggsave("Boxplot_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dpi = 300)
 ```
-![Boxplot of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_ARG_load_sex_income_filtered_age.png)
+![Boxplot of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_ARG_load_sex_income_filtered_age.png)
 
 ### 5.2 Table for counts for 
 ```r
@@ -603,7 +603,7 @@ ggplot(sex_age_income_counts, aes(x = AgeGroup, y = N, fill = sex)) +
 ggsave("Boxplot_counts_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
+![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
 
 
 ## 6. Analysis of ARG load,sex and, BMI, and filtered age (Women of reproductive age (15-49 years))
