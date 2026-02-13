@@ -608,6 +608,8 @@ ggsave("Boxplot_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dp
 ```
 ![Boxplot of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_ARG_load_sex_income_filtered_age.png)
 
+
+
 ### 5.2 Table for counts for boxplot of ARG load, sex, income, and filtered age 
 ```r
 ggplot(sex_age_income_counts, aes(x = AgeGroup, y = N, fill = sex)) +
@@ -937,8 +939,296 @@ ggsave("Loess_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6, dpi = 3
 ```
 ![Loess of ARG load, sex, BMI and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Loess_ARG_load_sex_BMI_filtered_age.png)
 
-### 5.3 Linear model
+### 6.3 Linear model
 
 * Three way interaction model
-  
 
+```
+lm_3way <- lm(
+  log10_ARG_load ~ age_years * sex * BMI_range_new,
+  data = df
+)
+
+summary(lm_3way)
+```
+
+# Linear Model Key Results: ARG Load
+
+| Term | Estimate | Std. Error | t value | Pr(>|t|) | Significance | Interpretation |
+|------|---------|-----------|--------|---------|:------------|----------------|
+| (Intercept) | 2.815 | 0.099 | 28.42 | <2e-16 | *** | Baseline ARG load for Female Underweight at age 0 |
+| BMI Normal (18.5–25) | -0.443 | 0.105 | -4.21 | 2.66e-05 | *** | Lower ARG load than Underweight females |
+| BMI Overweight (25–30) | -0.366 | 0.144 | -2.54 | 0.011 | * | Lower ARG load than Underweight females |
+| BMI Obese (>30) | -0.364 | 0.109 | -3.35 | 0.00081 | *** | Lower ARG load than Underweight females |
+| sexMale | -0.239 | 0.171 | -1.40 | 0.162 | | Male vs Female at age 0 (NS) |
+| age_years | 0.00190 | 0.00342 | 0.557 | 0.578 | | Age effect for Female Underweight (NS) |
+| age:sexMale | 0.0139 | 0.00585 | 2.38 | 0.018 | * | Age slope is steeper for Males vs Females (Underweight) |
+| age:BMI Normal | 0.0103 | 0.00363 | 2.85 | 0.004 | ** | Age slope slightly higher for Normal BMI (Females) |
+| age:BMI Obese | 0.00852 | 0.00377 | 2.26 | 0.024 | * | Age slope higher for Obese (Females) |
+| age:sexMale:BMI Obese | -0.0274 | 0.00624 | -4.39 | 1.20e-05 | *** | Age slope reduced for Male Obese (three-way interaction) |
+| age:sexMale:BMI Normal | -0.0154 | 0.00613 | -2.51 | 0.012 | * | Age slope reduced for Male Normal |
+| age:sexMale:BMI Overweight | -0.0142 | 0.00686 | -2.07 | 0.039 | * | Age slope reduced for Male Overweight |
+
+* Residual standard error: 0.2915 on 2480 degrees of freedom
+* Multiple R-squared:  0.1248,	Adjusted R-squared:  0.1195 
+* F-statistic: 23.57 on 15 and 2480 DF,  p-value: < 2.2e-16
+
+
+## Combination
+
+```
+library(dplyr)
+library(ggplot2)
+library(ggsci)
+
+# Filter and prepare dataset
+colData_subset_clean <- Subset1 %>%
+  filter(BMI_range_new != "Normal/Overweight (<30)",
+         !is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(AgeGroup),
+         !is.na(BMI_range_new),
+         !is.na(World_Bank_Income_Group)) %>%
+  mutate(
+    AgeGroup = factor(AgeGroup, levels = c("15–19", "20–24", "25–29", "30–34",
+                                           "35–39", "40–44", "45–49")),
+    sex = recode(sex, "female" = "Female", "male" = "Male"),
+    sex = factor(sex, levels = c("Female", "Male")),
+    BMI_range_new = factor(BMI_range_new,
+                           levels = c("Underweight (<18.5)",
+                                      "Normal (18.5-25)",
+                                      "Overweight (25-30)",
+                                      "Obese (>30)")),
+    World_Bank_Income_Group = factor(World_Bank_Income_Group,
+                                     levels = c("Low income", "Lower middle income",
+                                                "Upper middle income", "High income"))
+  )
+
+# Compute counts
+counts <- colData_subset_clean %>%
+  group_by(BMI_range_new, AgeGroup, sex, World_Bank_Income_Group) %>%
+  summarise(N = n(), .groups = "drop") %>%
+  mutate(
+    y_pos = max(colData_subset_clean$log10_ARG_load, na.rm = TRUE) + 
+            ifelse(sex == "Female", 0.05, 0.1)
+  )
+
+ggplot(colData_subset_clean, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) +
+  geom_boxplot(position = position_dodge(width = 0.8),
+               width = 0.7,
+               outlier.shape = NA,
+               alpha = 0.8) +
+  # Add counts
+  geom_text(data = counts,
+            aes(x = AgeGroup, y = y_pos, label = N, color = sex),
+            position = position_dodge(width = 0.8),
+            inherit.aes = FALSE,
+            size = 3,
+            fontface = "bold") +
+  facet_grid(BMI_range_new ~ World_Bank_Income_Group, scales = "free_x") +
+  scale_fill_npg() +
+  scale_color_npg() +
+  labs(
+    title = "ARG Load by Age, Sex, BMI, and Income",
+    x = "Age Group (years)",
+    y = expression(log[10]*"(ARG load)"),
+    fill = "Sex",
+    color = "Sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.background = element_rect(fill = "grey90", color = "black", size = 1),
+    strip.text = element_text(face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.8),
+    panel.spacing = unit(1.2, "lines"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
+  )
+
+
+ggsave("Boxplot_ARG_load_sex_BMI_income_filtered_age.png", width = 8, height = 6, dpi = 300)
+
+```
+![Boxplot of ARG load, sex, BMI and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_ARG_load_sex_BMI_income_filtered_age.png)
+
+### Heatmap
+
+```r
+# Aggregate data for heatmap
+agg_heat <- colData_subset_clean %>%
+  group_by(AgeGroup, BMI_range_new, sex, World_Bank_Income_Group) %>%
+  summarise(mean_ARG = mean(log10_ARG_load, na.rm = TRUE), .groups = "drop")
+
+# Plot heatmap with continuous NPG-like colors
+
+# Use npg discrete colors as gradient endpoints
+npg_colors <- c("#E64B35", "#4DBBD5")  # red and blue from npg palette
+
+ggplot(agg_heat, aes(x = AgeGroup, y = BMI_range_new, fill = mean_ARG)) +
+  geom_tile(color = "white") +
+  # Add numeric labels on tiles
+  geom_text(aes(label = round(mean_ARG, 2)), size = 3, fontface = "bold") +
+  # Facet by Sex and Income
+  facet_grid(sex ~ World_Bank_Income_Group) +
+  # Continuous gradient using NPG-like colors
+  scale_fill_gradient(low = npg_colors[2], high = npg_colors[1]) +
+  labs(
+    title = "ARG Load by Age, Sex, BMI, and Income",
+    x = "Age Group (years)",
+    y = "BMI Range",
+    fill = expression(log[10]*"(ARG load)")
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.background = element_rect(fill = "grey90", color = "black"),
+    strip.text = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.spacing = unit(1, "lines")
+  )
+
+ggsave("Heatmap_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dpi = 300)
+```
+![Heatmap of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Heatmap_ARG_load_sex_income_filtered_age.png)
+
+
+
+## 6. Analysis of ARG load,sex and, BMI, and filtered age (Women of reproductive age (15-49 years))
+
+### 6.1 Boxplot of ARG load, sex, Antibiotics and filtered age 
+
+```
+
+Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
+Subset1$AgeGroup[Subset1$AgeGroup == "" | Subset1$AgeGroup == "NA"] <- NA
+Subset1$antibiotics_used[Subset1$antibiotics_used == "" | Subset1$antibiotics_used == "NA"] <- NA
+
+Subset1$sex <- recode(Subset1$sex,
+                      "female" = "Female",
+                      "male"   = "Male")
+
+plot_df <- Subset1 %>%
+  filter(!is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(AgeGroup),
+         !is.na(antibiotics_used)) %>%
+  mutate(sex = factor(sex, levels = c("Female", "Male")),
+              factor(AgeGroup, levels = c("15–19", "20–24", "25–29", "30–34",
+                                           "35–39", "40–44", "45–49")),)
+
+counts <- colData_subset_clean %>%
+  group_by(BMI_range_new, AgeGroup, sex) %>%
+  summarise(N = n(), .groups = "drop") %>%
+  # stagger the y-position of counts by sex
+  mutate(
+    y_pos = max(colData_subset_clean$log10_ARG_load, na.rm = TRUE) + 
+            ifelse(sex == "Female", 0.05, 0.1) # Female lower, Male higher
+  )
+
+ggplot(colData_subset_clean, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) +
+  geom_boxplot(position = position_dodge(width = 0.8),
+               width = 0.7,
+               outlier.shape = NA,
+               alpha = 0.8) +
+  facet_wrap(~BMI_range_new, scales = "free_x") +
+  scale_fill_npg() +
+  # Add counts above each box, colored by sex
+  geom_text(
+    data = counts,
+    aes(x = AgeGroup, y = y_pos, label = N, color = sex),
+    position = position_dodge(width = 0.8),
+    inherit.aes = FALSE,
+    size = 3,
+    fontface = "bold"
+  ) +
+  scale_color_npg() + # match text color to Sex
+  labs(
+    title = "ARG Load (log10) by AgeGroup and Sex\nFaceted by BMI Range",
+    x = "Age Group (years)",
+    y = expression(log[10]*"(ARG load)"),
+    fill = "Sex",
+    color = "Sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.background = element_rect(fill = "grey90", color = "black", size = 1),
+    strip.text = element_text(face = "bold"),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.8),
+    panel.spacing = unit(1.2, "lines"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
+  )
+
+
+ggsave("Boxplot_counts_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6, dpi = 300)
+
+```
+![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_counts_ARG_load_sex_BMI_filtered_age.png)
+
+
+
+
+## 7. Analysis of ARG load, sex, UTI, and filtered age (Women of reproductive age (15-49 years))
+
+### 7.1 Boxplot of ARG load, sex, UTI, and filtered age 
+
+```
+box_df <- Subset1 %>%
+  filter(!is.na(log10_ARG_load),
+         !is.na(AgeGroup),
+         !is.na(UTI_history),
+         !is.na(sex)) %>%
+  mutate(
+    UTI_history = factor(UTI_history, levels = c("No", "Yes")),
+    AgeGroup = factor(AgeGroup, levels = c("15–19", "20–24", "25–29", "30–34",
+                                           "35–39", "40–44", "45–49")),
+    sex = factor(sex, levels = c("Female", "Male"))
+  )
+
+counts <- box_df %>%
+  group_by(AgeGroup, UTI_history, sex) %>%
+  summarise(N = n(), .groups = "drop") %>%
+  mutate(
+    y_pos = max(box_df$log10_ARG_load, na.rm = TRUE) + 0.1
+  )
+
+custom_fill_colors <- c("No" = "#332288", 
+                        "Yes" = "#D55E00")
+custom_text_colors <- custom_fill_colors  # same for labels
+
+ggplot(box_df, aes(x = AgeGroup, y = log10_ARG_load, fill = UTI_history)) +
+  geom_boxplot(position = position_dodge(width = 0.8),
+               width = 0.7,
+               outlier.shape = NA,
+               alpha = 0.8) +
+  geom_text(data = counts,
+            aes(x = AgeGroup, y = y_pos, label = N, color = UTI_history, group = sex),
+            position = position_dodge2(width = 0.8, preserve ="single"),
+            inherit.aes = FALSE,
+            size = 3,
+            fontface = "bold") +
+  facet_wrap(~sex) +
+  scale_fill_manual(values = custom_fill_colors) +
+  scale_color_manual(values = custom_text_colors) +
+  labs(
+    title = "ARG Load (log10) by Age, UTI History, and Sex",
+    x = "Age Group (years)",
+    y = expression(log[10]*"(ARG load)"),
+    fill = "UTI History",
+    color = "UTI History"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.background = element_rect(fill = "grey90", color = "black"),
+    strip.text = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right",
+    plot.title = element_text(face = "bold"),
+    panel.spacing = unit(1, "lines")
+  )
+
+ggsave("Boxplot_counts_ARG_load_sex_UTI_filtered_age.png", width = 8, height = 6, dpi = 300)
+
+```
+![Boxplot of counts for ARG load, sex, UTI, and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_counts_ARG_load_sex_UTI_filtered_age.png)
