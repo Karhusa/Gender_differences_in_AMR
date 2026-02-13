@@ -8,6 +8,7 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(ggsci)
+library(mgcv)
 ```
 ---
 ### 1.2 Load TSE
@@ -32,16 +33,21 @@ Subset1 <- colData_df %>%
     UTI_history
   ) %>%
   filter(!is.na(age_years)) %>%
-  filter(age_years >= 15 & age_years <= 49) %>%   # only ages 15–49
+  filter(age_years >= 15 & age_years <= 49) %>%
+  filter(!is.na(log10_ARG_load), !is.na(sex)) %>%
   mutate(
-    # Create 5-year age groups
-    AgeGroup = cut(age_years,
-                   breaks = seq(15, 50, by = 5),   # 15-19, 20-24, ..., 45-49
-                   right = FALSE,                  # include left, exclude right
-                   labels = paste(seq(15, 45, by = 5),
-                                  seq(19, 49, by = 5),
-                                  sep = "–"))
-)
+    # Keep sex as factor
+    sex = recode(sex, "female" = "Female", "male" = "Male"),
+    sex = factor(sex, levels = c("Female", "Male")),
+    
+    # Create 5-year AgeGroup for categorical plots
+    AgeGroup = cut(
+      age_years,
+      breaks = seq(15, 50, by = 5),
+      right = FALSE,
+      labels = paste(seq(15, 45, by = 5), seq(19, 49, by = 5), sep = "–")
+    )
+  )
 
 ```
 ### 1.4. Inspect the values
@@ -390,9 +396,10 @@ plot_df <- Subset1 %>%
 
 counts <- plot_df %>%
   group_by(AgeGroup, sex) %>%
-  summarise(N = n(), .groups = "drop") %>%
-  mutate(
-    y_pos = max(AgeGroup, na.rm = TRUE) + 0.15,
+  summarise(
+    N = n(),
+    y_pos = max(log10_ARG_load, na.rm = TRUE) + 0.15,
+    .groups = "drop"
   )
 
 ggplot(plot_df, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) +
@@ -438,36 +445,21 @@ ggsave("Boxplot_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height =
 # 4.2 Loess curve of ARG load, sex and filtered age 
 ```
 Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
-Subset1$AgeGroup[Subset1$AgeGroup == "" | Subset1$AgeGroup == "NA"] <- NA
+Subset1$AgeGroup[Subset1$age_years == "" | Subset1$age_years == "NA"] <- NA
 
 Subset1$sex <- recode(Subset1$sex,
                       "female" = "Female",
                       "male"   = "Male")
-age_levels <- c("15–19", "20–24", "25–29", "30–34", "35–39", "40–44", "45–49")
 
 plot_df <- Subset1 %>%
   filter(
     !is.na(log10_ARG_load),
     !is.na(sex),
-    !is.na(AgeGroup)
+    !is.na(age_years)
   ) %>%
   mutate(
-    AgeGroup = factor(AgeGroup, levels = age_levels),
     sex = factor(sex, levels = c("Female", "Male"))
   )
-
-age_midpoints <- c(
-  "15–19" = 17,
-  "20–24" = 22,
-  "25–29" = 27,
-  "30–34" = 32,
-  "35–39" = 37,
-  "40–44" = 42,
-  "45–49" = 47
-)
-
-plot_df <- plot_df %>%
-  mutate(AgeNum = age_midpoints[as.character(AgeGroup)])
 
 sex_counts <- plot_df %>%
   group_by(sex) %>%
@@ -477,8 +469,8 @@ sex_counts <- plot_df %>%
 plot_df <- plot_df %>%
   mutate(sex_label = factor(sex, levels = sex_counts$sex, labels = sex_counts$label))
 
-# --- Plot LOESS curves only ---
-ggplot(plot_df, aes(x = AgeNum, y = log10_ARG_load, color = sex_label, fill = sex_label)) +
+# --- Plot LOESS curves using continuous age_years ---
+ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex_label, fill = sex_label)) +
   geom_smooth(
     method = "loess",
     se = TRUE,
@@ -501,21 +493,69 @@ ggplot(plot_df, aes(x = AgeNum, y = log10_ARG_load, color = sex_label, fill = se
     plot.title = element_text(face = "bold")
   )
 
+
 ggsave("Loess_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 ```
 ![Loess of ARG load with sex and filtered age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Loess_log10ARG_by_reproductive_sex_age_ready.png)
 
 ### 4.3 Linear model of of ARG load, sex and filtered age
 ```r
-
-
+lm_num <- lm(log10_ARG_load ~ age_years * sex, data = Subset1)
+summary(lm_num)
 ```
+# Linear Model Summary: log10(ARG load) ~ AgeNum * sex
+| Term | Estimate | Std. Error | t value | Pr(>|t|) | Significance |
+|-------------------|-----------|------------|---------|----------|--------------|
+| (Intercept) | 2.5328 | 0.01955 | 129.549 | < 2e-16 | *** |
+| age_years | 0.00710 | 0.000658 | 10.798 | < 2e-16 | *** |
+| sexMale | 0.03043 | 0.02826 | 1.077 | 0.282 | |
+| age_years:sexMale | -0.00319 | 0.000941 | -3.387 | 0.000711 | *** |
+
+Model statistics:
+
+Residual standard error: 0.2952 on 4440 df
+
+Multiple R-squared: 0.04155
+
+Adjusted R-squared: 0.0409
+
+F-statistic: 64.16 on 3 and 4440 DF, p-value: < 2.2e-16
 
 ### 4.4 GAM model of of ARG load, sex and filtered age
 ```r
+gam_model <- gam(
+  log10_ARG_load ~ sex + s(age_years, by = sex),
+  data = plot_df,
+  method = "REML"
+)
 
+summary(gam_model)
 
 ```
+
+### GAM Model Summary
+
+**Family:** gaussian  
+**Link function:** identity  
+**Formula:** `log10_ARG_load ~ sex + s(age_years, by = sex)`  
+**Sample size:** 4,444  
+
+#### Parametric Coefficients
+
+| Term        | Estimate | Std. Error | t value | p-value       |
+|------------ |---------:|-----------:|--------:|---------------|
+| (Intercept) | 2.736069 | 0.006116   | 447.33  | < 2e-16 ***   |
+| sexMale     | -0.058478 | 0.008915  | -6.56   | 6.01e-11 ***  |
+
+#### Smooth Terms (Approximate Significance)
+
+| Term                     | edf   | Ref.df | F value | p-value     |
+|-------------------------- |------:|-------:|--------:|------------|
+| s(age_years):sexFemale    | 6.307 | 7.429  | 19.61   | < 2e-16 *** |
+| s(age_years):sexMale      | 8.111 | 8.762  | 12.13   | < 2e-16 *** |
+
+**Model fit:** Adjusted R² = 0.0637, Deviance explained = 6.69%, REML = 866.66, Scale est. = 0.08506  
+
 
 
 ## 5. Analysis of ARG load, sex, income and filtered age (Women of reproductive age (15-49 years))
