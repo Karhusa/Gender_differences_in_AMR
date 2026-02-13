@@ -965,7 +965,7 @@ summary(lm_3way)
 * F-statistic: 23.57 on 15 and 2480 DF,  p-value: < 2.2e-16
 
 
-## Combination Boxplot of ARG load, sex, BMI, income groups, and filtered age 
+## 6.4 Combination Boxplot of ARG load, sex, BMI, income groups, and filtered age 
 
 ```
 colData_subset_clean <- Subset1 %>%
@@ -1035,7 +1035,7 @@ ggplot(colData_subset_clean, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) 
 ggsave("Boxplot_ARG_load_sex_BMI_income_filtered_age.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Boxplot of ARG load, sex, BMI and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_ARG_load_sex_BMI_income_filtered_age.png)
+![Boxplot of ARG load, sex, BMI and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_ARG_load_sex_BMI_income_filtered_age.png)
 
 ### Heatmap of ARG load, sex, BMI, income groups, and filtered age (RE DO!)
 
