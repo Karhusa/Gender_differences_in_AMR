@@ -673,7 +673,7 @@ ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex))
 
 ggsave("LOESS_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dpi = 300)
 ```
-![LOESS of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
+![LOESS of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/LOESS_ARG_load_sex_income_filtered_age.png.png)
 
 
 ## 6. Analysis of ARG load,sex and, BMI, and filtered age (Women of reproductive age (15-49 years))
