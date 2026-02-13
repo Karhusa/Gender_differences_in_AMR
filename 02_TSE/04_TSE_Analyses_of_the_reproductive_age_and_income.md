@@ -270,7 +270,7 @@ ggplot(plot_df, aes(x = x_group, y = log10_ARG_load, fill = sex)) +
 ggsave("Boxplot_ARG_Load_Sex_Income.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_ARG_Load_Sex_Income.png)
+![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_ARG_Load_Sex_Income.png)
 
 
 ## 6.1 Regression analysis of ARGlog10 index, income and sex
@@ -434,7 +434,7 @@ ggplot(plot_df, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) +
 
 ggsave("Boxplot_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 ```
-![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_log10ARG_by_reproductive_sex_age_ready.png)
+![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_log10ARG_by_reproductive_sex_age_ready.png)
 
 
 # 4.2 Loess curve of ARG load, sex and filtered age 
@@ -574,7 +574,7 @@ ggplot(plot_df, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) +
 
 ggsave("Boxplot_ARG_load_sex_income_filtered_age.png", width = 8, height = 6, dpi = 300)
 ```
-![Boxplot of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/ResultsARG_filtered_Age_Analyses/Boxplot_ARG_load_sex_income_filtered_age.png)
+![Boxplot of ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_ARG_load_sex_income_filtered_age.png)
 
 ### 5.2 Table for counts for 
 ```r
@@ -679,7 +679,7 @@ ggplot(colData_subset_clean, aes(x = AgeGroup, y = log10_ARG_load, fill = sex)) 
 ggsave("Boxplot_counts_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6, dpi = 300)
 
 ```
-![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
+![Boxplot of counts for ARG load, sex, income and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Boxplot_counts_ARG_load_sex_income_filtered_age.png)
 
 
 
