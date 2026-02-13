@@ -17,40 +17,68 @@ counts <- assays(TSE)[[1]]  # usually the first assay
 dim(counts)
 head(counts[, 1:5])
 
-genes <- rownames(TSE_object)  # often stored here
-head(genes)
-
 rowData(TSE_object)
 ```
-Create the matrix:
+## 2.3 Create the matrix:
 
 * samples : rows
 * genes : columns
 
 ```r
+# 1. Get counts
+counts <- assays(TSE)[[1]]   # 1406 genes x 60996 columns
+
+# 2. Get sample names (accessions)
+sample_ids <- colData(TSE)$acc
+
+# 3. Create new matrix: rows = samples, columns = genes
+counts_matrix <- t(counts)          # transpose: now 60996 x 1406
+rownames(counts_matrix) <- sample_ids
+colnames(counts_matrix) <- rownames(TSE)
+
+# 4. Sanity check
+dim(counts_matrix)
+head(counts_matrix[, 1:5])
+head(rownames(counts_matrix))
+```
+
+## 2.4 Save the matrix
+
+```
+saveRDS(counts_matrix, file = "counts_matrix.rds")
+
+#counts_matrix <- readRDS("counts_matrix.rds")
+
+```
+## 2.5 Check if values are as relative abundances
+```r
+row_sums <- rowSums(counts_matrix)
+
+summary(row_sums)
+head(row_sums)
 
 
 ```
+# summary(row_sums)
+#     Min.   1st Qu.    Median Mean   3rd Qu.      Max. 
+#    50.02    316.68    509.45 713.97    827.73 115515.58 
+     
+# head(row_sums)
+# DRR070899 DRR070900 DRR070901 DRR070902 DRR070903 DRR070904 
+#  760.1088  581.5741  600.2330  647.9989  567.5491  767.9853 
 
-If your current matrix has rows = genes and columns = samples , transpose it:
+
+## 2.6 Convert counts to relative abundance per sample
+
+# Reserve at least 16 GB
 
 ```r
-# counts: rows = genes, columns = samples
-counts_matrix <- assays(TSE_object)[[1]]   # get the first assay
-counts_matrix <- t(counts_matrix)         # transpose: now rows = samples, columns = genes
-```
-calculate the distance matrix
-
-remember abundances
-
-```r
-# Convert counts to relative abundance per sample
 counts_rel <- decostand(counts_matrix, method = "total") 
 
 
 ´´´
 
-
+calculate the distance matrix
 remember to sort out NA values (=zero counts)
 
 ```r
