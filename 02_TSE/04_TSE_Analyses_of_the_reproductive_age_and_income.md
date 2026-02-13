@@ -72,7 +72,7 @@ Sex:
 
 ## 2.1 Shannon Diversity by sex and filtered age
 
-## Boxplot of Shannon Diversity by sex and filtered age
+### 2.1.1 Boxplot of Shannon Diversity by sex and filtered age
 
 ```r
 
@@ -136,7 +136,7 @@ ggsave("Boxplot_Shannon_diversity_by_sex_and_filtered_age.png", width = 8, heigh
 ```
 ![Boxplot of Shannon_index with sex and filtered age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Boxplot_Shannon_diversity_by_sex_and_filtered_age.png)
 
-### Do we have repeated samples?
+### 2.1.2 Do we have repeated samples?
 
 ```r
 plot_df %>%
@@ -155,7 +155,7 @@ plot_df %>%
 * median_samples_per_subject:1 
 * subjects_with_repeats :0
 
-### Wilcoxon rank-sum test
+### 2.1.3Wilcoxon rank-sum test
 ```r
 wilcox.test(ARG_div_shan ~ sex, data = plot_df)
 ```
@@ -164,7 +164,7 @@ wilcox.test(ARG_div_shan ~ sex, data = plot_df)
 * W = 2996053
 * p-value < 2.2e-16
 
-### Cound Cohens d
+### 2.1.4 Cound Cohens d
 ```r
 group1 <- plot_df$ARG_div_shan[plot_df$sex == "Female"]
 group2 <- plot_df$ARG_div_shan[plot_df$sex == "Male"]
@@ -210,9 +210,9 @@ Coefficients
 * F-statistic: 181.8 on 1 and 4442 DF,  p-value: < 2.2e-16
 
 
-## 6. Ananlyses of ARGlog10 sex and income
+## 3. Ananlyses of ARGlog10 sex and income
 
-### 6.1 Boxbot of ARGlog10 sex and income
+### 3.1 Boxbot of ARGlog10 sex and income
 ```r
 Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
 Subset1$World_Bank_Income_Group[Subset1$World_Bank_Income_Group == "" | Subset1$World_Bank_Income_Group == "NA"] <- NA
@@ -272,9 +272,7 @@ ggsave("Boxplot_ARG_Load_Sex_Income.png", width = 8, height = 6, dpi = 300)
 ```
 ![Boxplot of ARG load with sex and income](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_Income_analyses/Boxplot_ARG_Load_Sex_Income.png)
 
-
-## 6.1 Regression analysis of ARGlog10 index, income and sex
-
+## 3.2 Regression analysis of ARGlog10 index, income and sex
 ```r
 
 plot_df <- plot_df %>%
@@ -507,13 +505,13 @@ ggsave("Loess_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height = 6
 ```
 ![Loess of ARG load with sex and filtered age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_filtered_Age_Analyses/Loess_log10ARG_by_reproductive_sex_age_ready.png)
 
-### 4.2 Linear model of of ARG load, sex and filtered age
+### 4.3 Linear model of of ARG load, sex and filtered age
 ```r
 
 
 ```
 
-### 4.2 GAM model of of ARG load, sex and filtered age
+### 4.4 GAM model of of ARG load, sex and filtered age
 ```r
 
 
@@ -683,7 +681,7 @@ ggsave("Boxplot_counts_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6
 
 
 
-## LOess curve
+## 5.2 LOESS curve
 ```
 age_midpoints <- c(
   "15–19" = 17,
@@ -731,7 +729,7 @@ ggsave("Loess_ARG_load_sex_BMI_filtered_age.png", width = 8, height = 6, dpi = 3
 ```
 ![Loess of counts for ARG load, sex, BMI and filtered age ](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Loess_ARG_load_sex_BMI_filtered_age.png)
 
-### Linear model
+### 5.3 Linear model
 
 * Three way interaction model
   
