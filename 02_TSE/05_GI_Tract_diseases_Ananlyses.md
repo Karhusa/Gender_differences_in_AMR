@@ -138,5 +138,5 @@ ggsave("Boxplot_ARG_load_sex_GI_age.png", width = 8, height = 6, dpi = 300)
 
 ```
 
-![Boxplot ARG load sex GI age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Boxplot_ARG_load_sex_GI_age.png)
+![Boxplot ARG load sex GI age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_GI_analyses/Boxplot_ARG_load_sex_GI_age.png)
 
