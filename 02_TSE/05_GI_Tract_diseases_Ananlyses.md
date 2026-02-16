@@ -46,6 +46,17 @@ subset2$GI_disease_binary <- ifelse(
 )
 
 ```
+5. 
+```
+subset2 <- subset2 %>%
+  mutate(
+    Disease_group2 = case_when(
+      Disease_group == "IBD" ~ "IBD",
+      Disease_group %in% c("Cdiff", "Cholera") ~ "Bacterial_GI",
+      Disease_group == "None" ~ "None"
+    )
+  )
+```
 5 Boxplot of GI disease history
 
 ```r
@@ -135,15 +146,6 @@ ggplot(plot_df, aes(x = GI_disease_binary, y = log10_ARG_load, fill = sex)) +
 ggsave("Boxplot_ARG_load_sex_GI_age.png", width = 8, height = 6, dpi = 300)
 
 ```
-
-subset2 <- subset2 %>%
-  mutate(
-    Disease_group2 = case_when(
-      Disease_group == "IBD" ~ "IBD",
-      Disease_group %in% c("Cdiff", "Cholera") ~ "Bacterial_GI",
-      Disease_group == "None" ~ "None"
-    )
-  )
 
 ![Boxplot ARG load sex GI age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_and_GI_analyses/Boxplot_ARG_load_sex_GI_age.png)
 
