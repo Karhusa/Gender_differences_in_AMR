@@ -45,12 +45,34 @@ subset2$GI_disease_binary <- ifelse(
   "Yes"
 )
 
+```r
+table(subset2$GI_disease_history)
 ```
+
+* Cholera 89
+* Clostridium difficile infection 292
+* Crohn's disease 936
+* Helminthiasis 298 
+* Indeterminate colitis 29
+* Intestinal_disease 59
+* Intestinal_disease;Colitis 70
+* Intestinal_disease;Colitis;Crohns_disease  1
+* Intestinal_disease;Colitis;IBD 5
+* Intestinal_disease;Crohns_disease;IBD 1
+* Intestinal_disease;IBD 10
+*  None  22157 
+* Schistosomiasis 18
+* ulcerative colitis 640
+* None   22157
+
 5. Combine variables
-*
-*
-*
-*
+* Crohn's disease	-->IBD
+*  Ulcerative colitis	--> IBD
+* Indeterminate colitis	-->IBD
+* Intestinal_disease;Colitis -->	IBD
+* Intestinal_disease;IBD -->	IBD
+* Cholera 
+* Clostridium difficile infection 292
 
 ```r
 subset2 <- subset2 %>%
