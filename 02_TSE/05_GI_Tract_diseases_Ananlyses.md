@@ -46,8 +46,24 @@ subset2$GI_disease_binary <- ifelse(
 )
 
 ```
-5. 
-```
+5. Combine variables
+*
+*
+*
+*
+
+```r
+subset2 <- subset2 %>%
+  mutate(
+    Disease_group = case_when(
+      str_detect(GI_disease_history, regex("crohn|colitis|ibd", ignore_case = TRUE)) ~ "IBD",
+      str_detect(GI_disease_history, regex("clostridium", ignore_case = TRUE)) ~ "Cdiff",
+      str_detect(GI_disease_history, regex("cholera", ignore_case = TRUE)) ~ "Cholera",
+      GI_disease_history == "None" ~ "None",
+      TRUE ~ "Other"
+    )
+  )
+
 subset2 <- subset2 %>%
   mutate(
     Disease_group2 = case_when(
