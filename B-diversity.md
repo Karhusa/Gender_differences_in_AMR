@@ -1,3 +1,5 @@
+# Beta diversity
+
 ## 1.1 Load packages
 
 ```r
