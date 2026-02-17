@@ -53,8 +53,12 @@ summary(row_sums)
 head(row_sums)
 ```
 summary(row_sums)
-Min.   1st Qu.    Median Mean   3rd Qu.      Max. 
-50.02    316.68    509.45 713.97    827.73 115515.58 
+* Min. 50.02
+* 1st Qu. 316.68 
+* Median 509.45
+* Mean  713.97
+* 3rd Qu. 827.73
+* Max. 115515.58 
      
 head(row_sums)
 DRR070899 DRR070900 DRR070901 DRR070902 DRR070903 DRR070904 
@@ -62,7 +66,7 @@ DRR070899 DRR070900 DRR070901 DRR070902 DRR070903 DRR070904
 
 
 ## 2.6 Convert counts to relative abundance per sample
-* Reserve at least 16 GB
+* Reserve at least 12 GB
 ```r
 counts_rel <- decostand(counts_matrix, method = "total")
 
@@ -71,8 +75,7 @@ head(counts_rel)
 
 saveRDS(counts_rel, file = "counts_rel.rds")
 
-# Later, load it back
-counts_rel <- readRDS("counts_rel.rds")
+#counts_rel <- readRDS("counts_rel.rds")
 
 ```
 **Summary:**
@@ -86,25 +89,29 @@ counts_rel <- readRDS("counts_rel.rds")
 
 ## 2.7 calculate the distance matrix
 
-* remember to sort out NA values (=zero counts)
+# * remember to sort out NA values (=zero counts)?
 
 ```r
-# relative abundances:
 dist_bc <- vegdis(, method = "bray")
 
 as.matrix(dist_bc)[1:5, 1:5]
 ```
 
-Jatkuu -->
+## Not ready yet:
 
+Multi-dimensinal scaling:
+
+```r
 pcoa <- cmdscale(dist_bc, eig = TRUE, k = 2)
 
 pcoa <- as.data.frame(reducedDim(tse, "PCoA"))
+```
 
-
-
+# for the future analysis
 pcoa$age <- metada$age
+
+# Statistics
 PERMANOVA
 adonis2
 Dispersion
-[12:51 PM]betadisper(dist_bc, meta$gender) (edited)
+betadisper(dist_bc, meta$gender)
