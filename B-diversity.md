@@ -14,7 +14,7 @@ TSE <- readRDS(tse_path)
 ```
 ## 2.2 Inspect the TSE to create a new matrix from sample names and ARG genes (and abundances)
 ```r
-counts <- assays(TSE)[[1]]  # usually the first assay
+counts <- assays(TSE)[[1]]
 dim(counts)
 head(counts[, 1:5])
 rowData(TSE)
