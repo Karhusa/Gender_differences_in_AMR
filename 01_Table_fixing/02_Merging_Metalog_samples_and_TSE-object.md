@@ -1,11 +1,13 @@
-*
-*
-* 
+Input files
+* SRA_metadata_with_biosample_corrected (SRA biosample numbers from Katariina Pärnänen)
+* SRA_metadata_gut_samples_full.csv (SRA Metadata)
+* human_all_wide_2025-10-19.tsv.gz (Metalog metadata)
 
+Objectives:
+Combine SRA and Metalog metadata with common biosample numbers from SRA_metadata_with_biosample_corrected
 
-
+___
 ## 1.  Inspect SRA_metadata_with_biosample_corrected.txt
-
 
 ### 1.1 Examine Column Structure
 ```bash
@@ -76,14 +78,12 @@ Overview of Strategy:
 * Remove irrelevant or sensitive columns
 * Handle large files via chunked reading
 
-### 4.1 Python Workflow
+### 4.1 Define Input Files and Parameters
+
 ```python
 import pandas as pd
 import re
-```
-### 4.2 Define Input Files and Parameters
 
-```python
 human_file = "human_all_wide_2025-10-19.tsv.gz"
 sra_file = "SRA_metadata_with_biosample_corrected.txt"
 matched_file = "matched_biosamples.txt"
@@ -92,9 +92,11 @@ final_output = "cleaned_merged_final.tsv"
 id_col_human = "metalog_sample_name"
 id_col_sra = "biosample"
 
-chunksize = 20000  # safe for large files
+chunksize = 20000
+
 ```
-### 4.3 Define Keywords for Column Filtering
+
+### 4.2 Define Keywords for Column Filtering
 
 These keywords retain columns related to:
 * Demographics (age, sex, BMI)
@@ -103,7 +105,7 @@ These keywords retain columns related to:
 
 ```python
 keywords = [
-    "bmi", "body mass", "antibiotic", "antimicrobial", "drug",
+    "bmi", "body mass", "body", "antibiotic", "abx", "antimicrobial", "drug",
     "sex", "gender", "age", "disease", "diagnosis", "condition",
     "infection", "immune", "inflammation", "therapy", "treatment",
     "cycline", "cillin", "phenicol", "bactam", "beta", "lactamase", "inhibitor",
@@ -117,8 +119,10 @@ keywords = [
     "xibornol", "clofoctol", "methenamine", "zolid", "lefamulins",
     "gepotidacin", "bacitracin", "novobiocin",
     "asthma", "cancer", "uti", "ibd", "crohn", "intestine",
-    "ulcerative", "colitis"
-]
+    "ulcerative", "colitis", "sx", "gndr", "female", "male", "uro", "dad", "mother",
+    "mum", "maternal", "gestational", "sibling", "family"]
+
+
 keywords = [kw.lower() for kw in keywords]
 ```
 ### 4.4 Define Exclusion Keywords
@@ -127,9 +131,9 @@ Columns containing these terms are removed.
 
 ```python
 exclude_keywords = [
-    "sexual", "private", "identifier", "confidential", "contact",
+    "private", "identifier", "confidential", "contact",
     "gestational", "beverages", "stage", "vitamin", "alcohol",
-    "average", "home", "sports", "strength", "siblings", "blockage"
+    "average", "sports", "strength", "blockage"
 ]
 ```
 ### 4.5 Load Matched BioSample IDs
@@ -192,6 +196,7 @@ Column selection rules
 * Always keep SRA columns and BioSample ID
 * Keep Metalog columns containing relevant keywords
 * Exclude columns with sensitive or irrelevant terms
+
 ```python
 def keep_keyword(c):
     c_low = c.lower()
