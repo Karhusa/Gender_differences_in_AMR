@@ -102,15 +102,48 @@ with open("columns_with_indexes.txt", "w") as f:
     for i, col in enumerate(df.columns):
         f.write(f"{i}: {col}\n")
 
-gender_keywords = ["sex", "gender", "sx", "gndr", "female", "male", "mother", "maternal"]
+sex_keywords = ["sex", "gender", "sx", "gndr", "female", "male", "mother", "maternal"]
 
-gender_cols = [c for c in df.columns if any(k in c.lower() for k in gender_keywords)]
-print("Possible sex/gender columns:", gender_cols)
+sex_cols = [c for c in df.columns if any(k in c.lower() for k in sex_keywords)]
+print("Sex/gender-related columns found:", sex_cols)
 
-df_gender_info = df[gender_cols]
+df_known_sex = df[df[sex_cols].notna().any(axis=1)]
 
-df_gender_info.to_csv("SRA_sex_gender_columns.csv", index=False)
+df_known_sex_all = df_known_sex.copy()
 
+df_known_sex_all.to_csv("SRA_metadata_known_sex_full.csv", index=False)
+
+print(f"Saved {len(df_known_sex_all)} samples with known sex to 'SRA_metadata_known_sex_full.csv'")
 ```
-* Output files: columns_with_indexes.txt
-* SRA_sex_gender_columns.csv
+## 3.2 Extract Sample type Information
+
+```r
+df = pd.read_csv( "SRA_metadata_known_sex_full.csv", sep=",", dtype="string", low_memory=False)
+
+gut_keywords = [
+    "stool", "feces", "faeces",
+    "human gut", "human-gut", "human gut microbiome",
+    "stool sample", "human stool",
+    "gastric biopsy", "lower digestive tract",
+    "appendix", "stomach", "antrum", "corpus",
+    "ileum", "colon", "intestine"
+]
+
+gut_keywords = [k.lower() for k in gut_keywords]
+
+mask = df.apply(
+    lambda row: any(
+        any(keyword in str(cell).lower() for keyword in gut_keywords)
+        for cell in row),
+    axis=1)
+
+df_gut_samples = df[mask].copy()
+
+df_gut_samples.to_csv("SRA_metadata_gut_samples_full.csv", index=False)
+
+print(f"Saved {len(df_gut_samples)} gut-related samples.")
+```
+** Output files: **
+* columns_with_indexes.txt
+* SRA_metadata_known_sex_full.csv
+* SRA_metadata_gut_samples_full
