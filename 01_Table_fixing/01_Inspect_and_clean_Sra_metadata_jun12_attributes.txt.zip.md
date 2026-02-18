@@ -11,21 +11,15 @@ The metadata file is compressed and very large, so we inspect it using Unix tool
 unzip -p Sra_metadata_jun12_attributes.txt.zip Sra_metadata_jun12_attributes.txt | head -n 5
 
 ```
-### 1.2 extract:
+### 1.2 extract all the column names:
 
-* The header
-* All rows containing relevant keywords
 
 ```bash
-{
-  unzip -p Sra_metadata_jun12_attributes.txt.zip | head -n 1
-  unzip -p Sra_metadata_jun12_attributes.txt.zip | grep -Eiw 'female|male|disease|age|bmi|antibiotics'
-} > metadata_matches2.txt
-
-head -n 5 metadata_matches2.txt
+unzip -p Sra_metadata_jun12_attributes.txt.zip | \
+head -n 1 | \
+tr '\t' '\n' | \
+nl > column_names_numbered.txt
 ```
-Result:
-A reduced metadata file containing only rows likely to include relevant biological or clinical information.
 
 ## 2. Unpack the jattr Column (JSON Attributes)
 
@@ -36,24 +30,28 @@ The jattr column contains nested JSON-like metadata. We unpack it into individua
 import pandas as pd
 import json
 
-df = pd.read_csv("metadata_matches2.txt", sep=",", engine="python")
+# Read directly from the zipped file
+df = pd.read_csv(
+    "Sra_metadata_jun12_attributes.txt.zip",
+    sep="\t",
+    compression="zip",
+    dtype={"jattr": "string"},
+    low_memory=False
+)
 
 def parse_json_safe(s):
     try:
         return json.loads(s)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, TypeError):
         return {}
 
-# Parse the jattr column
-jattr_dicts = df['jattr'].apply(parse_json_safe)
+jattr_dicts = df["jattr"].apply(parse_json_safe)
 
-# Expand JSON into columns
 jattr_expanded = pd.json_normalize(jattr_dicts)
 
-# Combine with original dataframe
-df_flat = pd.concat([df.drop(columns=['jattr']), jattr_expanded], axis=1)
+df_flat = pd.concat([df.drop(columns=["jattr"]), jattr_expanded], axis=1)
 
-df_flat.to_csv("SRA_metadata_jun12.csv", index=False)
+df_flat.to_csv("SRA_metadata_jun12_unpacked.csv", index=False)
 ```
 ### 2.2 Run the Script
 ```bash
