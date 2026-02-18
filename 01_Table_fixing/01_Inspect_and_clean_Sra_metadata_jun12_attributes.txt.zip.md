@@ -1,28 +1,21 @@
-1. Merge SRNA
-
 Input files:
-
-Sra_metadata_jun12_attributes.txt.zip
-
-
+* Sra_metadata_jun12_attributes.txt.zip
 
 ## 1. Inspect the Raw Metadata File
-
 
 ### 1.1 Preview File Contents and Filter Relevant Rows
 
 The metadata file is compressed and very large, so we inspect it using Unix tools.
 
-
 ```bash
 unzip -p Sra_metadata_jun12_attributes.txt.zip Sra_metadata_jun12_attributes.txt | head -n 5
 
 ```
-Next, extract:
+### 1.2 extract:
 
 * The header
 * All rows containing relevant keywords
-* 
+
 ```bash
 {
   unzip -p Sra_metadata_jun12_attributes.txt.zip | head -n 1
@@ -122,6 +115,7 @@ def extract_gender(val):
     return None
 ```
 Create a clean Gender column
+
 ```python
 df["Gender"] = df[sex_cols].apply(lambda row: next(
     (extract_gender(v) for v in row if extract_gender(v) is not None), None), axis=1)
