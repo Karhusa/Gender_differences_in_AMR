@@ -25,19 +25,25 @@ nl > column_names_numbered.txt
 
 The jattr column contains nested JSON-like metadata. We unpack it into individual columns using Python.
 
-### 2.1 Python Script: unpack_jattr.py
+### 2.1 Unzip
+
+```bash
+unzip Sra_metadata_jun12_attributes.txt.zip
+```
+
+### 2.2 Python Script: unpack_jattr.py
 ```python
 import pandas as pd
 import json
 
-df = pd.read_csv(
-    "Sra_metadata_jun12_attributes.txt.zip",
-    compression="zip",
-    header=0,
-    low_memory=False,
-    # explicitly pick the main file
-    filepath_or_buffer="Sra_metadata_jun12_attributes.txt"
-)
+txt_file = "Sra_metadata_jun12_attributes.txt"
+
+df = pd.read_csv(txt_file, sep=",", dtype="string", low_memory=False)
+
+df.columns = df.columns.str.strip()
+
+if "jattr" not in df.columns:
+    raise ValueError(f"Column 'jattr' not found! Available columns: {df.columns.tolist()}")
 
 def parse_json_safe(s):
     try:
@@ -51,115 +57,58 @@ jattr_expanded = pd.json_normalize(jattr_dicts)
 
 df_flat = pd.concat([df.drop(columns=["jattr"]), jattr_expanded], axis=1)
 
-df_flat.to_csv("SRA_metadata_jun12_flat.csv", index=False)
+df_flat.to_csv("SRA_metadata_jun12_unpacked.csv", index=False)
+
+print("Flattened CSV saved successfully. Rows:", len(df_flat))
+
 ```
-### 2.2 Run the Script
+### 2.3 Run the Script
 ```bash
-python3 -m pip install pandas #version 2.3.3
+source venv2/bin/activate
+
+python3 -m pip install pandas
 
 python3 unpack_jattr.py
 ```
+Result:
+* Output file: SRA_metadata_jun12_unpacked.csv
 
-### 2.3 Inspect Output File
+### 2.4 Inspect Output File
 ```bash
-
-wc -l SRA_metadata_jun12.csv
-# 17718 rows
-
-awk -F',' '{print NF; exit}' SRA_metadata_jun12.csv
-# 2132 columns
-
+wc -l SRA_metadata_jun12_unpacked.csv
+awk -F',' '{print NF; exit}' SRA_metadata_jun12_unpacked.csv
 ```
 Interpretation:
+* 69916 rows
+* 2395 columns
 
-* ~17k samples
-* 2000 metadata fields due to expanded JSON attributes
+---
 
 ## 3. Extract Gender and Sample Type
 
-### 3.1 Load Metadata
+## 3.1 Extract Gender Information
+
+* Identify candidate columns
 ```python
 
-import pandas as pd
-import ast
+df = pd.read_csv(
+    "SRA_metadata_jun12_unpacked.csv",
+    sep=",",
+    dtype="string",
+    low_memory=False
+)
 
-df = pd.read_csv("SRA_metadata_jun12.csv", low_memory=False)
+with open("columns_with_indexes.txt", "w") as f:
+    for i, col in enumerate(df.columns):
+        f.write(f"{i}: {col}\n")
+
+gender_keywords = ["sex", "gender", "sx", "gndr", "female", "male", "mother", "maternal"]
+
+gender_cols = [c for c in df.columns if any(k in c.lower() for k in gender_keywords)]
+print("Possible sex/gender columns:", gender_cols)
+
+df_gender_info = df[gender_cols]
+
+df_gender_info.to_csv("SRA_sex_gender_columns.csv", index=False)
+
 ```
-## 3.2 Extract Gender Information
-Identify candidate columns
-
-```python
-sex_cols = [c for c in df.columns if "sex" in c.lower() or "gender" in c.lower()]
-print("Possible sex-related columns:", sex_cols)
-```
-
-Helper function to normalize gender values
-```python
-def extract_gender(val):
-    if pd.isna(val):
-        return None
-    if isinstance(val, str) and val.strip().startswith("["):
-        try:
-            parsed = ast.literal_eval(val)
-            if isinstance(parsed, list) and len(parsed) > 0:
-                val = parsed[0]
-        except:
-            pass
-    val = str(val).strip().lower()
-    if "female" in val:
-        return "female"
-    if "male" in val:
-        return "male"
-    return None
-```
-Create a clean Gender column
-
-```python
-df["Gender"] = df[sex_cols].apply(lambda row: next(
-    (extract_gender(v) for v in row if extract_gender(v) is not None), None), axis=1)
-
-df = df.drop(columns=sex_cols)
-```
-### 3.3 Extract Sample Type (Fecal Samples)
-Identify candidate columns
-
-```python
-sample_cols = [c for c in df.columns if "environment" in c.lower() or "sample" in c.lower()]
-print("Possible sample-related columns:", sample_cols)
-```
-Helper function to detect fecal samples
-```def detect_feces(val):
-    if pd.isna(val):
-        return None
-    val = str(val).strip().lower()
-    if any(keyword in val for keyword in ["stool", "feces", "human gut"]):
-        return "feces"
-    return None
-```
-Create Sample type column
-
-```python
-df["Sample type"] = df[sample_cols].apply(lambda row: next(
-    (detect_feces(v) for v in row if detect_feces(v) is not None), None), axis=1)
-```
-
-### 3.4 Reorder Columns and Save Output
-
-Move key annotation columns near the front.
-```python
-cols = list(df.columns)
-for col in ["Gender", "Sample type"]:
-    if col in cols:
-        cols.insert(1, cols.pop(cols.index(col)))
-df = df[cols]
-
-df.to_csv("metadata_gender_sample.csv", index=False)
-print("Created 'metadata_gender_sample.csv' with Gender and Sample type columns.")
-```
-metadata_gender_sample.csv contains:
-
-* Original SRA metadata
-* Expanded JSON attributes
-* Clean Gender column (male, female, or NA)
-* Clean Sample type column (feces or NA)
-
