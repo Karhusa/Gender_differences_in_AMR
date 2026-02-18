@@ -9,6 +9,7 @@ library(ggplot2)
 library(tidyr)
 library(ggsci)
 library(mgcv)
+library(emmeans)
 ```
 ---
 ### 1.2 Load TSE
@@ -441,7 +442,7 @@ ggsave("Boxplot_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height =
 ### 4.2 Loess curve of ARG load, sex and filtered age 
 ```
 Subset1$sex[Subset1$sex == "" | Subset1$sex == "NA"] <- NA
-Subset1$AgeGroup[Subset1$age_years == "" | Subset1$age_years == "NA"] <- NA
+Subset1$age_years[Subset1$age_years == "" | Subset1$age_years == "NA"] <- NA
 
 Subset1$sex <- recode(Subset1$sex,
                       "female" = "Female",
@@ -496,11 +497,35 @@ ggsave("Loess_log10ARG_by_reproductive_sex_age_ready.png", width = 8, height = 6
 
 ### 4.3 Linear model of of ARG load, sex and filtered age
 ```r
+* Additive
+lm_add <- lm(log10_ARG_load ~ age_years + sex, data = Subset1)
+summary(lm_add)
+
+* Interaction
 lm_num <- lm(log10_ARG_load ~ age_years * sex, data = Subset1)
 summary(lm_num)
 ```
-Linear Model
-* log10(ARG load) ~ AgeNum * sex
+**Additive model**
+lm(formula = log10_ARG_load ~ age_years + sex, data = Subset1)
+
+Residuals: Min: -1.0791, 1Q: -0.1905, Median: 0.0011, 3Q:0.2046, Max: 1.6629 
+
+Coefficients:
+
+| Term | Estimate | Std. Error | t value | Pr(>t) | Significance |
+|-------------------|-----------|------------|---------|----------|--------------|
+| (Intercept) | 2.5767677 | 0.0146338 | 176.084 | < 2e-16 | *** |
+| age_years | 0.0055431 | 0.0004708 | 11.775 | < 2e-16 | *** |
+| sexMale | -0.0604523 | 0.0088827 | -6.806 | 1.14e-11 | *** |
+
+* Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+* Residual standard error: 0.2955 on 4441 degrees of freedom (216 observations deleted due to missingness)
+* Multiple R-squared:  0.03907,	Adjusted R-squared:  0.03864 
+* F-statistic: 90.29 on 2 and 4441 DF,  p-value: < 2.2e-16
+
+
+**Interaction model** NOT the best for this!
+lm(formula = log10(ARG load) ~ AgeNum * sex)
 
 | Term | Estimate | Std. Error | t value | Pr(>t) | Significance |
 |-------------------|-----------|------------|---------|----------|--------------|
@@ -549,8 +574,20 @@ Model fit:
 * Adjusted R² = 0.0637
 * Deviance explained = 6.69%
 * REML = 866.66
-* Scale est. = 0.08506  
+* Scale est. = 0.08506
 
+### Pairwise comparison
+
+```r
+emm <- emmeans(lm_add, ~ sex)
+pairs(emm)
+```
+
+| Contrast      | Estimate | SE      | df   | t.ratio | p.value |
+| ------------- | -------- | ------- | ---- | ------- | ------- |
+| Female - Male | 0.0605   | 0.00888 | 4441 | 6.806   | <.0001  |
+
+### Adjust for study
 ---
 
 ## 5. Analysis of ARG load, sex, income and filtered age (Women of reproductive age (15-49 years))
