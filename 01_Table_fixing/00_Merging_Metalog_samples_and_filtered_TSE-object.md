@@ -3,7 +3,7 @@
 Input files:
 * TSE-object (TSE-filtered) from study (Mahkameh et. al, 2025 [https://www.nature.com/articles/s41522-025-00715-9])
 * Metalog Samples (human_sample_list.csv) from (Metalog [https://metalog.embl.de/explore/human])
-* SRA_metadata_with_biosample.txt from Katariina Pärnänen
+* SRA samples (SRA_metadata_with_biosample.txt) from Katariina Pärnänen
 
 ---
 
@@ -24,6 +24,7 @@ Goal: Check which accession numbers are present in the TSE object.
 ## 2. Download Sample List from Metalog and Inspect Accession Numbers
 
 File: human_sample_list.csv
+
 Columns:
 1. Study code
 2. ena_ers_sample_id (our main interest)
@@ -36,8 +37,7 @@ cut -d',' -f1 human_sample_list.csv | sort -u > studies.txt
 
 tail -n +2 human_sample_list.csv | cut -d',' -f2 | sed 's/[0-9]*//g' | sort -u > unique_sample_names.txt
 ```
-
-**Example prefixes:** ERR, ERS, SAMD, SAMEA, SAMN, SRR, SRS, SRX
+**Example prefixes from unique_sample_names:** ERR, ERS, SAMD, SAMEA, SAMN, SRR, SRS, SRX
 
 ---
 
@@ -106,7 +106,7 @@ Result: No matches — confirmed manually.
 
 ---
 
-## 7. Compare with New SRA Metadata (Biosamples)
+## 7. Compare with SRA Metadata (Biosamples)
 
 ```r
 SRA_metadata <- read.csv("~/F_AMR_project/Gradu_AMR/SRA_metadata_with_biosample.txt")
