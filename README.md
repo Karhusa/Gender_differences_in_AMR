@@ -22,6 +22,8 @@ Overview:
 This workflow aims to determine whether human samples listed in Metalog are represented in an existing TSE object, and to annotate SRA metadata accordingly.
 Because Metalog sample lists are very large, Unix tools are used for preprocessing, followed by matching in R.
 
+Result: Matches can't be foumd by using accession numbers.
+
 01_
 
 Processing SRA Metadata: Extracting Gender and Sample Type
