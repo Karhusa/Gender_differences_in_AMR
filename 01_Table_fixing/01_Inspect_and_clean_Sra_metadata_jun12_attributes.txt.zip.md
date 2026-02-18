@@ -112,3 +112,5 @@ df_gender_info = df[gender_cols]
 df_gender_info.to_csv("SRA_sex_gender_columns.csv", index=False)
 
 ```
+* Output files: columns_with_indexes.txt
+* SRA_sex_gender_columns.csv
