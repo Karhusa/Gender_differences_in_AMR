@@ -30,13 +30,13 @@ The jattr column contains nested JSON-like metadata. We unpack it into individua
 import pandas as pd
 import json
 
-# Read directly from the zipped file
 df = pd.read_csv(
     "Sra_metadata_jun12_attributes.txt.zip",
-    sep="\t",
     compression="zip",
-    dtype={"jattr": "string"},
-    low_memory=False
+    header=0,
+    low_memory=False,
+    # explicitly pick the main file
+    filepath_or_buffer="Sra_metadata_jun12_attributes.txt"
 )
 
 def parse_json_safe(s):
@@ -51,7 +51,7 @@ jattr_expanded = pd.json_normalize(jattr_dicts)
 
 df_flat = pd.concat([df.drop(columns=["jattr"]), jattr_expanded], axis=1)
 
-df_flat.to_csv("SRA_metadata_jun12_unpacked.csv", index=False)
+df_flat.to_csv("SRA_metadata_jun12_flat.csv", index=False)
 ```
 ### 2.2 Run the Script
 ```bash
