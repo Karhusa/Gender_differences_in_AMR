@@ -164,10 +164,17 @@ Columns containing these terms are removed.
 
 ```python
 exclude_keywords = [
-    "private", "identifier", "confidential", "contact",
-    "gestational", "beverages", "stage", "vitamin", "alcohol",
-    "average", "sports", "strength", "blockage"
+    "longitude", "latitude", "environment", "timepoint", "fmt", "hip", "waist", "note", "birth", "milk",
+    "breakfast", "insulin", "measels", "physical", "gained", "diastolic", "drinks", "pizza",
+    "comment", "insulin", "clotting", "blockage", "prognosis", "c-peptide", "constipation",
+    "hemoglobin", "cholesterol", "arm"
+
+
 ]
+
+study_code, sample_alias,collection_date, last_change, tax_id, weight_kg, height_cm, artificial, subject_id, intervention, available_info, pmid, doi, timeseries_available, timeseries_count, timeseries_duration, medication_with_parents, recipient_donor, birth_country, sample_description, birth_weight_kg, hip_cm, waist_cm, study_accession, bristol_stool_scale, "sample_title",  raw_metadata_age_at_diagnosis, animal_contact, raw_metadata_cr_(umol/l), raw_metadata_gi_malignancy_polyposis
+
+
 ```
 ### 4.5 Load Matched BioSample IDs
 
