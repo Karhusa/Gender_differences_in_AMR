@@ -7,7 +7,7 @@ Objectives:
 Combine SRA and Metalog metadata with common biosample numbers from SRA_metadata_with_biosample_corrected
 
 ___
-## 1.  Inspect SRA_metadata_with_biosample_corrected.txt
+## 1.  Merge SRA_metadata_with_biosample_corrected.txt
 
 ### 1.1 Examine Column Structure
 ```bash
@@ -26,11 +26,8 @@ Columns present:
 9. mbases
 10. collection_date_sam
 
+
 ```python
-
-
-
-import pandas as pd
 
 import pandas as pd
 
@@ -91,61 +88,45 @@ metalog = pd.read_csv(
     dtype=str
 )
 
-# Clean column names
-metalog.columns = metalog.columns.str.strip().str.lower()
 sra_combined = pd.read_csv(
     "SRA_combined_full.tsv",
     sep="\t",
     dtype=str
 )
+
+metalog.columns = metalog.columns.str.strip().str.lower()
 sra_combined.columns = sra_combined.columns.str.strip().str.lower()
 
-# Merge Metalog with SRA on biosample / spire_sample_name
 final_metadata = metalog.merge(
     sra_combined,
     left_on="spire_sample_name",
     right_on="biosample",
-    how="left",
+    how="inner",  # only keep rows with a match
     suffixes=("", "_sra")
 )
 
-# Save the final combined table
+final_metadata = final_metadata.dropna(axis=1, how='all')
+
+cols = final_metadata.columns.tolist()
+if "acc" in cols:
+    cols.insert(0, cols.pop(cols.index("acc")))
+final_metadata = final_metadata[cols]
+
 final_metadata.to_csv(
-    "Metalog_SRA_combined.tsv",
+    "Metalog_SRA_final_clean.tsv",
     sep="\t",
     index=False
 )
 
-matched = final_metadata["biosample"].notna().sum()
-total = len(final_metadata)
-print(f"{matched} / {total} Metalog samples found in SRA metadata")
+num_rows, num_columns = final_metadata.shape
+print(f"Final table saved: Metalog_SRA_final_clean.tsv")
+print(f"Number of rows: {num_rows}")
+print(f"Number of columns: {num_columns}")
 ```
 
-
-```python
-
-final_metadata = pd.read_csv(
-    "Metalog_SRA_combined.tsv",
-    sep="\t",
-    dtype=str
-)
-
-final_metadata_clean = final_metadata.dropna(axis=1, how='all')
-
-final_metadata_clean.to_csv(
-    "Metalog_SRA_combined_clean.tsv",
-    sep="\t",
-    index=False
-)
-
-print("Cleaned table saved as Metalog_SRA_combined_clean.tsv")
-
-```
-
-
-
-
-
+Final table saved: Metalog_SRA_final_clean.tsv
+Number of rows: 24605
+Number of columns: 1378
 
 
 ### 4.2 Define Keywords for Column Filtering
