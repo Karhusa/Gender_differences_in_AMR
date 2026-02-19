@@ -26,75 +26,127 @@ Columns present:
 9. mbases
 10. collection_date_sam
 
-### 1.2 Extract Unique BioSample IDs from SRA Metadata
-```bash
-grep -oE '\bSAM(N|D|EA)[0-9]+' SRA_metadata_with_biosample_corrected.txt | sort -u > sra_biosample_ids.txt
+```python
 
-wc -l sra_biosample_ids.txt
-# count: 54178 
+
+
+import pandas as pd
+
+import pandas as pd
+
+corrected = pd.read_csv(
+    "SRA_metadata_with_biosample_corrected.txt",
+    sep=",",
+    dtype=str
+)
+
+sra_full = pd.read_csv(
+    "SRA_metadata_gut_samples_full.csv",
+    sep=",",
+    dtype=str
+)
+
+corrected.columns = corrected.columns.str.strip().str.lower()
+sra_full.columns = sra_full.columns.str.strip().str.lower()
+
+print("Corrected columns:", corrected.columns.tolist())
+print("SRA full columns:", sra_full.columns.tolist())
+
+if "acc" not in corrected.columns:
+    raise ValueError("Column 'acc' not found in corrected file")
+
+if "acc" not in sra_full.columns:
+    raise ValueError("Column 'acc' not found in SRA full file")
+
+print("Corrected acc duplicates:", corrected["acc"].duplicated().sum())
+print("SRA full acc duplicates:", sra_full["acc"].duplicated().sum())
+
+sra_combined = corrected.merge(
+    sra_full,
+    on="acc",
+    how="left",
+    suffixes=("", "_sra")
+)
+
+print("Rows in corrected:", len(corrected))
+print("Rows after merge:", len(sra_combined))
+print("Missing matches (acc not found in SRA full):", sra_combined["acc"].isna().sum())
+
+sra_combined.to_csv(
+    "SRA_combined_full.tsv",
+    sep="\t",
+    index=False
+)
+
+print("SRA_combined_full.tsv saved successfully.")
 ```
-
-## 2. Inspect human_all_wide_2025-10-19.tsv.gz
-
-This file contains wide-format Metalog human metadata.
-
-### 2.1 File Dimensions
-```bash
-gzcat human_all_wide_2025-10-19.tsv.gz | wc -l
-# rows 85471
-gzcat human_all_wide_2025-10-19.tsv.gz | head -n 1 | awk -F'\t' '{print NF}'
-# columns: 2836
-```
-### 2.2 Confirm Presence of BioSample IDs
-
-```bash
-gzcat human_all_wide_2025-10-19.tsv.gz | grep -E '\bSAM(N|D|EA)[0-9]+' | wc -l
-# 81436 rows contain BioSample IDs
-```
-### 2.3 Extract Unique BioSample IDs
-
-```bash
-gzcat human_all_wide_2025-10-19.tsv.gz | grep -oE '\bSAM(N|D|EA)[0-9]+' | sort -u > biosample_ids.txt
-```
-## 3. Identify Shared BioSample IDs
-
-Find BioSample IDs present in both SRA and Metalog datasets.
-```bash
-
-sort biosample_ids.txt > biosample_ids_sorted.txt
-sort sra_biosample_ids.txt > sra_biosample_ids_sorted.txt
-
-comm -12 biosample_ids_sorted.txt sra_biosample_ids_sorted.txt > matched_biosamples.txt
-
-wc -l matched_biosamples.txt
-# matches: 20339
-```
-## 4. Merge SRA and Metalog Metadata
-
-Overview of Strategy:
-* Subset both datasets using shared BioSample IDs
-* Merge on BioSample ID
-* Retain clinically relevant metadata fields
-* Remove irrelevant or sensitive columns
-* Handle large files via chunked reading
-
-### 4.1 Define Input Files and Parameters
+## Merge human_all_wide_2025-10-19.tsv.gz to SRA_combined_full.tsv
 
 ```python
-import pandas as pd
-import re
 
-human_file = "human_all_wide_2025-10-19.tsv.gz"
-sra_file = "SRA_metadata_with_biosample_corrected.txt"
-matched_file = "matched_biosamples.txt"
-final_output = "cleaned_merged_final.tsv"
+metalog = pd.read_csv(
+    "human_all_wide_2025-10-19.tsv.gz",
+    sep="\t",
+    compression="gzip",
+    dtype=str
+)
 
-id_col_human = "metalog_sample_name"
-id_col_sra = "biosample"
+# Clean column names
+metalog.columns = metalog.columns.str.strip().str.lower()
+sra_combined = pd.read_csv(
+    "SRA_combined_full.tsv",
+    sep="\t",
+    dtype=str
+)
+sra_combined.columns = sra_combined.columns.str.strip().str.lower()
 
-chunksize = 20000
+# Merge Metalog with SRA on biosample / spire_sample_name
+final_metadata = metalog.merge(
+    sra_combined,
+    left_on="spire_sample_name",
+    right_on="biosample",
+    how="left",
+    suffixes=("", "_sra")
+)
+
+# Save the final combined table
+final_metadata.to_csv(
+    "Metalog_SRA_combined.tsv",
+    sep="\t",
+    index=False
+)
+
+matched = final_metadata["biosample"].notna().sum()
+total = len(final_metadata)
+print(f"{matched} / {total} Metalog samples found in SRA metadata")
+```
+
+
+```python
+
+final_metadata = pd.read_csv(
+    "Metalog_SRA_combined.tsv",
+    sep="\t",
+    dtype=str
+)
+
+final_metadata_clean = final_metadata.dropna(axis=1, how='all')
+
+final_metadata_clean.to_csv(
+    "Metalog_SRA_combined_clean.tsv",
+    sep="\t",
+    index=False
+)
+
+print("Cleaned table saved as Metalog_SRA_combined_clean.tsv")
 
 ```
+
+
+
+
+
+
 
 ### 4.2 Define Keywords for Column Filtering
 
