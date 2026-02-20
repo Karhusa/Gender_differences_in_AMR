@@ -159,12 +159,13 @@ Shape: (24605, 317)
 * Output file: Filtered_Metadata.tsv
     * No need to save, just for inspection 
 
-Exclude "16s" "milk", neonate_pair, dpl63, dosage_1, end_stage, birth_gestational, age_of_onset,disease_duration_years, partner_last6months, tnm_stage, diet_sam, storage_temperature, diet_full, "alcohol", "tobacco" creatinine_mumol_l, body_%_fat, birth_country, cigarette, age_z_score, body_fat_mass, treatment_group, village_sam, baseline_montreal_location, location, disease_cause, drug_statins, childhood_accomodation, excercise, sam_s_dpl104
+Exclude "16s" "milk", neonate_pair, dpl63, dosage_1, end_stage, birth_gestational, age_of_onset,disease_duration_years, partner_last6months, tnm_stage, diet_sam, storage_temperature, diet_full, "alcohol", "tobacco" creatinine_mumol_l, body_%_fat, birth_country, cigarette, age_z_score, body_fat_mass, treatment_group, village_sam, baseline_montreal_location, location, disease_cause, drug_statins, childhood_accomodation, excercise, sam_s_dpl104, birth_outside, smoked, immunotherapy, soft_drinks, disease_duration, body_product_sam, time_per_time, dosage_sam, body_temp, diagnosed_with_disease, body_site_sam, disease_group, reaction_medication, diagnosis_date, infection_control_means, specimen_location_sam. sample_location_full, discovery_stage, treatment_where_sam, disease_extent, treatment_duration, treatment_effect
 
 
 
-df["study_accession"].unique()
+df["raw_metadata_treatment_effect"].unique()
 
+# Antibiotics: 1.1 S01AA
 
 
 ## 4. BMI Cleaning and Categorization
