@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 import re
 
-df = pd.read_csv("Metalog_SRA_final_clean.tsv", sep="\t")
+df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
 ```
 
 ---
@@ -159,11 +159,14 @@ Shape: (24605, 317)
 * Output file: Filtered_Metadata.tsv
     * No need to save, just for inspection 
 
-Exclude "16s" "milk", neonate_pair, dpl63, dosage_1, end_stage, birth_gestational, age_of_onset,disease_duration_years, partner_last6months, tnm_stage, diet_sam, storage_temperature, diet_full, "alcohol", "tobacco" creatinine_mumol_l, body_%_fat, birth_country, cigarette, age_z_score, body_fat_mass, treatment_group, village_sam, baseline_montreal_location, location, disease_cause, drug_statins, childhood_accomodation, excercise, sam_s_dpl104, birth_outside, smoked, immunotherapy, soft_drinks, disease_duration, body_product_sam, time_per_time, dosage_sam, body_temp, diagnosed_with_disease, body_site_sam, disease_group, reaction_medication, diagnosis_date, infection_control_means, specimen_location_sam. sample_location_full, discovery_stage, treatment_where_sam, disease_extent, treatment_duration, treatment_effect
+Exclude "16s" "milk", neonate_pair, dpl63, dosage_1, end_stage, birth_gestational, age_of_onset,disease_duration_years, partner_last6months, tnm_stage, diet_sam, storage_temperature, diet_full, "alcohol", "tobacco" creatinine_mumol_l, body_%_fat, birth_country, cigarette, age_z_score, body_fat_mass, treatment_group, village_sam, baseline_montreal_location, disease_cause, drug_statins, childhood_accomodation, excercise, sam_s_dpl104, birth_outside, smoked, immunotherapy, soft_drinks, disease_duration, body_product_sam, time_per_time, dosage_sam, body_temp, diagnosed_with_disease, body_site_sam, disease_group, reaction_medication, diagnosis_date, infection_control_means, specimen_location_sam. sample_location_full, discovery_stage, treatment_where_sam, disease_extent, treatment_duration, treatment_effect, propranolol, age_at_diagnosis, birth_country, bilharzia, body_lean_mass, feedingage, village_grouping, treatment_by_sam, metagenomic_sequencing, age_units, best_response, smoke, biologics, have_you_received, hoehn_yahr_stage, stage_sam, inflammatory_drugs, vegan, treatment_group, lifestyle, particular_diet, caffeinated, schistosoma, lifestylegeneral, longitude, age_z_score,
+country_birth, drug_combine, tumor_stage, physicalexercise, submitter_id, medication_code,
+storageprotocol, day_of_life, village, raw_metadata_diet, vaccination_last3weeks, tumor_localization, disease_activity, mumps_sam, urea_nitrogen, disease_duration, body_temperature, diet_as_a_baby, nucleic_acid, extractionprotocolid, "treatment_(y_or_n)",
+body_habitat_sam, agedischargeddays, validation_stage, disease_status_sam
 
 
 
-df["raw_metadata_treatment_effect"].unique()
+df["host_disease_status_sam"].unique()
 
 # Antibiotics: 1.1 S01AA
 
