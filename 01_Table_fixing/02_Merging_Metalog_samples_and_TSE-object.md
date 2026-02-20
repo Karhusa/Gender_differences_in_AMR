@@ -4,7 +4,7 @@
 * Combine SRA and Metalog metadata with common biosample numbers from SRA_metadata_with_biosample_corrected
 * Remove columns than include only "NA" values
 
-Input files
+Input files:
 * SRA_metadata_with_biosample_corrected (SRA biosample numbers from Katariina Pärnänen)
 * SRA_metadata_gut_samples_full.csv (SRA Metadata)
 * human_all_wide_2025-10-19.tsv.gz (Metalog metadata)
@@ -46,6 +46,15 @@ print("SRA_combined_full.tsv saved successfully.")
 
 ## 2. Merge human_all_wide_2025-10-19.tsv.gz to SRA_combined_full.tsv
 
+### 2.1 Extract Metalog column names:
+```bash
+gzip -dc human_all_wide_2025-10-19.tsv.gz | \
+head -n 1 | \
+tr '\t' '\n' | \
+nl -w2 -s$'\t' \
+> Metalog_columns_with_indexes.txt
+```
+### 2.2 Merge datasets
 ```python
 
 metalog = pd.read_csv("human_all_wide_2025-10-19.tsv.gz", sep="\t", compression="gzip", dtype=str)
@@ -83,6 +92,11 @@ Final table saved: Metalog_SRA_final_clean.tsv
 Number of rows: 24605
 Number of columns: 1378
 
+## 3. Compress the final file
+
+```bash
+gzip Metalog_SRA_final_clean.tsv
+```
 
 Summary:
 * 20,339 shared BioSamples identified
