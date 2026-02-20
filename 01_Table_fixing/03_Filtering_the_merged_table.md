@@ -81,25 +81,57 @@ These keywords retain columns related to:
 
 ```python
 keywords = [
-    "bmi", "body mass", "body", "antibiotic", "antibio", "abx", "antimicrobial", "drug",
-    "sex", "gender", "age", "disease", "diagnosis", "condition",
-    "infection", "immune", "inflammation", "therapy", "treatment", "medication",
-    "vaccine", "vaccina", "cycline", "cillin", "phenicol", "bactam", "beta", "lactamase", "inhibitor",
-    "cef", "loracarbef", "flomoxef", "latamoxef", "onam", "penem", "cilastatin",
-    "cephalexin", "dazole", "mycin", "prim", "sulfa", "tylosin", "tilmicosin",
-    "tylvacosin", "tildipirosin", "macrolide", "quinupristin", "dalfopristin",
-    "xacin", "acid", "flumequine", "olaquindox", "sulfonamide", "tetracycline",
-    "nitrofuran", "amphenicol", "polymyxin", "quinolone",
-    "aminoglycoside", "teicoplanin", "vancin", "colistin", "polymyxin_b",
-    "nitro", "fura", "nifru", "micin", "tiamulin", "valnemulin",
-    "xibornol", "clofoctol", "methenamine", "zolid", "lefamulins",
-    "gepotidacin", "bacitracin", "novobiocin",
-    "asthma", "cancer", "ibd", "crohn", "intestine",
-    "ulcerative", "colitis", "sx", "gndr", "female", "male", "uro", "dad", "mother",
-    "mum", "maternal", "gestational", "sibling", "family", "environmental",
-    "pregnant", "lifestyle", "life", "menopau", "urine", "tract", "uti",
-    "malign", "realtionship", "gravid", "tumor", "region", "biologics",
-    "geographic", "location"
+    "acc", "accession", "biosample", "bioproject",
+    "age", "sex", "gender", "male", "female",
+    "bmi", "body mass", "body",
+    "region", "geographic", "location", "country",
+
+    "family", "relationship", "sibling",
+    "mother", "maternal", "mum", "mom", "dad", "father",
+    "pregnant", "pregnancy", "gestational", "gravid",
+    "menopau",
+
+    "lifestyle", "life", "environmental",
+    "diet", "smoke", "alcohol", "exercise",
+    "disease", "diagnosis", "condition",
+    "infection", "immune", "immunity", "inflammation",
+    "cancer", "tumor", "malign", "malignancy",
+    "asthma",
+    "ibd", "crohn", "ulcerative", "colitis",
+    "intestine", "gut",
+
+    "uro", "urine", "tract", "uti",
+
+    "therapy", "treatment", "medication", "drug",
+    "antibiotic", "antibio", "abx", "antimicrobial",
+    "vaccine", "vaccina",
+    "biologics",
+
+    "beta", "bactam", "lactamase", "inhibitor",
+    "penem", "onam", "cilastatin",
+    "cef", "cephalexin", "loracarbef", "flomoxef", "latamoxef",
+    "cycline", "tetracycline",
+    "cillin",
+    "mycin", "micin", "macrolide",
+    "aminoglycoside",
+    "quinolone", "xacin", "flumequine",
+    "sulfa", "sulfonamide",
+    "phenicol", "amphenicol",
+    "nitro", "nitrofuran", "fura", "nifru",
+    "polymyxin", "polymyxin_b", "colistin",
+    "vancin", "teicoplanin",
+    "dazole",
+    "prim",
+    "tylosin", "tilmicosin", "tylvacosin", "tildipirosin",
+    "quinupristin", "dalfopristin",
+    "tiamulin", "valnemulin",
+    "zolid", "lefamulins",
+    "gepotidacin",
+    "bacitracin", "novobiocin",
+    "olaquindox",
+    "xibornol", "clofoctol", "methenamine",
+
+    "sx", "gndr"
 ]
 
 pattern = "|".join([re.escape(k) for k in keywords if k])
@@ -118,9 +150,22 @@ matched_columns = list(set(matched_columns))
 
 filtered_df = df[matched_columns]
 
-filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
+# filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
 
+print(f" Shape: {filtered_df.shape}")
 ```
+Shape: (24605, 317)
+
+* Output file: Filtered_Metadata.tsv
+    * No need to save, just for inspection 
+
+Exclude "16s" "milk", neonate_pair, dpl63, dosage_1, end_stage, birth_gestational, age_of_onset,disease_duration_years, partner_last6months, tnm_stage, diet_sam, storage_temperature, diet_full, "alcohol", "tobacco" creatinine_mumol_l, body_%_fat, birth_country, cigarette, age_z_score, body_fat_mass, treatment_group, village_sam, baseline_montreal_location, location, disease_cause, drug_statins, childhood_accomodation, excercise, sam_s_dpl104
+
+
+
+df["study_accession"].unique()
+
+
 
 ## 4. BMI Cleaning and Categorization
 
@@ -150,6 +195,7 @@ labels = [
 
 df["BMI_range_new"] = pd.cut(df["bmi"], bins=bins, labels=labels)
 ```
+exclude = milk, 5yr
 
 ---
 
