@@ -17,22 +17,22 @@ import pandas as pd
 import numpy as np
 import re
 
-df = pd.read_csv("cleaned_merged_final.tsv", sep="\t")
+df = pd.read_csv("Metalog_SRA_final_clean.tsv", sep="\t")
 ```
 
 ---
 
-## 2. Remove Columns With No Values
+## 2. Remove empty columns.
+
+### 2.1 Columns With Na Values
 
 ```python
 df = df.dropna(axis=1, how='all')
 print(f" Shape: {df.shape}")
-# Shape: (24605, 195)
 ```
+Shape: (24605, 1378)
 
----
-
-## 3. Drop Columns Containing Only NaN or "No"
+### 2.2 Drop Columns Containing Only NaN or "No"
 
 ```python
 def drop_nan_no_columns(df):
@@ -46,14 +46,81 @@ def drop_nan_no_columns(df):
     df = df.drop(columns=cols_to_drop)
     return df, cols_to_drop
 
-
 df, dropped = drop_nan_no_columns(df)
 print("Dropped columns:", dropped)
 print(f" Shape: {df.shape}")
-# Shape: (24605, 154)
 ```
+Shape: (24605, 1214)
 
 ---
+
+## 3. Collect information about remaining columns
+
+```python
+summary_df = pd.DataFrame({
+    "Column": df.columns,
+    "Data_Type": df.dtypes,
+    "Non_Null_Count": df.notnull().sum(),
+    "Null_Count": df.isnull().sum(),
+    "Unique_Values": df.nunique(),
+})
+
+summary_df.to_csv("Metadata_column_value_summary.tsv", sep="\t", index=False)
+```
+* No need to save, just for visual inspection
+
+## 4. Filter columns
+
+### 4.2 Define Keywords for Column Filtering
+
+These keywords retain columns related to:
+* Demographics (age, sex, BMI, family relationships)
+* Geographic loaction
+* Diseases and infections
+* Antibiotic and drug exposure
+
+```python
+keywords = [
+    "bmi", "body mass", "body", "antibiotic", "antibio", "abx", "antimicrobial", "drug",
+    "sex", "gender", "age", "disease", "diagnosis", "condition",
+    "infection", "immune", "inflammation", "therapy", "treatment", "medication",
+    "vaccine", "vaccina", "cycline", "cillin", "phenicol", "bactam", "beta", "lactamase", "inhibitor",
+    "cef", "loracarbef", "flomoxef", "latamoxef", "onam", "penem", "cilastatin",
+    "cephalexin", "dazole", "mycin", "prim", "sulfa", "tylosin", "tilmicosin",
+    "tylvacosin", "tildipirosin", "macrolide", "quinupristin", "dalfopristin",
+    "xacin", "acid", "flumequine", "olaquindox", "sulfonamide", "tetracycline",
+    "nitrofuran", "amphenicol", "polymyxin", "quinolone",
+    "aminoglycoside", "teicoplanin", "vancin", "colistin", "polymyxin_b",
+    "nitro", "fura", "nifru", "micin", "tiamulin", "valnemulin",
+    "xibornol", "clofoctol", "methenamine", "zolid", "lefamulins",
+    "gepotidacin", "bacitracin", "novobiocin",
+    "asthma", "cancer", "ibd", "crohn", "intestine",
+    "ulcerative", "colitis", "sx", "gndr", "female", "male", "uro", "dad", "mother",
+    "mum", "maternal", "gestational", "sibling", "family", "environmental",
+    "pregnant", "lifestyle", "life", "menopau", "urine", "tract", "uti",
+    "malign", "realtionship", "gravid", "tumor", "region", "biologics",
+    "geographic", "location"
+]
+
+pattern = "|".join([re.escape(k) for k in keywords if k])
+
+matched_columns = [
+    col for col in df.columns
+    if re.search(pattern, col, flags=re.IGNORECASE)
+]
+
+extra_column = "raw_metadata_living_environment"
+
+if extra_column in df.columns:
+    matched_columns.append(extra_column)
+
+matched_columns = list(set(matched_columns))
+
+filtered_df = df[matched_columns]
+
+filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
+
+```
 
 ## 4. BMI Cleaning and Categorization
 
@@ -495,7 +562,7 @@ df.to_csv("kesken2.tsv", sep="\t", index=False)
 
 ## Outputs
 
-* `kesken1.tsv`
+* Metadata_column_value_summary.tsv
 * `kesken2.tsv`
 
 ---
