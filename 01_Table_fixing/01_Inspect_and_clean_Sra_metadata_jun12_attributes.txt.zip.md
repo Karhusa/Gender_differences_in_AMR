@@ -78,7 +78,7 @@ Result:
 wc -l SRA_metadata_jun12_unpacked.csv
 awk -F',' '{print NF; exit}' SRA_metadata_jun12_unpacked.csv
 ```
-Interpretation:
+Results:
 * 69916 rows
 * 2395 columns
 
@@ -115,6 +115,10 @@ df_known_sex_all.to_csv("SRA_metadata_known_sex_full.csv", index=False)
 
 print(f"Saved {len(df_known_sex_all)} samples with known sex to 'SRA_metadata_known_sex_full.csv'")
 ```
+* No need to save this file, because the gut samples need to be separates.
+* This was for visual inspection.
+
+
 ## 3.2 Extract Sample type Information
 
 ```r
@@ -139,11 +143,13 @@ mask = df.apply(
 
 df_gut_samples = df[mask].copy()
 
-df_gut_samples.to_csv("SRA_metadata_gut_samples_full.csv", index=False)
+df_gut_samples.to_csv("SRA_metadata_gut_sex_samples_full.csv", index=False)
 
 print(f"Saved {len(df_gut_samples)} gut-related samples.")
 ```
+
 ** Output files: **
 * columns_with_indexes.txt
 * SRA_metadata_known_sex_full.csv
-* SRA_metadata_gut_samples_full
+* df_gut_samples.to_csv("SRA_metadata_gut_sex_samples_full.csv", index=False)
+
