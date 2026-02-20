@@ -54,7 +54,12 @@ tr '\t' '\n' | \
 nl -w2 -s$'\t' \
 > Metalog_columns_with_indexes.txt
 ```
-### 2.2 Merge datasets
+### 2.2 Merge datasets and filter by matching biosamples
+* human_all_wide_2025-10-19.tsv.gz
+    * spire_sample_name column includes biosample numbers
+* SRA_combined_full.tsv
+    * biosample column includes biosample numbers
+
 ```python
 
 metalog = pd.read_csv("human_all_wide_2025-10-19.tsv.gz", sep="\t", compression="gzip", dtype=str)
