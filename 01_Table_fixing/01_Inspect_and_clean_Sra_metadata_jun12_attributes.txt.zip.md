@@ -1,3 +1,8 @@
+## 01_Inspect_and_clean_Sra_metadata_jun12_attributes.txt.zip.md
+
+**Objectives:**
+* Filter age and gut related samples from the whole dataset.
+
 Input files:
 * Sra_metadata_jun12_attributes.txt.zip
 
@@ -5,20 +10,18 @@ Input files:
 
 ### 1.1 Preview File Contents and Filter Relevant Rows
 
-The metadata file is compressed and very large, so we inspect it using Unix tools.
+* The metadata file is compressed and very large, so we inspect it using Unix tools.
 
 ```bash
 unzip -p Sra_metadata_jun12_attributes.txt.zip Sra_metadata_jun12_attributes.txt | head -n 5
-
 ```
-### 1.2 extract all the column names:
-
+### 1.2 Extract all the column names:
 
 ```bash
 unzip -p Sra_metadata_jun12_attributes.txt.zip | \
 head -n 1 | \
 tr '\t' '\n' | \
-nl > column_names_numbered.txt
+nl -w2 -s$'\t' > SRA_columns_with_indexes.txt
 ```
 
 ## 2. Unpack the jattr Column (JSON Attributes)
@@ -149,7 +152,8 @@ print(f"Saved {len(df_gut_samples)} gut-related samples.")
 ```
 
 ** Output files: **
-* columns_with_indexes.txt
+* SRA_columns_with_indexes.txt
 * SRA_metadata_known_sex_full.csv
 * df_gut_samples.to_csv("SRA_metadata_gut_sex_samples_full.csv", index=False)
+    * file is too large for github 
 
