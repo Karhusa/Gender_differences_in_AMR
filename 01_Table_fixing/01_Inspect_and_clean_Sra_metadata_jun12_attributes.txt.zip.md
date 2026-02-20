@@ -151,7 +151,7 @@ df_gut_samples.to_csv("SRA_metadata_gut_sex_samples_full.csv", index=False)
 print(f"Saved {len(df_gut_samples)} gut-related samples.")
 ```
 
-** Output files: **
+**Output files: **
 * SRA_columns_with_indexes.txt
 * SRA_metadata_known_sex_full.csv
 * df_gut_samples.to_csv("SRA_metadata_gut_sex_samples_full.csv", index=False)
