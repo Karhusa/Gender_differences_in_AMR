@@ -87,7 +87,7 @@ keywords = [
     "acc", "accession", "biosample", "bioproject",
     "age", "sex", "gender", "male", "female",
     "bmi", "body mass", "body",
-    "region", "geographic", "location", "country",
+    "region", "geographic", "location", "country", "contra"
 
     "family", "relationship", "sibling",
     "mother", "maternal", "mum", "mom", "dad", "father",
