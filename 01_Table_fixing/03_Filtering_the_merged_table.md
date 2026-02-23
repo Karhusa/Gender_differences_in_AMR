@@ -8,6 +8,9 @@
 * Harmonise BMI, age, disease, infection, UTI, and antibiotic metadata
 * Produce progressively cleaner TSV outputs (`kesken1.tsv`, `kesken2.tsv`)
 
+Input files:
+* Filtered_Metadata.tsv
+
 ---
 
 ## 1. Load Data
@@ -157,18 +160,84 @@ print(f" Shape: {filtered_df.shape}")
 Shape: (24605, 317)
 
 * Output file: Filtered_Metadata.tsv
-    * No need to save, just for inspection 
+    * No need to save, just for inspection
+exclude columns related to:
+* technical metadata
+* Lifestyle 
+* Disease stage
+* birth
+* Unrelated treatments, diseases or measurements
+* Too detailed geography/location
 
-Exclude "16s" "milk", neonate_pair, dpl63, dosage_1, end_stage, birth_gestational, age_of_onset,disease_duration_years, partner_last6months, tnm_stage, diet_sam, storage_temperature, diet_full, "alcohol", "tobacco" creatinine_mumol_l, body_%_fat, birth_country, cigarette, age_z_score, body_fat_mass, treatment_group, village_sam, baseline_montreal_location, disease_cause, drug_statins, childhood_accomodation, excercise, sam_s_dpl104, birth_outside, smoked, immunotherapy, soft_drinks, disease_duration, body_product_sam, time_per_time, dosage_sam, body_temp, diagnosed_with_disease, body_site_sam, disease_group, reaction_medication, diagnosis_date, infection_control_means, specimen_location_sam. sample_location_full, discovery_stage, treatment_where_sam, disease_extent, treatment_duration, treatment_effect, propranolol, age_at_diagnosis, birth_country, bilharzia, body_lean_mass, feedingage, village_grouping, treatment_by_sam, metagenomic_sequencing, age_units, best_response, smoke, biologics, have_you_received, hoehn_yahr_stage, stage_sam, inflammatory_drugs, vegan, treatment_group, lifestyle, particular_diet, caffeinated, schistosoma, lifestylegeneral, longitude, age_z_score,
-country_birth, drug_combine, tumor_stage, physicalexercise, submitter_id, medication_code,
-storageprotocol, day_of_life, village, raw_metadata_diet, vaccination_last3weeks, tumor_localization, disease_activity, mumps_sam, urea_nitrogen, disease_duration, body_temperature, diet_as_a_baby, nucleic_acid, extractionprotocolid, "treatment_(y_or_n)",
-body_habitat_sam, agedischargeddays, validation_stage, disease_status_sam
 
+```python
 
+exclude_keywords = [
 
-df["host_disease_status_sam"].unique()
+    "16s", "metagenomic_sequencing", "nucleic_acid",
+    "extractionprotocolid", "storageprotocol",
+    "storage_temperature", "specimen_location_sam",
+    "sample_location_full", "body_site_sam",
+    "body_habitat_sam",
 
-# Antibiotics: 1.1 S01AA
+    "diet", "diet_sam", "diet_full", "raw_metadata_diet",
+    "diet_as_a_baby", "particular_diet", "vegan",
+    "lifestyle", "lifestylegeneral",
+    "alcohol", "tobacco", "smoke", "smoked", "cigarette",
+    "soft_drinks", "caffeinated", "physicalexercise", "excercise",
+
+    "stage", "tnm_stage", "tumor_stage", "tumor_localization",
+    "discovery_stage", "validation_stage", "hoehn_yahr_stage",
+    "baseline_montreal_location", "disease_extent",
+    "disease_activity", "disease_group", "disease_status_sam",
+
+    "age_of_onset", "age_at_diagnosis",
+    "diagnosis_date", "disease_duration",
+    "disease_duration_years",
+
+    "birth_gestational", "birth_country", "birth_outside",
+    "day_of_life", "agedischargeddays",
+    "feedingage", "neonate_pair",
+
+    "treatment", "treatment_group", "treatment_duration",
+    "treatment_effect", "treatment_where_sam",
+    "treatment_by_sam", "treatment_(y_or_n)",
+    "dosage", "dosage_1", "dosage_sam",
+    "drug", "drug_statins", "drug_combine",
+    "immunotherapy", "biologics",
+    "inflammatory_drugs", "reaction_medication",
+    "medication_code", "propranolol",
+
+    "creatinine_mumol_l", "urea_nitrogen",
+    "body_temp", "body_temperature",
+    "body_%_fat", "body_fat_mass", "body_lean_mass",
+    "age_z_score",
+
+    "village", "village_sam", "village_grouping",
+    "longitude", "country_birth",
+
+    "submitter_id",
+
+    "bilharzia", "schistosoma", "mumps_sam",
+
+    "metadata_condition", "sexual_orientation",
+    "infection_control_means"
+]
+
+pattern = "|".join([re.escape(k) for k in exclude_keywords])
+
+cols_to_remove = df.columns[df.columns.str.contains(
+    pattern, case=False, regex=True
+)]
+
+filtered_df = df.drop(columns=cols_to_remove)
+
+print("Removed columns:", len(cols_to_remove))
+
+print(f" Shape: {filtered_df.shape}")
+ Shape: (24605, 191)
+```
+
 
 
 ## 4. BMI Cleaning and Categorization
@@ -617,7 +686,9 @@ df.to_csv("kesken2.tsv", sep="\t", index=False)
 
 ---
 
+df["raw_metadata_sexual_orientation"].unique()
 
+# Antibiotics: 1.1 S01AA
 
 
 
