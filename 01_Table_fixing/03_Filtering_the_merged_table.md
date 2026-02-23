@@ -160,15 +160,17 @@ print(f" Shape: {filtered_df.shape}")
 Shape: (24605, 317)
 
 * Output file: Filtered_Metadata.tsv
-    * No need to save, just for inspection
-exclude columns related to:
+     * No need to save, just for inspection
+
+
+
+Exclude columns related to:
 * technical metadata
 * Lifestyle 
 * Disease stage
 * birth
 * Unrelated treatments, diseases or measurements
 * Too detailed geography/location
-
 
 ```python
 
@@ -230,15 +232,13 @@ cols_to_remove = df.columns[df.columns.str.contains(
     pattern, case=False, regex=True
 )]
 
-filtered_df = df.drop(columns=cols_to_remove)
+df = df.drop(columns=cols_to_remove)
 
 print("Removed columns:", len(cols_to_remove))
 
-print(f" Shape: {filtered_df.shape}")
+print(f" Shape: {df.shape}")
  Shape: (24605, 191)
 ```
-
-
 
 ## 4. BMI Cleaning and Categorization
 
@@ -249,11 +249,39 @@ bmi_cols = df.columns[df.columns.str.contains("bmi", case=False)]
 
 for col in bmi_cols:
     print(f"{col}: {df[col].unique()}")
+
+
 ```
 
----
-
 ### 4.2 Convert BMI to Numeric and Create Categories
+
+* Numeric BMI column
+
+```python
+
+df["bmi"] = pd.to_numeric(df["bmi"], errors="coerce")
+df["bmi_sam"] = pd.to_numeric(df["bmi_sam"], errors="coerce")
+
+df["bmi"] = df["bmi"].round(1)
+df["bmi_sam"] = df["bmi_sam"].round(1)
+
+df["BMI"] = df["bmi"].fillna(df["bmi_sam"])
+
+conflicts = df[
+     df["bmi"].notna() &
+     df["bmi_sam"].notna() &
+     (df["bmi"] != df["bmi_sam"])
+]
+ 
+conflicts.shape
+
+df["BMI"].count()
+```
+No conflicts
+
+BMI has 5774 values
+
+
 
 ```python
 df["bmi"] = pd.to_numeric(df["bmi"], errors="coerce")
@@ -267,8 +295,9 @@ labels = [
 ]
 
 df["BMI_range_new"] = pd.cut(df["bmi"], bins=bins, labels=labels)
+
+
 ```
-exclude = milk, 5yr
 
 ---
 
@@ -285,6 +314,8 @@ bmi_range_map = {
 
 mask = df["bmi_range"].notna()
 df.loc[mask, "BMI_range_new"] = df.loc[mask, "bmi_range"].map(bmi_range_map)
+
+filtered_df = df.drop(columns=cols_to_remove)
 ```
 
 ---
