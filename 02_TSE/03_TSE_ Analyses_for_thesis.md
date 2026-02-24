@@ -8,6 +8,7 @@ library(ggplot2)
 library(tidyr)
 library(ggsci)
 library(mgcv)
+library(ggpubr)
 ```
 
 ## 1.2 Load TSE
@@ -454,6 +455,84 @@ ggsave("GAM_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 ```
 
 ![GAM ARG Load by Sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/GAM_log10ARG_by_sex_age_ready.png)
+
+## 2.4 Ananlyses of BMI and sex
+
+```r
+
+Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
+Subset$BMI_range_new[Subset$BMI_range_new == "" | Subset$BMI_range_new == "NA"] <- NA
+
+Subset <- Subset %>% filter(BMI_range_new != "Normal/Overweight (<30)")
+
+Subset$sex <- recode(Subset$sex,
+                     "female" = "Female",
+                     "male"   = "Male")
+
+levels_bmi <- c("Underweight (<18.5)", "Normal (18.5-25)", 
+                "Overweight (25-30)", "Obese (>30)")
+Subset$BMI_range_new <- factor(Subset$BMI_range_new, levels = levels_bmi)
+
+plot_df <- Subset %>% 
+  filter(!is.na(log10_ARG_load), !is.na(sex), !is.na(BMI_range_new)) %>%
+  mutate(
+    precise_age_category = factor(BMI_range_new, levels = levels_bmi),
+    sex = factor(sex, levels = c("Female", "Male"))
+  )
+
+counts <- plot_df %>%
+  group_by(BMI_range_new, sex) %>%
+  summarise(N = n(), .groups = "drop") %>%
+  mutate(
+    y_pos = max(plot_df$log10_ARG_load, na.rm = TRUE) * 1.05,
+    precise_age_category = factor(BMI_range_new, levels = levels_bmi)
+  )
+
+bmi_labels <- c("Underweight", "Normal", "Overweight", "Obese")
+npg_cols <- pal_npg("nrc")(2)
+
+# Plot
+ggplot(plot_df, aes(x = BMI_range_new, y = log10_ARG_load, fill = sex)) +
+  geom_jitter(
+    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.6),
+    size = 1.2, alpha = 0.25, color = "grey30"
+  ) +
+  geom_boxplot(
+    width = 0.55, outlier.shape = NA, alpha = 0.8,
+    position = position_dodge(width = 0.6)
+  ) +
+  geom_text(
+    data = counts,
+    aes(x = precise_age_category, y = y_pos, label = N, color = sex),
+    position = position_dodge(width = 0.6),
+    inherit.aes = FALSE,
+    size = 2.0,
+    fontface = "bold",
+    show.legend = FALSE
+  ) +
+  stat_compare_means(
+    aes(group = sex),           # group by sex for comparisons
+    method = "t.test",          # or "wilcox.test" for non-parametric
+    label = "p.signif",         # shows *, **, ***
+    label.size = 4,
+    hide.ns = FALSE              # hides ns (not significant)
+  ) +
+  scale_x_discrete(labels = age_labels) +
+  scale_fill_npg() +
+  scale_color_npg() +
+  labs(
+    title = "ARG Load by BMI and Sex",
+    x = "BMI range",
+    y = expression(log[10]*"(ARG load)"),
+    fill = "Sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
 
 
 
