@@ -208,7 +208,7 @@ ggsave("Loess_log10ARG_by_sex_age_category_ready.png", width = 8, height = 6, dp
 ![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/AGR_Load_Analyses/LOESS_log10ARG_by_sex_age_category_ready.png)
 
 
-### 2.3.3 Loess curve of ARG load by sex and numeric age
+### 2.3 Loess curve of ARG load by sex and numeric age
 
 ```
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -249,7 +249,7 @@ ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi
 ![LOESS ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Loess_log10ARG_by_sex_age_numeric_ready(2).png)
 
 
-### 2.3.4 Linear model
+### 2.4 Linear model
 ```
 
 lm_full <- lm(log10_ARG_load ~ age_years * sex, data = plot_df)
@@ -276,7 +276,7 @@ summary(lm_full)
 
 
 
-## 2.3.5 Optional GAM model
+### 2.5 Optional GAM model
 
 ```r
 library(mgcv)
@@ -325,14 +325,11 @@ Results:
 | Significance codes | . | p < 0.1 | – | – | – | – |
 
 
-
+### 2.6 GAM plot
 ```r
 
 ggplot(plot_df, aes(x = age_years, y = log10_ARG_load)) +
-  # raw points
   geom_point(alpha = 0.2, color = "grey70") +
-  
-  # ribbon from predictions
   geom_ribbon(
     data = newdat,
     aes(x = age_years, ymin = lwr, ymax = upr, fill = sex),
@@ -340,20 +337,14 @@ ggplot(plot_df, aes(x = age_years, y = log10_ARG_load)) +
     color = NA,
     inherit.aes = FALSE
   ) +
-  
-  # predicted lines
   geom_line(
     data = newdat,
     aes(x = age_years, y = fit, color = sex),
     size = 1.5,
     inherit.aes = FALSE
   ) +
-  
-  # ggsci palettes
   scale_color_npg() +
   scale_fill_npg() +
-  
-  # labels
   labs(
     x = "Age (years)",
     y = expression(log[10]*"(ARG load)"),
@@ -369,9 +360,9 @@ ggsave("GAM_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 
 ![GAM ARG Load by Sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/GAM_log10ARG_by_sex_age_ready.png)
 
-## 2.4 Analyses from age categories excluding "Oldest Adults"
+## 3. Analyses from age categories excluding "Oldest Adults"
 
-### 2.4.1  Base filtering (age ≤ 80)
+### 3.1  Base filtering (age ≤ 80)
 ```r
 df_no_80 <- Subset %>%
   filter(!is.na(age_years), age_years <= 80) %>%
@@ -380,7 +371,7 @@ df_no_80 <- Subset %>%
     sex = factor(sex, levels = c("Female", "Male"))
   )
 ```
-#  2.4.2 Plot 1: Boxplot by precise_age_category
+#  3.2 Plot 1: Boxplot by precise_age_category
 ```
 age_levels <- c("Infant", "Toddler", "Child", "Teenage",
                 "Young adult", "Middle-Age Adult", "Older Adult")
@@ -444,7 +435,7 @@ ggplot(plot_df_cat, aes(x = precise_age_category, y = log10_ARG_load, fill = sex
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 ```
-### 2.4.3 Plot 2: Loess curve by age_years
+### 3.3 Plot 2: Loess curve by age_years
 ```r
 plot_df_cont <- df_no_80 %>%
   filter(!is.na(log10_ARG_load))
@@ -465,7 +456,7 @@ ggplot(plot_df_cont, aes(x = age_years, y = log10_ARG_load, color = sex)) +
     plot.title = element_text(face = "plain")
   )
 ```
-### 2.4.4 Statistical results
+### 3.4 Statistical results
 ```
 summary_table <- plot_df_cont %>%
   group_by(sex) %>%
@@ -485,7 +476,7 @@ summary_table <- summary_table %>% mutate(wilcox_p = wilcox_p)
 summary_table
 
 ```
-# 2.4.5 GAM: ARG load ~ age_years + sex
+# 3.5 GAM: ARG load ~ age_years + sex
 
 ```r
 library(mgcv)
@@ -496,7 +487,7 @@ gam_model <- gam(
 )
 summary(gam_model)
 ```
-# 2.4.6 Table for statistics
+# 3.6 Table for statistics
 ```
 poster_table <- summary_table %>%
   mutate(
@@ -536,14 +527,15 @@ poster_table
 ```
 
 
-Separate by LMIC and HIC
+## 4. Separate by LMIC and HIC and remove ages over 80
 
+### 4.1. 
 
 ```r
 df_income_age_ARG <- Subset %>%
   select(
     sex,
-    BMI_range_new,            
+    World_Bank_Income_Group,        
     age_years,
     log10_ARG_load
   ) %>%
@@ -560,15 +552,64 @@ df_income_age_ARG <- Subset %>%
   ) %>%
   select(sex, age_years, Income_group, log10_ARG_load)
 
-df_income_ARG$Income_group <- factor(
-  df_income_ARG$Income_group,
+df_income_age_ARG$Income_group <- factor(
+  df_income_age_ARG$Income_group,
   levels = c("HIC", "LMIC")  
 )
 ```
+
+Remove ages above 80
+```
+
+# Prepare the dataset
+df_income_age_ARG <- Subset %>%
+  select(
+    sex,
+    World_Bank_Income_Group,        
+    age_years,
+    log10_ARG_load
+  ) %>%
+  mutate(
+    Income_group = case_when(
+      World_Bank_Income_Group == "High income" ~ "HIC",
+      World_Bank_Income_Group %in% c(
+        "Low income",
+        "Lower middle income",
+        "Upper middle income"
+      ) ~ "LMIC",
+      TRUE ~ NA_character_
+    ),
+    sex = recode(sex, "female" = "Female", "male" = "Male"),
+    sex = factor(sex, levels = c("Female", "Male"))
+  ) %>%
+  filter(
+    !is.na(age_years),
+    age_years <= 80,
+    !is.na(sex),
+    !is.na(log10_ARG_load),
+    !is.na(Income_group)
+  )
+
+# Plot by Income Group
+ggplot(df_income_age_ARG, aes(x = age_years, y = log10_ARG_load, color = sex)) +
+  geom_point(alpha = 0.1, size = 1) +
+  geom_smooth(method = "loess", se = TRUE, span = 0.8, size = 1.2) +
+  scale_color_npg() +
+  labs(
+    title = "Global ARG Load by Age and Income Group",
+    x = "Age (years)",
+    y = expression(log[10]*"(ARG load)"),
+    color = "Sex"
+  ) +
+  facet_wrap(~Income_group) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "plain")
+  )
+
 ## Convert age into logarithmic scale
 ```
 df_income_age_ARG <- df_income_age_ARG %>%
   filter(age_years > 0) %>%   # remove invalid ages
   mutate(log_age = log10(age_years))
-
-```
