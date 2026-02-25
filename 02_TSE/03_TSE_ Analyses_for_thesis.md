@@ -37,6 +37,37 @@ Subset <- colData_df %>%
     precise_age_category, imprecise_age_category
   )
 ```
+## 1.4 Look through columns
+
+### 1.4.1. Look through columns
+```
+table(Subset$sex)
+table(Subset$sex, Subset$BMI_range_new)
+```
+**Sex**
+* Female: 7426
+* Male: 7349
+
+**BMI**
+Normal (18.5-25)
+* Female: 1593 
+* Male: 1611
+        
+Obese (>30)  
+* Female: 628      
+* Male: 581        
+
+Overweight (25-30)
+* Female 556
+* Male: 823
+
+Underweight (<18.5) 
+* Female: 295
+* Male: 170
+```
+
+
+
 # 2. ARG load analyses
 
 ## 2.2 Ananlyses of ARGlog10 and sex
@@ -456,8 +487,9 @@ ggsave("GAM_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 
 ![GAM ARG Load by Sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/GAM_log10ARG_by_sex_age_ready.png)
 
-## 2.4 Ananlyses of BMI and sex
+## 2.4 Ananlyses of ARG Load, BMI and sex
 
+### 2.4.1 Boxplot of ARG Load, BMI and sex
 ```r
 
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -515,9 +547,9 @@ ggplot(plot_df, aes(x = BMI_range_new, y = log10_ARG_load, fill = sex)) +
     method = "t.test",          # or "wilcox.test" for non-parametric
     label = "p.signif",         # shows *, **, ***
     label.size = 4,
-    hide.ns = FALSE              # hides ns (not significant)
+    hide.ns = TRUE              # hides ns (not significant)
   ) +
-  scale_x_discrete(labels = age_labels) +
+  scale_x_discrete(labels = bmi_labels) +
   scale_fill_npg() +
   scale_color_npg() +
   labs(
@@ -532,6 +564,18 @@ ggplot(plot_df, aes(x = BMI_range_new, y = log10_ARG_load, fill = sex)) +
     plot.title = element_text(face = "bold"),
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
+```
+### 2.4.2 Additive linear model of AGR Load, BMI and sex
+```r
+plot_df$BMI_range_new <- relevel(
+  plot_df$BMI_range_new,
+  ref = "Normal (18.5-25)"
+)
+
+model_add <- lm(log10_ARG_load ~ BMI_range_new + sex, data = plot_df)
+summary(model_add)
+
+
 ```
 
 
