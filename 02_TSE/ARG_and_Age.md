@@ -515,11 +515,11 @@ poster_table <- summary_table %>%
   tab_header(
     title = md("**ARG Load Statistics by Sex**")
   ) %>%
-  fmt_number(
+  arg_number(
     columns = vars(Mean, Median, SD, Min, Max),
     decimals = 2
   ) %>%
-  fmt_number(
+  arg_number(
     columns = vars(`Wilcoxon p`),
     decimals = 3
   ) %>%
@@ -533,4 +533,42 @@ poster_table <- summary_table %>%
   )
 
 poster_table
+```
+
+
+Separate by LMIC and HIC
+
+
+```r
+df_income_age_ARG <- Subset %>%
+  select(
+    sex,
+    BMI_range_new,            
+    age_years,
+    log10_ARG_load
+  ) %>%
+  mutate(
+    Income_group = case_when(
+      World_Bank_Income_Group == "High income" ~ "HIC",
+      World_Bank_Income_Group %in% c(
+        "Low income",
+        "Lower middle income",
+        "Upper middle income"
+      ) ~ "LMIC",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(sex, age_years, Income_group, log10_ARG_load)
+
+df_income_ARG$Income_group <- factor(
+  df_income_ARG$Income_group,
+  levels = c("HIC", "LMIC")  
+)
+```
+## Convert age into logarithmic scale
+```
+df_income_age_ARG <- df_income_age_ARG %>%
+  filter(age_years > 0) %>%   # remove invalid ages
+  mutate(log_age = log10(age_years))
+
 ```
