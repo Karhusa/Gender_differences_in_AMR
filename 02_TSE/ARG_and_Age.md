@@ -529,39 +529,10 @@ poster_table
 
 ## 4. Separate by LMIC and HIC and remove ages over 80
 
-### 4.1. 
+### 4.1. Prepare the dataset
 
 ```r
-df_income_age_ARG <- Subset %>%
-  select(
-    sex,
-    World_Bank_Income_Group,        
-    age_years,
-    log10_ARG_load
-  ) %>%
-  mutate(
-    Income_group = case_when(
-      World_Bank_Income_Group == "High income" ~ "HIC",
-      World_Bank_Income_Group %in% c(
-        "Low income",
-        "Lower middle income",
-        "Upper middle income"
-      ) ~ "LMIC",
-      TRUE ~ NA_character_
-    )
-  ) %>%
-  select(sex, age_years, Income_group, log10_ARG_load)
 
-df_income_age_ARG$Income_group <- factor(
-  df_income_age_ARG$Income_group,
-  levels = c("HIC", "LMIC")  
-)
-```
-
-Remove ages above 80
-```
-
-# Prepare the dataset
 df_income_age_ARG <- Subset %>%
   select(
     sex,
@@ -589,8 +560,10 @@ df_income_age_ARG <- Subset %>%
     !is.na(log10_ARG_load),
     !is.na(Income_group)
   )
+```
+# 4.2 Plot by Income Group
+```
 
-# Plot by Income Group
 ggplot(df_income_age_ARG, aes(x = age_years, y = log10_ARG_load, color = sex)) +
   geom_point(alpha = 0.1, size = 1) +
   geom_smooth(method = "loess", se = TRUE, span = 0.8, size = 1.2) +
@@ -607,9 +580,199 @@ ggplot(df_income_age_ARG, aes(x = age_years, y = log10_ARG_load, color = sex)) +
     legend.position = "right",
     plot.title = element_text(face = "plain")
   )
-
-## Convert age into logarithmic scale
 ```
+# 4.3 Plot by HIC-countries
+```r
+
+ggplot(
+  df_income_age_ARG %>% filter(Income_group == "HIC"),
+  aes(x = age_years, y = log10_ARG_load, color = sex)
+) +
+  geom_point(alpha = 0.1, size = 1) +
+  geom_smooth(method = "loess", se = TRUE, span = 0.8, size = 1.2) +
+  scale_color_npg() +
+  labs(
+    title = "ARG Load by Age in HIC Countries",
+    x = "Age (years)",
+    y = expression(log[10]*"(ARG load)"),
+    color = "Sex"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "plain")
+  )
+
+```
+
+## 4.4 Convert age into logarithmic scale
+```r
 df_income_age_ARG <- df_income_age_ARG %>%
-  filter(age_years > 0) %>%   # remove invalid ages
-  mutate(log_age = log10(age_years))
+  mutate(log10_age = log10(age_years)) %>%      # create log10_age
+  filter(is.finite(log10_age))                  # remove Inf or -Inf values 
+```
+## 4.4. LOESS plot of log10 AGE
+```
+ggplot(df_income_age_ARG,
+       aes(x = log_age,
+           y = log10_ARG_load,
+           color = sex)) +
+  geom_point(alpha = 0.15, size = 1) +
+  geom_smooth(method = "loess", se = TRUE, span = 0.8) +
+  facet_wrap(~Income_group) +
+  theme_minimal(base_size = 13) +
+  labs(
+    title = "ARG Load vs Log(Age) by Income Group",
+    x = expression(Log[10]*"(Age)"),
+    y = expression(log[10]*"(ARG load)"),
+    color = "Sex"
+  )
+```
+## 4.5 Linear models for Log10 Ages
+```r
+model_HIC <- lm(
+  log10_ARG_load ~ log10_age + sex,
+  data = df_income_age_ARG %>% filter(Income_group == "HIC")
+)
+
+summary(model_HIC)
+
+model_LMIC <- lm(
+  log10_ARG_load ~ log10_age + sex,
+  data = df_income_age_ARG %>% filter(Income_group == "LMIC")
+)
+
+summary(model_LMIC)
+
+```
+
+## 4.6 Summary by Income Group and Sex
+
+```
+summary_table_sex <- df_income_age_ARG %>%
+  group_by(Income_group, sex) %>%
+  summarise(
+    n = n(),
+    mean_log10_ARG = mean(log10_ARG_load, na.rm = TRUE),
+    sd_log10_ARG = sd(log10_ARG_load, na.rm = TRUE),
+    median_log10_ARG = median(log10_ARG_load, na.rm = TRUE),
+    IQR_log10_ARG = IQR(log10_ARG_load, na.rm = TRUE)
+  ) %>%
+  arrange(Income_group, sex)
+
+```
+
+## 4.7 GT Image of the table:
+```
+summary_table_sex %>%
+  gt() %>%
+  tab_header(
+    title = "ARG Load Summary by Income Group and Sex",
+    subtitle = "Log10(ARG load) statistics"
+  ) %>%
+  fmt_number(
+    columns = vars(mean_log10_ARG, sd_log10_ARG, median_log10_ARG, IQR_log10_ARG),
+    decimals = 2
+  ) %>%
+  cols_label(
+    Income_group = "Income Group",
+    sex = "Sex",
+    n = "Sample Size",
+    mean_log10_ARG = "Mean",
+    sd_log10_ARG = "SD",
+    median_log10_ARG = "Median",
+    IQR_log10_ARG = "IQR"
+  ) %>%
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels(columns = everything())
+  ) %>%
+  tab_options(
+    table.font.size = 12
+  )
+```
+
+### 4.8 Summary of Linear model statistics 
+
+```
+extract_model_stats <- function(model, income_group){
+  s <- summary(model)
+  coefs <- s$coefficients
+  # Create a data frame
+  df <- data.frame(
+    Income_group = income_group,
+    term = rownames(coefs),
+    estimate = coefs[, "Estimate"],
+    std_error = coefs[, "Std. Error"],
+    t_value = coefs[, "t value"],
+    p_value = coefs[, "Pr(>|t|)"],
+    stringsAsFactors = FALSE
+  )
+  
+  # Add significance column
+  df$significance <- cut(
+    df$p_value,
+    breaks = c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
+    labels = c("***", "**", "*", ".", "")
+  )
+  
+  return(df)
+}
+
+# Extract for both
+df_HIC <- extract_model_stats(model_HIC, "HIC")
+df_LMIC <- extract_model_stats(model_LMIC, "LMIC")
+
+# Combine
+summary_table <- rbind(df_HIC, df_LMIC)
+
+# Round for poster
+summary_table <- summary_table %>%
+  mutate(
+    estimate = round(estimate, 3),
+    std_error = round(std_error, 3),
+    t_value = round(t_value, 2),
+    p_value = signif(p_value, 3)
+  )
+
+summary_table
+
+```
+
+### 4.7 GT Image of Linear model statistics 
+```r
+library(gt)
+
+summary_table %>%
+  gt() %>%
+  tab_header(
+    title = "Linear Model Coefficients by Income Group",
+    subtitle = "log10(ARG load) ~ log10_age + sex"
+  ) %>%
+  fmt_number(
+    columns = vars(estimate, std_error, t_value, p_value),
+    decimals = 3
+  ) %>%
+  cols_label(
+    Income_group = "Income Group",
+    term = "Predictor",
+    estimate = "Estimate",
+    std_error = "Std. Error",
+    t_value = "t-value",
+    p_value = "p-value",
+    significance = "Significance"
+  ) %>%
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels(columns = everything())
+  ) %>%
+  # Optional: color significant stars
+  tab_style(
+    style = cell_text(color = "red", weight = "bold"),
+    locations = cells_body(
+      columns = vars(significance),
+      rows = significance %in% c("***", "**", "*")
+    )
+  ) %>%
+  tab_options(table.font.size = 12)
+```
