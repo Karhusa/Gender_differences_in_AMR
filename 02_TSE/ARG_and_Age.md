@@ -527,7 +527,7 @@ poster_table
 ```
 
 
-## 4. Separate by LMIC and HIC and remove ages over 80
+## 4. Separate by LMIC and HIC and remove ages under 18 and over 80
 
 ### 4.1. Prepare the dataset
 
@@ -555,7 +555,8 @@ df_income_age_ARG <- Subset %>%
   ) %>%
   filter(
     !is.na(age_years),
-    age_years <= 80,
+    age_years >= 18,    # keep adults
+    age_years <= 80,    # exclude very old ages
     !is.na(sex),
     !is.na(log10_ARG_load),
     !is.na(Income_group)
@@ -607,172 +608,241 @@ ggplot(
 
 ## 4.4 Convert age into logarithmic scale
 ```r
-df_income_age_ARG <- df_income_age_ARG %>%
+df_income_age_ARG_f <- df_income_age_ARG %>%
   mutate(log10_age = log10(age_years)) %>%      # create log10_age
   filter(is.finite(log10_age))                  # remove Inf or -Inf values 
 ```
-## 4.4. LOESS plot of log10 AGE
-```
-ggplot(df_income_age_ARG,
-       aes(x = log_age,
-           y = log10_ARG_load,
-           color = sex)) +
-  geom_point(alpha = 0.15, size = 1) +
-  geom_smooth(method = "loess", se = TRUE, span = 0.8) +
-  facet_wrap(~Income_group) +
-  theme_minimal(base_size = 13) +
-  labs(
-    title = "ARG Load vs Log(Age) by Income Group",
-    x = expression(Log[10]*"(Age)"),
-    y = expression(log[10]*"(ARG load)"),
-    color = "Sex"
-  )
-```
+
 ## 4.5 Linear models for Log10 Ages
 ```r
 model_HIC <- lm(
   log10_ARG_load ~ log10_age + sex,
-  data = df_income_age_ARG %>% filter(Income_group == "HIC")
+  data = df_income_age_ARG_f %>% filter(Income_group == "HIC")
 )
 
 summary(model_HIC)
 
 model_LMIC <- lm(
   log10_ARG_load ~ log10_age + sex,
-  data = df_income_age_ARG %>% filter(Income_group == "LMIC")
+  data = df_income_age_ARG_f %>% filter(Income_group == "LMIC")
 )
 
 summary(model_LMIC)
 
 ```
 
-## 4.6 Summary by Income Group and Sex
+## 4.6 Summary and GT table by Income Group and Sex
 
 ```
-summary_table_sex <- df_income_age_ARG %>%
+sample_counts <- df_income_age_ARG_f %>%
   group_by(Income_group, sex) %>%
-  summarise(
-    n = n(),
-    mean_log10_ARG = mean(log10_ARG_load, na.rm = TRUE),
-    sd_log10_ARG = sd(log10_ARG_load, na.rm = TRUE),
-    median_log10_ARG = median(log10_ARG_load, na.rm = TRUE),
-    IQR_log10_ARG = IQR(log10_ARG_load, na.rm = TRUE)
-  ) %>%
-  arrange(Income_group, sex)
+  summarise(n = n(), .groups = "drop") %>%
+  tidyr::pivot_wider(names_from = sex, values_from = n) %>%
+  mutate(Total = Female + Male)
 
-```
-
-## 4.7 GT Image of the table:
-```
-summary_table_sex %>%
+# Create gt table
+sample_counts %>%
   gt() %>%
   tab_header(
-    title = "ARG Load Summary by Income Group and Sex",
-    subtitle = "Log10(ARG load) statistics"
-  ) %>%
-  fmt_number(
-    columns = vars(mean_log10_ARG, sd_log10_ARG, median_log10_ARG, IQR_log10_ARG),
-    decimals = 2
+    title = "Sample Counts by Income Group and Sex"
   ) %>%
   cols_label(
     Income_group = "Income Group",
-    sex = "Sex",
-    n = "Sample Size",
-    mean_log10_ARG = "Mean",
-    sd_log10_ARG = "SD",
-    median_log10_ARG = "Median",
-    IQR_log10_ARG = "IQR"
+    Female = "Female",
+    Male = "Male",
+    Total = "Total"
   ) %>%
-  tab_style(
-    style = cell_text(weight = "bold"),
-    locations = cells_column_labels(columns = everything())
-  ) %>%
-  tab_options(
-    table.font.size = 12
-  )
+  fmt_number(columns = vars(Female, Male, Total), decimals = 0)
+
+
 ```
 
-### 4.8 Summary of Linear model statistics 
+### LM model results
 
 ```
-extract_model_stats <- function(model, income_group){
-  s <- summary(model)
-  coefs <- s$coefficients
-  # Create a data frame
-  df <- data.frame(
-    Income_group = income_group,
-    term = rownames(coefs),
-    estimate = coefs[, "Estimate"],
-    std_error = coefs[, "Std. Error"],
-    t_value = coefs[, "t value"],
-    p_value = coefs[, "Pr(>|t|)"],
-    stringsAsFactors = FALSE
-  )
-  
-  # Add significance column
-  df$significance <- cut(
-    df$p_value,
-    breaks = c(-Inf, 0.001, 0.01, 0.05, 0.1, Inf),
-    labels = c("***", "**", "*", ".", "")
-  )
-  
-  return(df)
-}
+lm_LMIC <- lm(log10_ARG_load ~ log10_age + sex, 
+              data = df_income_age_ARG_f %>% filter(Income_group == "LMIC"))
+lm_HIC <- lm(log10_ARG_load ~ log10_age + sex, 
+             data = df_income_age_ARG_f %>% filter(Income_group == "HIC"))
 
-# Extract for both
-df_HIC <- extract_model_stats(model_HIC, "HIC")
-df_LMIC <- extract_model_stats(model_LMIC, "LMIC")
+# Tidy model outputs
+tidy_LMIC <- broom::tidy(lm_LMIC) %>%
+  mutate(Income_group = "LMIC") %>%
+  select(Income_group, term, estimate, std.error, statistic, p.value)
+
+tidy_HIC <- broom::tidy(lm_HIC) %>%
+  mutate(Income_group = "HIC") %>%
+  select(Income_group, term, estimate, std.error, statistic, p.value)
 
 # Combine
-summary_table <- rbind(df_HIC, df_LMIC)
+lm_table <- bind_rows(tidy_LMIC, tidy_HIC)
 
-# Round for poster
-summary_table <- summary_table %>%
+# Add model-level stats
+model_stats <- tibble(
+  Income_group = c("LMIC", "HIC"),
+  Adj_R2 = c(summary(lm_LMIC)$adj.r.squared, summary(lm_HIC)$adj.r.squared),
+  RSE = c(summary(lm_LMIC)$sigma, summary(lm_HIC)$sigma)
+)
+
+# Merge
+lm_table <- lm_table %>%
+  left_join(model_stats, by = "Income_group")
+
+# Create gt table
+lm_table %>%
+  gt() %>%
+  tab_header(title = "Linear Model Results for ARG Load") %>%
+  cols_label(
+    term = "Predictor",
+    estimate = "β",
+    std.error = "SE",
+    statistic = "t",
+    p.value = "p-value",
+    Adj_R2 = "Adjusted R²",
+    RSE = "Residual SE"
+  ) %>%
+  fmt_number(columns = c(estimate, std.error, statistic, Adj_R2, RSE), decimals = 2) %>%
+  fmt_scientific(columns = p.value, decimals = 1)
+
+```
+### Reproductive age
+
+```r
+
+df_income_r_age_ARG <- Subset %>%
+  select(
+    sex,
+    World_Bank_Income_Group,        
+    age_years,
+    log10_ARG_load
+  ) %>%
   mutate(
-    estimate = round(estimate, 3),
-    std_error = round(std_error, 3),
-    t_value = round(t_value, 2),
-    p_value = signif(p_value, 3)
+    Income_group = case_when(
+      World_Bank_Income_Group == "High income" ~ "HIC",
+      World_Bank_Income_Group %in% c(
+        "Low income",
+        "Lower middle income",
+        "Upper middle income"
+      ) ~ "LMIC",
+      TRUE ~ NA_character_
+    ),
+    sex = recode(sex, "female" = "Female", "male" = "Male"),
+    sex = factor(sex, levels = c("Female", "Male"))
+  ) %>%
+  filter(
+    !is.na(age_years),
+    !is.na(sex),
+    !is.na(log10_ARG_load),
+    !is.na(Income_group),
+    (sex == "Female" & age_years >= 15 & age_years <= 49) |
+    (sex == "Male" & age_years >= 15 & age_years <= 49)
   )
 
-summary_table
+```
+
 
 ```
 
-### 4.7 GT Image of Linear model statistics 
-```r
-library(gt)
+ggplot(df_income_r_age_ARG, aes(x = Income_group, y = log10_ARG_load, fill = sex)) +
+  geom_jitter(aes(color = sex), width = 0.2, alpha = 0.3, size = 1.5, show.legend = FALSE) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.8, width = 0.6) +
+  scale_fill_npg() +
+  scale_color_npg() +
+  labs(
+    x = "Income Group",
+    y = "log10(ARG load)",
+    fill = "Sex"
+  ) +
+  ggtitle("ARG Load by Income Group and Sex\nReproductive ages: Female 15–49, Male 15–49") +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    panel.grid.major.x = element_blank(),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
 
-summary_table %>%
+```
+Models:
+
+```
+library(dplyr)
+
+model_HIC <- lm(
+  log10_ARG_load ~ age_years + sex,
+  data = df_income_r_age_ARG %>% filter(Income_group == "HIC")
+)
+
+summary(model_HIC)
+
+model_LMIC <- lm(
+  log10_ARG_load ~ age_years + sex,
+  data = df_income_r_age_ARG %>% filter(Income_group == "LMIC")
+)
+
+summary(model_LMIC)
+```
+
+
+
+tables:
+
+```
+
+sample_counts <- df_income_r_age_ARG %>%
+  group_by(sex, Income_group) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  tidyr::pivot_wider(names_from = Income_group, values_from = n, values_fill = 0)
+
+sample_counts %>%
   gt() %>%
   tab_header(
-    title = "Linear Model Coefficients by Income Group",
-    subtitle = "log10(ARG load) ~ log10_age + sex"
-  ) %>%
-  fmt_number(
-    columns = vars(estimate, std_error, t_value, p_value),
-    decimals = 3
+    title = "Sample Counts by Sex and Income Group (Reproductive Age)"
   ) %>%
   cols_label(
-    Income_group = "Income Group",
-    term = "Predictor",
-    estimate = "Estimate",
-    std_error = "Std. Error",
-    t_value = "t-value",
-    p_value = "p-value",
-    significance = "Significance"
+    sex = "Sex",
+    HIC = "HIC",
+    LMIC = "LMIC"
   ) %>%
-  tab_style(
-    style = cell_text(weight = "bold"),
-    locations = cells_column_labels(columns = everything())
-  ) %>%
-  # Optional: color significant stars
-  tab_style(
-    style = cell_text(color = "red", weight = "bold"),
-    locations = cells_body(
-      columns = vars(significance),
-      rows = significance %in% c("***", "**", "*")
-    )
-  ) %>%
-  tab_options(table.font.size = 12)
+  fmt_number(
+    columns = vars(HIC, LMIC),
+    decimals = 0
+  )
+
 ```
+
+```
+tidy_LMIC <- broom::tidy(lm_LMIC) %>%
+  mutate(Income_group = "LMIC") %>%
+  select(Income_group, term, estimate, std.error, statistic, p.value)
+
+tidy_HIC <- broom::tidy(lm_HIC) %>%
+  mutate(Income_group = "HIC") %>%
+  select(Income_group, term, estimate, std.error, statistic, p.value)
+
+# Combine
+lm_table <- bind_rows(tidy_HIC, tidy_LMIC)
+
+# Add model-level stats
+model_stats <- tibble(
+  Income_group = c("HIC", "LMIC"),
+  Adj_R2 = c(summary(lm_HIC)$adj.r.squared, summary(lm_LMIC)$adj.r.squared),
+  RSE = c(summary(lm_HIC)$sigma, summary(lm_LMIC)$sigma)
+)
+
+# Merge
+lm_table <- lm_table %>%
+  left_join(model_stats, by = "Income_group")
+lm_table %>%
+  gt() %>%
+  tab_header(title = "Linear Model Results for ARG Load") %>%
+  cols_label(
+    term = "Predictor",
+    estimate = "β",
+    std.error = "SE",
+    statistic = "t",
+    p.value = "p-value",
+    Adj_R2 = "Adjusted R²",
+    RSE = "Residual SE"
+  ) %>%
+  fmt_number(columns = c(estimate, std.error, statistic, Adj_R2, RSE), decimals = 3) %>%
+  fmt_scientific(columns = p.value, decimals = 2)
