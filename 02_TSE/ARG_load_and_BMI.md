@@ -1,5 +1,7 @@
 BMI
 
+## 1.2 Load packages
+
 ```r
 library(SummarizedExperiment)
 library(dplyr)
@@ -8,6 +10,7 @@ library(tidyr)
 library(ggsci)
 library(mgcv)
 library(ggpubr)
+library(gt)
 ```
 
 ## 1.2 Load TSE
@@ -136,6 +139,7 @@ plot_df$BMI_range_new <- relevel(
 
 model_add <- lm(log10_ARG_load ~ BMI_range_new + sex, data = plot_df)
 summary(model_add)
+```
 
 ### 2.4.3 Separate by income gruops
 ```
@@ -229,40 +233,211 @@ ggplot(df_income_ARG, aes(x = Income_group, y = log10_ARG_load, fill = sex)) +
     plot.title = element_text(face = "bold"),
     legend.position = "right"
   )
+```
+Remove ages under 18
 
 ```
-
-TABLE
-
-```r
-
-
-
-
-```
-
-
-Linear models:
-
-VÄÄRIN, ÄLÄ TEE
-```r
-
-df_income_ARG <- df_income_ARG %>%
-  filter(!is.na(log10_ARG_load), !is.na(BMI_range_new)) %>%
+df_income_BMI_ARG <- Subset %>%
+  filter(age_years >= 18) %>%           # Remove ages under 18
+  select(
+    sex,
+    age_years,
+    BMI_range_new,            
+    World_Bank_Income_Group,
+    log10_ARG_load
+  ) %>%
   mutate(
-    log_age = log(age_years)  # create log(age)
+    Income_group = case_when(
+      World_Bank_Income_Group == "High income" ~ "HIC",
+      World_Bank_Income_Group %in% c(
+        "Low income",
+        "Lower middle income",
+        "Upper middle income"
+      ) ~ "LMIC",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(sex, BMI_range_new, Income_group, log10_ARG_load)
+
+df_income_BMI_ARG$Income_group <- factor(
+  df_income_BMI_ARG$Income_group,
+  levels = c("HIC", "LMIC")  
+)
+
+
+levels_bmi <- c("Underweight (<18.5)", "Normal (18.5-25)", 
+                "Overweight (25-30)", "Obese (>30)")
+
+df_income_BMI_ARG <- df_income_BMI_ARG %>%
+  filter(!is.na(log10_ARG_load), !is.na(sex), 
+         !is.na(BMI_range_new), !is.na(Income_group)) %>%
+  mutate(
+    BMI_range_new = factor(BMI_range_new, levels = levels_bmi),
+    sex = factor(sex, levels = c("Female", "Male")),
+    Income_group = factor(Income_group, levels = c("HIC", "LMIC"))
   )
 
-# Split by Income group
-df_HIC <- df_income_ARG %>% filter(Income_group == "HIC")
-df_LMIC <- df_income_ARG %>% filter(Income_group == "LMIC")
+ggplot(df_income_BMI_ARG, aes(x = Income_group, y = log10_ARG_load, fill = sex)) +
+  geom_jitter(
+    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.6),
+    size = 1.2, alpha = 0.25, color = "grey30"
+  ) +
+  geom_boxplot(
+    width = 0.65,  # wider boxes
+    outlier.shape = NA, alpha = 0.8,
+    position = position_dodge(width = 0.65)
+  ) +
+  stat_compare_means(
+    aes(group = sex),
+    method = "t.test",
+    label = "p.signif",
+    hide.ns = TRUE
+  ) +
+  
+  facet_wrap(
+    ~ BMI_range_new,
+    nrow = 1,
+    scales = "free_x",
+    labeller = label_wrap_gen(width = 15)  # wrap long facet labels
+  ) +
+  
+  scale_fill_npg() +
+  scale_color_npg() +
+  
+  labs(
+    title = "ARG Load by Income, Sex, and BMI",
+    x = "Income group",
+    y = expression(log[10]*"(ARG load)"),
+    fill = "Sex"
+  ) +
+  
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.background = element_rect(fill = "grey95", color = NA),  # lighter background
+    strip.text = element_text(face = "bold", size = 11, lineheight = 0.9),
+    panel.grid.major.y = element_line(color = "grey80"),
+    panel.grid.minor = element_blank(),
+    panel.spacing = unit(1.2, "lines"),
+    axis.text.x = element_text(angle = 0, hjust = 0.5),
+    plot.title = element_text(face = "bold"),
+    legend.position = "right"
+  )
+```
 
-# Run LM for HIC
-lm_HIC <- lm(log10_ARG_load ~ sex + BMI_range_new, data = df_HIC)
-summary(lm_HIC)
 
-# Run LM for LMIC
-lm_LMIC <- lm(log10_ARG_load ~ sex + BMI_range_new, data = df_LMIC)
-summary(lm_LMIC)
+
+```
+
+df_income_BMI_ARG <- df_income_BMI_ARG %>%
+  mutate(BMI_range_new = relevel(BMI_range_new, ref = "Normal (18.5-25)"))
+
+# Linear model for HIC
+model_HIC <- lm(
+  log10_ARG_load ~ BMI_range_new + sex,
+  data = df_income_BMI_ARG %>% filter(Income_group == "HIC")
+)
+summary(model_HIC)
+
+# Linear model for LMIC
+model_LMIC <- lm(
+  log10_ARG_load ~ BMI_range_new + sex,
+  data = df_income_BMI_ARG %>% filter(Income_group == "LMIC")
+)
+summary(model_LMIC)
+
+```
+
+
+
+Sample counts:
+
+```r
+
+sample_counts <- df_income_BMI_ARG %>%
+  group_by(Income_group, BMI_range_new, sex) %>%
+  summarise(n_samples = n(), .groups = "drop")
+
+# Display as a separate gt table
+sample_counts %>%
+  gt(groupname_col = "Income_group") %>%
+  tab_header(
+    title = "Number of Samples Used in Linear Models",
+    subtitle = "Counts per BMI category and sex"
+  ) %>%
+  cols_label(
+    BMI_range_new = "BMI Category",
+    sex = "Sex",
+    n_samples = "Number of Samples"
+  )
+
+```
+
+```
+get_signif <- function(p) {
+  case_when(
+    p < 0.001 ~ "***",
+    p < 0.01  ~ "**",
+    p < 0.05  ~ "*",
+    p < 0.1   ~ ".",
+    TRUE      ~ ""
+  )
+}
+
+# Extract HIC model summary
+sum_HIC <- summary(model_HIC)
+df_HIC <- data.frame(
+  term = rownames(sum_HIC$coefficients),
+  estimate = sum_HIC$coefficients[, "Estimate"],
+  std.error = sum_HIC$coefficients[, "Std. Error"],
+  t.value = sum_HIC$coefficients[, "t value"],
+  p.value = sum_HIC$coefficients[, "Pr(>|t|)"],
+  Income_group = "HIC",
+  row.names = NULL
+)
+
+# Extract LMIC model summary
+sum_LMIC <- summary(model_LMIC)
+df_LMIC <- data.frame(
+  term = rownames(sum_LMIC$coefficients),
+  estimate = sum_LMIC$coefficients[, "Estimate"],
+  std.error = sum_LMIC$coefficients[, "Std. Error"],
+  t.value = sum_LMIC$coefficients[, "t value"],
+  p.value = sum_LMIC$coefficients[, "Pr(>|t|)"],
+  Income_group = "LMIC",
+  row.names = NULL
+)
+
+# Combine, clean names, and add significance
+df_combined <- bind_rows(df_HIC, df_LMIC) %>%
+  mutate(
+    term = recode(term,
+                  "(Intercept)" = "Normal (18.5-25) Female",
+                  "BMI_range_newUnderweight (<18.5)" = "Underweight (<18.5)",
+                  "BMI_range_newOverweight (25-30)" = "Overweight (25-30)",
+                  "BMI_range_newObese (>30)" = "Obese (>30)",
+                  "sexMale" = "Male"),
+    Significance = get_signif(p.value)
+  )
+
+# Create gt table
+df_combined %>%
+  gt(groupname_col = "Income_group") %>%
+  fmt_number(
+    columns = c(estimate, std.error, t.value, p.value),
+    decimals = 3
+  ) %>%
+  tab_header(
+    title = "Linear Model Results: log10(ARG load) ~ BMI + Sex",
+    subtitle = "Reference: Normal weight Female"
+  ) %>%
+  cols_label(
+    term = "Predictor",
+    estimate = "Estimate",
+    std.error = "Std. Error",
+    t.value = "t-value",
+    p.value = "p-value",
+    Significance = "Significance"
+  )
+
 
 ```
