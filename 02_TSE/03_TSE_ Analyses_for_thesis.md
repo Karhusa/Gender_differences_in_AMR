@@ -48,31 +48,23 @@ table(Subset$sex, Subset$BMI_range_new)
 * Female: 7426
 * Male: 7349
 
-**BMI**
-Normal (18.5-25)
-* Female: 1593 
-* Male: 1611
-        
-Obese (>30)  
-* Female: 628      
-* Male: 581        
-
-Overweight (25-30)
-* Female 556
-* Male: 823
-
-Underweight (<18.5) 
-* Female: 295
-* Male: 170
-```
-
-
-
 # 2. ARG load analyses
 
 ## 2.2 Ananlyses of ARGlog10 and sex
 
-### 2.2.1 Boxplot of ARGlog10 and sex
+### 2.2.1 Normal distribution
+
+```r
+ggplot(plot_df, aes(x = log10_ARG_load)) +
+  geom_histogram(bins = 30, fill = "steelblue") +
+  facet_wrap(~ sex) +
+  theme_minimal()
+```
+
+![Normal distribution of ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Normal_distribution_ARG_sex.png)
+
+
+### 2.2.2 Boxplot of ARGlog10 and sex
 ```r
 
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -118,7 +110,7 @@ ggsave("Boxplot_log10ARG_by_sex_ready.png", width = 8, height = 6, dpi = 300)
 ```
 ![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Boxplot_log10ARG_by_sex_ready.png)
 
-### 2.2.2 Do we have repeated samples?
+### 2.2.3 Do we have repeated samples?
 
 ```r
 plot_df %>%
@@ -138,12 +130,12 @@ plot_df %>%
 * subjects_with_repeats :0
 
 
-
-### 2.2.3 Wilcoxon rank-sum test
+### 2.24 Linear regression
 ```r
-
+wilcox.test(log10_ARG_load ~ sex, data = plot_df)
 
 ```
+
 **Results:**
 
 
@@ -170,7 +162,6 @@ pooled_sd <- sqrt(((n1-1)*sd1^2 + (n2-1)*sd2^2) / (n1 + n2 - 2))
 cohen_d <- (mean1 - mean2) / pooled_sd
 cohen_d
 ```
-# -> 0.1136723
 **Results**
 Cohen's D: 0.1136723
 
