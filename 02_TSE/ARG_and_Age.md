@@ -251,28 +251,41 @@ ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi
 
 ### 2.4 Linear model
 ```
+plot_df <- Subset %>%
+  filter(!is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(age_years)) %>%
+  mutate(sex = factor(sex, levels = c("Female", "Male")))
+Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
+Subset$age_years[Subset$age_years == "" | is.na(Subset$age_years)] <- NA
 
-lm_full <- lm(log10_ARG_load ~ age_years * sex, data = plot_df)
+lm_full <- lm(log10_ARG_load ~ age_years + sex, data = plot_df)
 summary(lm_full)
 
 ```
 
-| Section | Term | Estimate / Value | Std. Error | Statistic | p-value | Signif. |
-|--------|------|-----------------|------------|-----------|---------|---------|
-| Model information | Formula | log10_ARG_load ~ age_years * sex | – | – | – | – |
-| Model information | Residual standard error | 0.3024 (df = 10065) | – | – | – | – |
-| Model information | Observations deleted | 311 | – | – | – | – |
-| Model information | Multiple R-squared | 0.01433 | – | – | – | – |
-| Model information | Adjusted R-squared | 0.01404 | – | – | – | – |
-| Model information | F-statistic | 48.79 (3, 10065 DF) | – | – | <2.2e-16 | – |
-| Parametric coefficients | (Intercept) | 2.7052081 | 0.0081720 | t = 331.032 | <2e-16 | *** |
-| Parametric coefficients | age_years | 0.0011343 | 0.0001834 | t = 6.185 | 6.45e-10 | *** |
-| Parametric coefficients | sexMale | -0.0336205 | 0.0114390 | t = -2.939 | 0.0033 | ** |
-| Parametric coefficients | age_years:sexMale | 0.0006515 | 0.0002519 | t = 2.587 | 0.0097 | ** |
-| Significance codes | *** | p < 0.001 | – | – | – | – |
-| Significance codes | ** | p < 0.01 | – | – | – | – |
-| Significance codes | * | p < 0.05 | – | – | – | – |
-| Significance codes | . | p < 0.1 | – | – | – | – |
+| Min      | 1Q       | Median  | 3Q      | Max     |
+| -------- | -------- | ------- | ------- | ------- |
+| -1.00348 | -0.19450 | 0.01204 | 0.19203 | 1.73418 |
+
+Coefficients
+
+| Term | Estimate | Std. Error | t value | Pr(>t) | Significance |
+|------------|------------|------------|---------|----------|--------------|
+| (Intercept) | 2.6921136 | 0.0064172 | 419.515 | < 2e-16 | *** |
+| age_years | 0.0014797 | 0.0001257 | 11.769 | < 2e-16 | *** |
+| sexMale | -0.0084758 | 0.0060318 | -1.405 | 0.16 | |
+
+| Item                    | Value                              |
+| ----------------------- | ---------------------------------- |
+| Formula                 | `log10_ARG_load ~ age_years + sex` |
+| Residual Standard Error | 0.3025                             |
+| Degrees of Freedom      | 10066                              |
+| Multiple R²             | 0.01368                            |
+| Adjusted R²             | 0.01348                            |
+| F-statistic             | 69.8 (df = 2, 10066)               |
+| Model p-value           | < 2.2e-16                          |
+
 
 
 
