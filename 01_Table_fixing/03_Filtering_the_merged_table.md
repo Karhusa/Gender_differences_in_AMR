@@ -87,7 +87,7 @@ keywords = [
     "acc", "accession", "biosample", "bioproject",
     "age", "sex", "gender", "male", "female",
     "bmi", "body mass", "body",
-    "region", "geographic", "location", "country", "contra"
+    "region", "geographic", "location", "country", "contra", "urban", "rural"
 
     "family", "relationship", "sibling",
     "mother", "maternal", "mum", "mom", "dad", "father",
@@ -99,7 +99,7 @@ keywords = [
     "disease", "diagnosis", "condition",
     "infection", "immune", "immunity", "inflammation",
     "cancer", "tumor", "malign", "malignancy",
-    "asthma",
+    "asthma", "sepsis",
     "ibd", "crohn", "ulcerative", "colitis",
     "intestine", "gut",
 
