@@ -234,13 +234,12 @@ filtered_df = filtered_df.drop(columns=cols_to_remove)
 print("Removed columns:", len(cols_to_remove))
 
 print(f" Shape: {filtered_df.shape}")
-
-#filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
-#filtered_df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
-
 ```
  Shape: (24605, 190)
 
+
+#filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
+#filtered_df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
 
 ---
 ## 4.UTI-Related Columns
@@ -287,9 +286,6 @@ uri_cols = filtered_df.columns[filtered_df.columns.str.contains("urine", case=Fa
 
 for col in uri_cols:
     print(f"{col}: {filtered_df[col].unique()}")
-
-# raw_metadata_urineinfection: [nan  0.  1.]
-
 
 filtered_df.loc[
     filtered_df["raw_metadata_urineinfection"].fillna(0) == 1,
@@ -353,23 +349,15 @@ filtered_df["Colorectal_Cancer"] = filtered_df["Colorectal_Cancer"].notna().map(
     True: "Yes",
     False: "No"
 })
-
 ```
-
 ---
 
 ## 6. Infection-Related Columns
 
 ```python
-
 infection_cols = filtered_df.columns[filtered_df.columns.str.contains("infection", case=False)]
 for col in infection_cols:
     print(f"{col}: {filtered_df[col].unique()}")
-
-#raw_metadata_otherinfection: [nan  0.  1.]
-raw_metadata_bloodinfection: [nan  0.  1.]
-raw_metadata_gi_infection: [nan 'No' '3-4 years ago, stomach bug']
-raw_metadata_trachealinfection: [nan  0.  1.]
 
 filtered_df = filtered_df.drop(columns=[
     "raw_metadata_otherinfection",
@@ -429,6 +417,7 @@ filtered_df.drop(columns=["raw_metadata_location"], inplace=True)
 ```
 
 #### raw_metadata_location
+
 * Append countries into Country column.
 * Append cities into into City column
 * Create a Continent column and append values of the continents there
@@ -487,9 +476,6 @@ filtered_df.drop(columns=["geographic_location__region_and_locality__sam"], inpl
 ```python
 filtered_df.drop(columns=["geographic_location__latitude__sam"], inplace=True)
 ```
-#filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
-
-filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
 
 ### 6.2 Keyword: continent
 
@@ -522,6 +508,7 @@ filtered_df.drop(columns=[
 
 filtered_df["Continent"].value_counts(dropna=False)
 ```
+
 ---
 
 ## 7. Family-related columns
@@ -540,6 +527,8 @@ filtered_df["Parent"] = np.select(
     ["Mother", "Father"],
     default="None")
 
+filtered_df.drop(columns=["host_family_relationship_sam",], inplace=True)
+
 filtered_df["Parent"].value_counts(dropna=False)
 ```
 ### 7.1 Keyword: maternal
@@ -550,16 +539,16 @@ maternal_cols = filtered_df.columns[filtered_df.columns.str.contains("maternal",
 for col in maternal_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
-
 filtered_df.drop(columns=maternal_cols, inplace=True)
 ```
 
-### 7.1 Keyword: mother
+### 7.2 Keyword: mother
+
+```python
 mo_cols = filtered_df.columns[filtered_df.columns.str.contains("mother", case=False)]
 
 for col in mo_cols:
     print(f"{col}: {filtered_df[col].unique()}")
-
 
 filtered_df.loc[
     (filtered_df["raw_metadata_mother"].notna()) | 
@@ -569,8 +558,23 @@ filtered_df.loc[
 
 filtered_df.drop(columns=mo_cols, inplace=True)
 ```
+### 7.3 Keyword: Father
 
+```python
+fa_cols = filtered_df.columns[filtered_df.columns.str.contains("father", case=False)]
 
+for col in fa_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+filtered_df.loc[
+    (filtered_df["raw_metadata_father"].notna()),
+    "Parent"
+] = "Father"
+
+filtered_df.drop(columns=fa_cols, inplace=True)
+
+filtered_df["Parent"].value_counts(dropna=False)
+```
 ---
 
 ## 7. Antibiotic Usage Processing 
@@ -622,6 +626,13 @@ Antibiotic_Use
 * No       641
 
 
+#filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
+#filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
+
+filtered_df["Clindamycin"].value_counts(dropna=False)
+
+
+
 ### 7.1 Identify Antibiotic Columns
 
 ```python
@@ -631,26 +642,61 @@ antibiotic_cols_m = [c for c in filtered_df.columns if c.startswith("raw_metadat
 
 all_antibiotic_cols = antibiotic_cols_w + antibiotic_cols_c + antibiotic_cols_m
 
+antibiotics = [
+    "clindamycin", "amoxacillin", "cefazolin", "allabx", "vancomycin", "cefotaxime",
+    "oxacillin", "ticarcillinclavulanate", "metronidazole", "penicilling",
+    "ampicillinsulbactam", "gentamicin", "meropenem", "cefepime", "ampicillin",
+    "cefoxitin", "sulfamethoxazoletrimethoprim"
+]
+
+for ab in antibiotics:
+    w_col = f"raw_metadata_w_{ab}"
+    c_col = f"raw_metadata_c_{ab}"
+    m_col = f"raw_metadata_m_{ab}"
+    new_col = ab.capitalize()
+
+    def check_use(row):
+        for col, cond in [(w_col, lambda x: x == 1),
+                          (c_col, lambda x: x > 0),
+                          (m_col, lambda x: x == 1)]:
+            if col in filtered_df.columns:
+                val = row[col]
+                if pd.notna(val) and cond(val):
+                    return "Yes"
+        return "No"
+
+    filtered_df[new_col] = filtered_df.apply(check_use, axis=1)
+
+# Check result
+filtered_df[[ab.capitalize() for ab in antibiotics]].head()
 
 
-```
+antibiotic_cols = [ab.capitalize() for ab in [
+    "clindamycin", "amoxacillin", "cefazolin", "allabx", "vancomycin", "cefotaxime",
+    "oxacillin", "ticarcillinclavulanate", "metronidazole", "penicilling",
+    "ampicillinsulbactam", "gentamicin", "meropenem", "cefepime", "ampicillin",
+    "cefoxitin", "sulfamethoxazoletrimethoprim"
+]]
 
-## 9.2 Create Antibiotic List per Sample
+def update_antibiotics_used(row):
+    # If already 'Yes', keep it
+    if row['Antibiotics_Used'] == 'Yes':
+        return 'Yes'
+    # If any antibiotic column is 'Yes', mark 'Yes'
+    elif any(row[col] == 'Yes' for col in antibiotic_cols):
+        return 'Yes'
+    # Otherwise keep current value (or 'No' if missing)
+    else:
+        return row['Antibiotics_Used'] if pd.notna(row['Antibiotics_Used']) else 'No'
 
-```python
-def get_antibiotics_list(row):
-    used = []
-    for col in all_antibiotic_cols:
-        if row[col] == 1:
-            name = col.replace("raw_metadata_w_", "") \
-                      .replace("raw_metadata_c_", "") \
-                      .replace("raw_metadata_m_", "")
-            used.append(name)
-    return used 
+filtered_df['Antibiotics_Used'] = filtered_df.apply(update_antibiotics_used, axis=1)
 
-df["antibiotics_list"] = df.apply(get_antibiotics_list, axis=1)
-```
----
+df['Antibiotics_Used'] = df.apply(update_antibiotics_used, axis=1)
+
+
+
+
+
 
 ## 9.3 Expand Lists Into Columns
 
@@ -755,42 +801,7 @@ df.to_csv("kesken1.tsv", sep="\t", index=False)
 
 ## 14.1 Inspect UTI related columns
 
-```python
-uti_cols = [col for col in df.columns if "uti" in col.lower()]
 
-for col in uti_cols:
-    print(f"Column: {col}")
-    print(df[col].unique())
-    print()
-```
----
-
-## 14.2 Create a single UTI history variable.
-* We also have one column (raw_metadata_UrineInfection) from 8.2 Inspect Remaining Infection Columns
-  
-```python
-df["UTI_history"] = np.where(
-    (df.get("raw_metadata_UTIs", 0) > 0) |
-    (df.get("raw_metadata_diagnosed_utis", 0) == 1) |
-    (df.get("raw_metadata_ecoli_utis", 0) == 1) |
-    (df.get("raw_metadata_history_of_recurrent_uti") == "Recurrent UTIs") |
-    (df.get("raw_metadata_UrineInfection") == 1),
-    "Yes", "No"
-)
-
-df = df.drop(columns=[
-    "raw_metadata_UTIs",
-    "raw_metadata_diagnosed_utis",
-    "raw_metadata_ecoli_utis",
-    "raw_metadata_history_of_recurrent_uti",
-    "raw_metadata_UrineInfection",
-])
-
-print(df["UTI_history"].value_counts(dropna=False))
-```
-UTI_history
-* No     24380
-* Yes      225
 
 ---
 
