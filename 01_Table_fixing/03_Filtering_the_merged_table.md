@@ -71,6 +71,8 @@ summary_df.to_csv("Metadata_column_value_summary.tsv", sep="\t", index=False)
 ```
 * No need to save, just for visual inspection
 
+---
+
 ## 4. Filter columns
 
 ### 4.2 Define Keywords for Column Filtering
@@ -152,17 +154,14 @@ matched_columns = list(set(matched_columns))
 
 filtered_df = df[matched_columns]
 
-
-
 print(f" Shape: {filtered_df.shape}")
 ```
 Shape: (24605, 316)
 
-* Output file: Filtered_Metadata.tsv
-     * No need to save, just for inspection
+* Output file: Filtered_Metadata.tsv (No need to save, just for inspection)
 
 
-Exclude columns related to:
+**Exclude columns related to:**
 * technical metadata
 * Lifestyle 
 * Disease stage
@@ -377,8 +376,6 @@ filtered_df = filtered_df.drop(columns=[
     "raw_metadata_gi_infection",
 ])
 ```
-
-
 ---
 
 ## 6.Location-Related Columns
@@ -529,7 +526,7 @@ filtered_df["Continent"].value_counts(dropna=False)
 
 ## 7. Family-related columns
 
-### 6.2 Keyword: family
+### 7.1 Keyword: family
 
 ```python
 family_cols = filtered_df.columns[filtered_df.columns.str.contains("family", case=False)]
@@ -538,19 +535,40 @@ for col in family_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
 filtered_df["Parent"] = np.select(
-    [
-        filtered_df["host_family_relationship_sam"].str.contains("mother", case=False, na=False),
-        filtered_df["host_family_relationship_sam"].str.contains("father", case=False, na=False)
-    ],
-    [
-        "Mother",
-        "Father"
-    ],
-    default="None"
-)
+    [filtered_df["host_family_relationship_sam"].str.contains("mother", case=False, na=False),
+    filtered_df["host_family_relationship_sam"].str.contains("father", case=False, na=False)],
+    ["Mother", "Father"],
+    default="None")
 
 filtered_df["Parent"].value_counts(dropna=False)
+```
+### 7.1 Keyword: maternal
+```python
 
+maternal_cols = filtered_df.columns[filtered_df.columns.str.contains("maternal", case=False)]
+
+for col in maternal_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+
+filtered_df.drop(columns=maternal_cols, inplace=True)
+```
+
+### 7.1 Keyword: mother
+mo_cols = filtered_df.columns[filtered_df.columns.str.contains("mother", case=False)]
+
+for col in mo_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+
+filtered_df.loc[
+    (filtered_df["raw_metadata_mother"].notna()) | 
+    (filtered_df["raw_metadata_mother_infant"].str.lower() == "mother"),
+    "Parent"
+] = "Mother"
+
+filtered_df.drop(columns=mo_cols, inplace=True)
+```
 
 
 ---
