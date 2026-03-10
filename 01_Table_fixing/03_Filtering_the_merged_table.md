@@ -20,7 +20,7 @@ import pandas as pd
 import numpy as np
 import re
 
-df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
+df = pd.read_csv("Metalog_SRA_final_clean.tsv", sep="\t")
 ```
 
 ---
@@ -50,7 +50,6 @@ def drop_nan_no_columns(df):
     return df, cols_to_drop
 
 df, dropped = drop_nan_no_columns(df)
-print("Dropped columns:", dropped)
 print(f" Shape: {df.shape}")
 ```
 Shape: (24605, 1214)
@@ -153,15 +152,14 @@ matched_columns = list(set(matched_columns))
 
 filtered_df = df[matched_columns]
 
-# filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
+
 
 print(f" Shape: {filtered_df.shape}")
 ```
-Shape: (24605, 317)
+Shape: (24605, 316)
 
 * Output file: Filtered_Metadata.tsv
      * No need to save, just for inspection
-
 
 
 Exclude columns related to:
@@ -228,69 +226,323 @@ exclude_keywords = [
 
 pattern = "|".join([re.escape(k) for k in exclude_keywords])
 
-cols_to_remove = df.columns[df.columns.str.contains(
+cols_to_remove = filtered_df.columns[filtered_df.columns.str.contains(
     pattern, case=False, regex=True
 )]
 
-df = df.drop(columns=cols_to_remove)
+filtered_df = filtered_df.drop(columns=cols_to_remove)
 
 print("Removed columns:", len(cols_to_remove))
 
-print(f" Shape: {df.shape}")
+print(f" Shape: {filtered_df.shape}")
+
+#filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
+#filtered_df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
 
 ```
- Shape: (24605, 191)
- 
-df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
+ Shape: (24605, 190)
 
 
 ---
+## 4.UTI-Related Columns
 
+### 4.1 keyword "uti"
 
----
+* Combine UTI-related columns into one UTI_History column by marking "Yes" if any column indicates a UTI, otherwise "No".
+* Check results
+* Remove unnecessary columns
 
-## 4.Cancer-Related Columns
+```
+uti_cols = filtered_df.columns[filtered_df.columns.str.contains("uti", case=False)]
+
+for col in uti_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+# raw_metadata_utis: [nan  0.  3.  1.  4.]
+# raw_metadata_history_of_recurrent_uti: [nan 'Recurrent UTIs']
+# raw_metadata_ecoli_utis: [nan  1.]
+# raw_metadata_diagnosed_utis: [nan  1.]
+# location_resolution: ['city' 'country' 'region' 'site' 'village' 'continent']
+
+filtered_df["UTI_History"] = np.where(
+    (filtered_df["raw_metadata_utis"].fillna(0) > 0) |
+    (filtered_df["raw_metadata_history_of_recurrent_uti"].notna()) |
+    (filtered_df["raw_metadata_ecoli_utis"].fillna(0) == 1) |
+    (filtered_df["raw_metadata_diagnosed_utis"].fillna(0) == 1),
+    "Yes",
+    "No"
+)
+
+filtered_df["UTI_History"].value_counts()
+
+filtered_df.drop(columns=uti_cols, inplace=True)
+```
+UTI_History
+* No     24449
+* Yes      156
+
+### 4.2 keyword "urine"
 
 ```python
-cancer_cols = df.columns[df.columns.str.contains("cancer", case=False)]
+uri_cols = filtered_df.columns[filtered_df.columns.str.contains("urine", case=False)]
+
+for col in uri_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+# raw_metadata_urineinfection: [nan  0.  1.]
+
+
+filtered_df.loc[
+    filtered_df["raw_metadata_urineinfection"].fillna(0) == 1,
+    "UTI_History"
+] = "Yes"
+
+filtered_df["UTI_History"].value_counts()
+
+filtered_df.drop(columns=uri_cols, inplace=True)
+```
+UTI_History
+* No     24380
+* Yes      225
+
+
+### 4.3 keyword "tract"
+
+```python
+tract_cols = filtered_df.columns[filtered_df.columns.str.contains("tract", case=False)]
+
+for col in tract_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+filtered_df.drop(columns=tract_cols, inplace=True)
+```
+---
+
+## 5.Cancer-Related Columns
+
+### 5.1 Keyword Cancer
+
+```python
+cancer_cols = filtered_df.columns[filtered_df.columns.str.contains("cancer", case=False)]
 
 for col in cancer_cols:
-    print(f"{col}: {df[col].unique()}")
+    print(f"{col}: {filtered_df[col].unique()}")
 
-df = df.rename(columns={"raw_metadata_gi_cancer_past_3_months": "GI_Cancer"})
+filtered_df.rename(columns={"raw_metadata_gi_cancer_past_3_months": "GI_Cancer"},
+    inplace=True
+)
+filtered_df["GI_Cancer"] = filtered_df["GI_Cancer"].notna().map({
+    True: "Yes",
+    False: "No"
+})
+
+```
+### 5.2 Keyword Tumor
+
+```python
+tumor_cols = filtered_df.columns[filtered_df.columns.str.contains("tumor", case=False)]
+
+for col in tumor_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+filtered_df.rename(
+    columns={"raw_metadata_tumor_location": "Colorectal_Cancer"},
+    inplace=True
+)
+
+filtered_df["Colorectal_Cancer"] = filtered_df["Colorectal_Cancer"].notna().map({
+    True: "Yes",
+    False: "No"
+})
+
 ```
 
 ---
 
-## 5. Infection-Related Columns
-
+## 6. Infection-Related Columns
 
 ```python
 
-infection_cols = df.columns[df.columns.str.contains("infection", case=False)]
+infection_cols = filtered_df.columns[filtered_df.columns.str.contains("infection", case=False)]
 for col in infection_cols:
-    print(f"{col}: {df[col].unique()}")
+    print(f"{col}: {filtered_df[col].unique()}")
 
+#raw_metadata_otherinfection: [nan  0.  1.]
+raw_metadata_bloodinfection: [nan  0.  1.]
+raw_metadata_gi_infection: [nan 'No' '3-4 years ago, stomach bug']
+raw_metadata_trachealinfection: [nan  0.  1.]
 
-
-df = df.drop(columns=[
-    "raw_metadata_OtherInfection",
-    "raw_metadata_TrachealInfection"
+filtered_df = filtered_df.drop(columns=[
+    "raw_metadata_otherinfection",
+    "raw_metadata_gi_infection",
 ])
 ```
 
+
 ---
 
-# 9. Antibiotic Usage Processing
+## 6.Location-Related Columns
 
-## 9. Antibiotic Usage Processing ### 9.1 Identify Antibiotic Columns
+### 6.1 Keyword: location
 
 ```python
-antibiotic_cols_w = [c for c in df.columns if c.startswith("raw_metadata_w_")]
-antibiotic_cols_c = [c for c in df.columns if c.startswith("raw_metadata_c_")]
-antibiotic_cols_m = [c for c in df.columns if c.startswith("raw_metadata_m_")]
+loc_cols = filtered_df.columns[filtered_df.columns.str.contains("location", case=False)]
+for col in loc_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+```
+* Many columns with mixed data which needs to be cleaned
+* Clean and combine different location-related columns into under one column
+
+#### Column name: geographic_location
+```python
+filtered_df.rename(columns={"geographic_location": "Country"}, inplace=True)
+
+filtered_df["Country"].value_counts(dropna=False)
+```
+#### Column name: geographic_location__country_and_or_sea__sam
+
+```python
+filtered_df["geographic_location__country_and_or_sea__sam"] = (
+    filtered_df["geographic_location__country_and_or_sea__sam"]
+    .str.strip("[]")
+    .str.replace("'", "", regex=False)
+)
+
+filtered_df["Country"] = filtered_df["Country"].fillna(
+    filtered_df["geographic_location__country_and_or_sea__sam"]
+)
+
+filtered_df.drop(columns=["geographic_location__country_and_or_sea__sam"], inplace=True)
+```
+#### raw_metadata_location
+* Clean
+* Append countries into Country column.
+* Create a City-column
+* Append City values there
+
+```python
+filtered_df["raw_metadata_location"] = filtered_df["raw_metadata_location"].replace("missing", pd.NA)
+
+split_cols = filtered_df["raw_metadata_location"].str.split(":", n=1, expand=True)
+
+filtered_df["Country"] = filtered_df["Country"].fillna(split_cols[0].str.strip())
+filtered_df["City"] = split_cols[1].str.strip()
+
+filtered_df.drop(columns=["raw_metadata_location"], inplace=True)
+```
+
+#### raw_metadata_location
+* Append countries into Country column.
+* Append cities into into City column
+* Create a Continent column and append values of the continents there
+
+```python
+filtered_df["Continent"] = pd.NA 
+
+filtered_df.loc[filtered_df["location"] == "North America", "Continent"] = "North America"
+
+# what is "Judah"? lets just put it as NaN
+filtered_df.loc[filtered_df["location"] == "Judah", ["Country", "City"]] = pd.NA
+
+filtered_df.loc[filtered_df["location"] == "Tanjung_Sepat", ["Country", "City"]] = ["Malaysia", "Tanjung_Sepat"]
+
+mask = ~filtered_df["location"].isin(["North America", "Judah", "Tanjung_Sepat"]) & filtered_df["location"].notna()
+
+split_loc = filtered_df.loc[mask, "location"].str.split(":", n=1, expand=True)
+
+filtered_df.loc[mask, "Country"] = split_loc[0].str.strip()
+filtered_df.loc[mask, "City"] = split_loc[1].str.strip()
+
+filtered_df["Country"].value_counts(dropna=False)
+filtered_df["City"].value_counts(dropna=False)
+
+filtered_df.drop(columns=["location"], inplace=True)
+```
+#### Column: geographic_location__region_and_locality__sam
+
+* (These are rural villages)
+* Clean
+* Append countries into Country column.
+* Append cities into into city column
+
+```python
+filtered_df["geographic_location__region_and_locality__sam"] = filtered_df[
+    "geographic_location__region_and_locality__sam"
+].replace("nan", pd.NA)
+
+filtered_df["geographic_location__region_and_locality__sam"] = (
+    filtered_df["geographic_location__region_and_locality__sam"]
+    .str.strip("[]")
+    .str.replace("'", "", regex=False)  
+)
+
+split_loc = filtered_df["geographic_location__region_and_locality__sam"].str.split(":", n=1, expand=True)
+
+filtered_df["Country"] = filtered_df["Country"].fillna(split_loc[0].str.strip())
+filtered_df["City"] = split_loc[1].str.strip()
+
+filtered_df.drop(columns=["geographic_location__region_and_locality__sam"], inplace=True)
+```
+
+#### Column: geographic_location__latitude__sam
+* Remove
+
+```python
+filtered_df.drop(columns=["geographic_location__latitude__sam"], inplace=True)
+```
+
+
+#filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
+
+filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
+
+### 6.2 Keyword: continent
+
+```python
+cont_cols = filtered_df.columns[filtered_df.columns.str.contains("continent", case=False)]
+
+for col in cont_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+```
+
+## Clean and combine three continent related information columns
+
+```python
+
+filtered_df["Continent"] = filtered_df["Continent"].astype("string")
+
+for col in ["geo_loc_name_country_continent_calc_sra", "geo_loc_name_country_continent_calc"]:
+    mask = filtered_df["Continent"].isna() | (filtered_df["Continent"] == "")
+    filtered_df.loc[mask, "Continent"] = filtered_df.loc[mask, col]
+
+
+filtered_df["Continent"] = filtered_df["Continent"].replace("uncalculated", pd.NA)
+
+filtered_df["Continent"] = filtered_df["Continent"].str.title()
+
+filtered_df.drop(columns=[
+    "geo_loc_name_country_continent_calc_sra",
+    "geo_loc_name_country_continent_calc"
+], inplace=True)
+
+filtered_df["all_antibiotic_cols"].value_counts(dropna=False)
+```
+
+---
+
+## 7. Antibiotic Usage Processing 
+
+### 7.1 Identify Antibiotic Columns
+
+```python
+antibiotic_cols_w = [c for c in filtered_df.columns if c.startswith("raw_metadata_w_")]
+antibiotic_cols_c = [c for c in filtered_df.columns if c.startswith("raw_metadata_c_")]
+antibiotic_cols_m = [c for c in filtered_df.columns if c.startswith("raw_metadata_m_")]
 
 all_antibiotic_cols = antibiotic_cols_w + antibiotic_cols_c + antibiotic_cols_m
+
+
+
 ```
 
 ## 9.2 Create Antibiotic List per Sample
@@ -445,14 +697,14 @@ df = df.drop(columns=[
 ])
 
 print(df["UTI_history"].value_counts(dropna=False))
-
-
 ```
 UTI_history
 * No     24380
 * Yes      225
 
 ---
+
+
 
 #15. Final Antibiotic Harmonization
 
