@@ -490,8 +490,6 @@ filtered_df.drop(columns=["geographic_location__region_and_locality__sam"], inpl
 ```python
 filtered_df.drop(columns=["geographic_location__latitude__sam"], inplace=True)
 ```
-
-
 #filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
 
 filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
@@ -525,12 +523,86 @@ filtered_df.drop(columns=[
     "geo_loc_name_country_continent_calc"
 ], inplace=True)
 
-filtered_df["all_antibiotic_cols"].value_counts(dropna=False)
+filtered_df["Continent"].value_counts(dropna=False)
 ```
+---
+
+## 7. Family-related columns
+
+### 6.2 Keyword: family
+
+```python
+family_cols = filtered_df.columns[filtered_df.columns.str.contains("family", case=False)]
+
+for col in family_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+filtered_df["Parent"] = np.select(
+    [
+        filtered_df["host_family_relationship_sam"].str.contains("mother", case=False, na=False),
+        filtered_df["host_family_relationship_sam"].str.contains("father", case=False, na=False)
+    ],
+    [
+        "Mother",
+        "Father"
+    ],
+    default="None"
+)
+
+filtered_df["Parent"].value_counts(dropna=False)
+
+
 
 ---
 
 ## 7. Antibiotic Usage Processing 
+
+```python
+abx_cols = filtered_df.columns[filtered_df.columns.str.contains("antibio", case=False)]
+
+for col in abx_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+def antibiotic_status(row):
+
+    if (
+        row['antibio_flag_6mo_sam'] == 1 or
+        row['antibio_flag_1mo_sam'] == 1 or
+        row['raw_metadata_antibiotics_current'] == 'Y' or
+        str(row['antibiotics_sam']).lower() == 'yes' or
+        row['raw_metadata_antibiotics_past_3_months'] == 'Y' or
+        row['antibiotics_past_3months_sam'] == 'Yes' or
+        (isinstance(row['raw_metadata_antibiotics_last3months'], str) and 'Yes' in row['raw_metadata_antibiotics_last3months']) or
+        pd.notna(row['days_since_antibiotics']) or
+        pd.notna(row['range_days_since_antibiotics'])
+    ):
+        return "Yes"
+
+    if (
+        row['antibio_flag_6mo_sam'] == 0 or
+        row['antibio_flag_1mo_sam'] == 0 or
+        row['raw_metadata_antibiotics_current'] == 'N' or
+        str(row['antibiotics_sam']).lower() == 'no' or
+        row['raw_metadata_antibiotics_past_3_months'] == 'N' or
+        row['antibiotics_past_3months_sam'] in ['No', 'Not sure']
+    ):
+        return "No"
+
+    return np.nan
+
+filtered_df["Antibiotic_Use"] = filtered_df.apply(antibiotic_status, axis=1)
+
+
+filtered_df["Antibiotic_Use"].value_counts(dropna=False)
+
+filtered_df.drop(columns=abx_cols, inplace=True)
+
+```
+Antibiotic_Use
+* NaN    23080
+* Yes      884
+* No       641
+
 
 ### 7.1 Identify Antibiotic Columns
 
