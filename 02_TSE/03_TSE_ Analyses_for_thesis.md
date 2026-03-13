@@ -157,7 +157,7 @@ table_image <- table_df %>%
      )
 table_image
 ```
-![Sample distribution ARG Load](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_table_Age.png
+![Sample distribution ARG Load](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_table_Age.png)
 
 
 # 2. ARG load analyses
@@ -374,7 +374,7 @@ ggplot(plot_df, aes(x = precise_age_category, y = log10_ARG_load, fill = sex)) +
 ggsave("Boxplot_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
-![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Boxplot_log10ARG_by_sex_age_category_ready1.png)
+![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Boxplot_ARG_by_sex_age.png)
 
 ### 2.3.2 Loess curve of ARG load by sex and age categories
 ```r
