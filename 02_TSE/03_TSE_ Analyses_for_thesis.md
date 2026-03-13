@@ -1,6 +1,6 @@
 
-# 1. Prepare the data
-## 1.1 Load packages
+## 1. Prepare the data
+### 1.1 Load packages
 ```r
 library(SummarizedExperiment)
 library(dplyr)
@@ -11,14 +11,14 @@ library(mgcv)
 library(ggpubr)
 ```
 
-## 1.2 Load TSE
+### 1.2 Load TSE
 
 ```r
 tse_path <- "/scratch/project_2008149/USER_WORKSPACES/karhula/DATA/TSE.rds"
 TSE <- readRDS(tse_path)
 ```
 
-## 1.3 Extract colData
+### 1.3 Extract colData
 
 ```r
 colData_df <- as.data.frame(colData(TSE))
@@ -37,19 +37,28 @@ Subset <- colData_df %>%
     precise_age_category, imprecise_age_category
   )
 ```
-## 1.4 Basic statistics about the dataset
+### 1.4 Do we have repeated samples?
 
-### 1.4.1. Look through columns
+```r
+plot_df %>%
+  count(acc) %>%
+  summarise(
+    n_subjects = n(),
+    max_samples_per_subject = max(n),
+    median_samples_per_subject = median(n),
+    subjects_with_repeats = sum(n > 1)
+  )
 ```
-table(Subset$sex)
-```
-**Sex**
-* Female: 7426
-* Male: 7349
+**Results:***
+* n_subjects: 14775
+* max_samples_per_subject: 1
+* median_samples_per_subject:1 
+* subjects_with_repeats :0
 
-# 2. Basic statistics about the dataset
 
-## 2.1 Sample distribuotion (ARG log10 and sex)
+## 2 Basic statistics about the dataset
+
+### 2.1 Sample distribution (ARG log10 and sex)
 
 ```r
 Subset_clean <- Subset %>%
@@ -69,7 +78,6 @@ ggplot(Subset_clean, aes(x = log10_ARG_load, fill = sex)) +
   theme(legend.position = "none")
 
 #Statistics summary
-
 ARG_summary <- Subset_clean %>%
   group_by(sex) %>%
   summarise(
@@ -82,9 +90,7 @@ ARG_summary <- Subset_clean %>%
   )
 ARG_summary
 ```
-
 ![Sample distribution ARG Load](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_ARG.png)
-
 
 ### 2.2 Sample distribuotion (ARG Shannon x sex)
 
@@ -121,14 +127,11 @@ Shan_summary <- Subset_clean %>%
   )
 Shan_summary
 ```
-
 ![Sample distribution ARG diversity](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_ARG_diversity.png)
 
-
-### 1.4.2. Sample distribution (ARG log10 x sex x age )
+### 2.3 Sample distribution (ARG log10 x sex x age )
 
 ```r
-
 plot_df <- Subset %>%
      filter(
          !is.na(log10_ARG_load),
@@ -159,13 +162,13 @@ table_image
 ```
 ![Sample distribution ARG Load](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_table_Age.png)
 
+---
 
-# 2. ARG load analyses
+## 3. ARG load x sex analyses
 
-## 2.2 Boxplot of ARGlog10 and sex
+### 3.1 Boxplot of ARGlog10 and sex
 
 ```r
-
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
 Subset$sex[Subset$log10_ARG_load == "" | Subset$log10_ARG_load == "NA"] <- NA
 
@@ -203,37 +206,15 @@ ggplot(plot_df, aes(x = sex, y = log10_ARG_load, fill = sex)) +
     scale_x_discrete(labels = c(female = "Female", male = "Male"))
 
 ggsave("Boxplot_log10ARG_by_sex_ready.png", width = 8, height = 6, dpi = 300)
-
 ```
 ![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Boxplot_log10ARG_by_sex_ready.png)
 
-### 2.2.3 Do we have repeated samples?
-
-```r
-plot_df %>%
-  count(acc) %>%
-  summarise(
-    n_subjects = n(),
-    max_samples_per_subject = max(n),
-    median_samples_per_subject = median(n),
-    subjects_with_repeats = sum(n > 1)
-  )
-
-```
-**Results:***
-* n_subjects: 14775
-* max_samples_per_subject: 1
-* median_samples_per_subject:1 
-* subjects_with_repeats :0
-
-
-### 2.24 Linear regression
+### 3.2 Linear regression
 
 ```r
 lm_ARG_sex <- lm(log10_ARG_load ~ sex, data = Subset_clean)
 
 ```
-
 **Results:**
 
 Residuals:
@@ -256,7 +237,7 @@ F-statistic: 47.73 on 1 and 14773 DF,  p-value: 5.099e-12
 
 ---
 
-## 2.3 Ananlyses of ARGlog10, sex and age
+## 4 Ananlyses of ARGlog10, sex and age
 
 ### 2.3.1 Sample distribution
 
@@ -291,9 +272,10 @@ table_image <- table_df %>%
   )
 
 table_image
-
-
 ```
+
+KUVA!!
+
 
 ### 2.3.2 Boxplot of ARGlog10, sex and age categories
 
@@ -334,9 +316,7 @@ plot_df <- Subset %>%
     sex = factor(sex, levels = c("Female", "Male"))
   )
 
-plot_df <- plot_df %>%
-  filter(precise_age_category != "NA")
-
+plot_df <- plot_df %>% filter(precise_age_category != "NA")
 
 plot_df <- plot_df %>%
   mutate(
@@ -369,65 +349,10 @@ ggplot(plot_df, aes(x = precise_age_category, y = log10_ARG_load, fill = sex)) +
   plot.title = element_text(face = "plain"),  # not bold
   axis.text.x = element_text(angle = 45, hjust = 1)
 )
-
-
 ggsave("Boxplot_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 
 ```
 ![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Boxplot_ARG_by_sex_age.png)
-
-### 2.3.2 Loess curve of ARG load by sex and age categories
-```r
-
-Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
-Subset$precise_age_category[Subset$precise_age_category == "" |
-                            Subset$precise_age_category == "NA"] <- NA
-
-Subset$sex <- recode(Subset$sex,
-                     "female" = "Female",
-                     "male"   = "Male")
-
-age_levels <- c(
-  "Infant", "Toddler", "Child", "Teenage",
-  "Young adult", "Middle-Age Adult",
-  "Older Adult", "Oldest Adult"
-)
-
-plot_df <- Subset %>%
-  filter(!is.na(log10_ARG_load),
-         !is.na(sex),
-         !is.na(precise_age_category),
-         precise_age_category != "NA") %>%
-  mutate(
-    precise_age_category = factor(precise_age_category, levels = age_levels),
-    age_num = as.numeric(precise_age_category),
-    sex = factor(sex, levels = c("Female", "Male"))
-  )
-
-# LOESS curves only
-ggplot(plot_df, aes(x = age_num, y = log10_ARG_load, color = sex, fill = sex)) +
-  geom_smooth(method = "loess", se = TRUE, span = 0.7, alpha = 0.2, size = 1.2) +
-  scale_x_continuous(breaks = 1:length(age_levels), labels = age_levels) +
-  scale_color_npg() +
-  scale_fill_npg() +
-  labs(
-    title = "LOESS Curve of ARG Load by Age and Sex",
-    x = "Age Category",
-    y = expression(log[10]*"(ARG load)"),
-    color = "Sex", fill = "Sex"
-  ) +
-  theme_minimal(base_size = 13) +
-  theme(
-    legend.position = "right",
-    plot.title = element_text(face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
-
-ggsave("Loess_log10ARG_by_sex_age_category_ready.png", width = 8, height = 6, dpi = 300)
-
-```
-![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/AGR_Load_Analyses/LOESS_log10ARG_by_sex_age_category_ready.png)
-
 
 ### 2.3.3 Loess curve of ARG load by sex and numeric age
 
@@ -445,14 +370,13 @@ plot_df <- Subset %>%
          !is.na(age_years)) %>%
   mutate(sex = factor(sex, levels = c("Female", "Male")))
 
-
-# LOESS curves with numeric age
 ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex)) +
+  geom_point(alpha = 0.08, size = 0.8) +
   geom_smooth(method = "loess", se = TRUE, span = 0.7, alpha = 0.2, size = 1.2) +
   scale_color_npg() +
   scale_fill_npg() +
   labs(
-    title = "LOESS Curve of ARG Load by Age (Years) and Sex",
+    title = "ARG Load Across Age by Sex",
     x = "Age (years)",
     y = expression(log[10]*"(ARG load)"),
     color = "Sex",
@@ -461,7 +385,7 @@ ggplot(plot_df, aes(x = age_years, y = log10_ARG_load, color = sex, fill = sex))
   theme_minimal(base_size = 13) +
   theme(
     legend.position = "right",
-    plot.title = element_text(face = "bold")
+    plot.title = element_text(face = "plain")
   )
 
 ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi = 300)
@@ -472,6 +396,15 @@ ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi
 
 ### 2.3.4 Linear model
 ```
+n_samples <- Subset %>%
+  filter(
+    !is.na(log10_ARG_load),
+    !is.na(sex),
+    !is.na(age_years)
+  ) %>%
+  nrow()
+
+n_samples
 
 lm_full <- lm(log10_ARG_load ~ age_years + sex, data = plot_df)
 summary(lm_full)
