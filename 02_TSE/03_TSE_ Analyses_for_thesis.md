@@ -120,8 +120,11 @@ Shan_summary <- Subset_clean %>%
     max_shan = max(ARG_div_shan)           # maximum
   )
 Shan_summary
-
 ```
+
+![Sample distribution ARG diversity](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_ARG_diversity.png)
+
+
 ### 1.4.2. Sample distribution (ARG log10 x sex x age )
 
 ```r
