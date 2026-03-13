@@ -81,12 +81,12 @@ ARG_summary <- Subset_clean %>%
     max_ARG = max(log10_ARG_load)           # maximum
   )
 ARG_summary
-
-
-
 ```
 
-### 2.1 Sample distribuotion (ARG Shannon x sex)
+![Sample distribution ARG Load](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_ARG.png)
+
+
+### 2.2 Sample distribuotion (ARG Shannon x sex)
 
 ```r
 Subset_shan <- Subset %>%
@@ -122,29 +122,40 @@ Shan_summary <- Subset_clean %>%
 Shan_summary
 
 ```
-
-
 ### 1.4.2. Sample distribution (ARG log10 x sex x age )
 
+```r
 
-Subset_shan <- Subset %>%
-  filter(!is.na(ARG_div_shan), !is.na(sex))
+plot_df <- Subset %>%
+     filter(
+         !is.na(log10_ARG_load),
+         !is.na(sex),
+         !is.na(precise_age_category),
+         precise_age_category != "Unknown"
+     )
 
+ table_df <- plot_df %>%
+     count(precise_age_category, sex) %>%
+     tidyr::pivot_wider(names_from = sex, values_from = n)
+ 
+ table_df
 
-npg_cols <- pal_npg("nrc")(4)[3:4]
-
-ggplot(Subset_shan, aes(x = ARG_div_shan, fill = sex)) +
-  geom_histogram(bins = 30, color = "black", alpha = 0.8, position = "identity") +
-  facet_wrap(~ sex, scales = "fixed") +  # separate panels for each sex
-    scale_fill_manual(values = npg_cols) +
-  labs(
-    title = "Distribution of Shannon Diversity Index by Sex",
-    x = "Shannon Diversity Index",
-    y = "Sample Count"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
+table_df <- table_df %>% mutate(Total = Female + Male)
+table_image <- table_df %>%
+     gt() %>%
+     cols_label(
+         precise_age_category = "Age Category",
+         Female = "Female (n)",
+         Male = "Male (n)",
+         Total = "Total (n)"
+     ) %>%
+     tab_header(
+         title = "Sample Distribution by Age Category and Sex"
+     )
+table_image
 ```
+![Sample distribution ARG Load](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_table_Age.png
+
 
 # 2. ARG load analyses
 
@@ -155,9 +166,7 @@ ggplot(Subset_shan, aes(x = ARG_div_shan, fill = sex)) +
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
 Subset$sex[Subset$log10_ARG_load == "" | Subset$log10_ARG_load == "NA"] <- NA
 
-Subset$sex <- recode(Subset$sex,
-                     "female" = "Female",
-                     "male"   = "Male")
+Subset$sex <- recode(Subset$sex,"female" = "Female", "male"   = "Male")
 
 plot_df <- Subset %>% filter(!is.na(log10_ARG_load), !is.na(sex))
 
@@ -165,7 +174,7 @@ n_df <- plot_df %>%
   group_by(sex) %>%
   summarise(
     n = n(),
-    y_max = max(ARG_div_shan, na.rm = TRUE)
+    y_max = max(log10_ARG_load, na.rm = TRUE)
   )
 
 npg_cols <- pal_npg("nrc")(2)
