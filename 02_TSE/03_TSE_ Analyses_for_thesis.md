@@ -531,93 +531,95 @@ ggsave("GAM_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 
 ### 2.4.1 Boxplot of ARG Load, BMI and sex
 ```r
-
-Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
-Subset$BMI_range_new[Subset$BMI_range_new == "" | Subset$BMI_range_new == "NA"] <- NA
-
-Subset <- Subset %>% filter(BMI_range_new != "Normal/Overweight (<30)")
-
-Subset$sex <- recode(Subset$sex,
-                     "female" = "Female",
-                     "male"   = "Male")
+# Filter dataset
+Subset_BMI <- Subset %>%
+  filter(
+    age_years >= 18,
+    BMI_range_new != "Normal/Overweight (<30)"
+  ) %>%
+  filter(
+    !is.na(log10_ARG_load),
+    !is.na(BMI_range_new),
+    !is.na(sex)
+  )
 
 levels_bmi <- c("Underweight (<18.5)", "Normal (18.5-25)", 
                 "Overweight (25-30)", "Obese (>30)")
-Subset$BMI_range_new <- factor(Subset$BMI_range_new, levels = levels_bmi)
 
-plot_df <- Subset %>% 
-  filter(!is.na(log10_ARG_load), !is.na(sex), !is.na(BMI_range_new)) %>%
-  mutate(
-    precise_age_category = factor(BMI_range_new, levels = levels_bmi),
-    sex = factor(sex, levels = c("Female", "Male"))
-  )
+Subset_BMI$BMI_range_new <- factor(
+  Subset_BMI$BMI_range_new,
+  levels = levels_bmi
+)
 
-counts <- plot_df %>%
-  group_by(BMI_range_new, sex) %>%
-  summarise(N = n(), .groups = "drop") %>%
-  mutate(
-    y_pos = max(plot_df$log10_ARG_load, na.rm = TRUE) * 1.05,
-    precise_age_category = factor(BMI_range_new, levels = levels_bmi)
-  )
+comparisons <- list(
+  c("Underweight (<18.5)", "Normal (18.5-25)"),
+  c("Underweight (<18.5)", "Overweight (25-30)"),
+  c("Underweight (<18.5)", "Obese (>30)"),
+  c("Normal (18.5-25)", "Overweight (25-30)"),
+  c("Normal (18.5-25)", "Obese (>30)"),
+  c("Overweight (25-30)", "Obese (>30)")
+)
 
-bmi_labels <- c("Underweight", "Normal", "Overweight", "Obese")
-npg_cols <- pal_npg("nrc")(2)
-
-# Plot
-ggplot(plot_df, aes(x = BMI_range_new, y = log10_ARG_load, fill = sex)) +
-  geom_jitter(
-    position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.6),
-    size = 1.2, alpha = 0.25, color = "grey30"
-  ) +
-  geom_boxplot(
-    width = 0.55, outlier.shape = NA, alpha = 0.8,
-    position = position_dodge(width = 0.6)
-  ) +
-  geom_text(
-    data = counts,
-    aes(x = precise_age_category, y = y_pos, label = N, color = sex),
-    position = position_dodge(width = 0.6),
-    inherit.aes = FALSE,
-    size = 2.0,
-    fontface = "bold",
-    show.legend = FALSE
-  ) +
-  stat_compare_means(
-    aes(group = sex),           # group by sex for comparisons
-    method = "t.test",          # or "wilcox.test" for non-parametric
-    label = "p.signif",         # shows *, **, ***
-    label.size = 4,
-    hide.ns = TRUE              # hides ns (not significant)
-  ) +
-  scale_x_discrete(labels = bmi_labels) +
+ggplot(Subset_BMI, aes(x = BMI_range_new, y = log10_ARG_load, fill = sex)) +
+  geom_jitter(aes(color = sex), width = 0.2, alpha = 0.2, size = 0.5) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
   scale_fill_npg() +
   scale_color_npg() +
   labs(
-    title = "ARG Load by BMI and Sex",
-    x = "BMI range",
-    y = expression(log[10]*"(ARG load)"),
-    fill = "Sex"
+    x = "BMI Category",
+    y = "log10 ARG Load",
+    title = "Distribution of ARG Load by BMI Category and Sex"
   ) +
-  theme_minimal(base_size = 13) +
+  stat_compare_means(
+    comparisons = comparisons, 
+    method = "wilcox.test",      # non-parametric
+    label = "p.signif",          # shows *, **, ***
+    tip.length = 0.03             # length of the connecting lines
+  ) +
+  theme_minimal() +
   theme(
-    legend.position = "right",
-    plot.title = element_text(face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    text = element_text(size = 12),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5)
   )
 ```
 ### 2.4.2 Additive linear model of AGR Load, BMI and sex
 ```r
-plot_df$BMI_range_new <- relevel(
-  plot_df$BMI_range_new,
+Subset_BMI$BMI_range_new <- relevel(
+  Subset_BMI$BMI_range_new, 
   ref = "Normal (18.5-25)"
 )
 
-model_add <- lm(log10_ARG_load ~ BMI_range_new + sex, data = plot_df)
-summary(model_add)
-
+lm_bmi <- lm(log10_ARG_load ~ BMI_range_new + sex, data = Subset_BMI)
+summary(lm_bmi)
 
 ```
+Call:
+lm(formula = log10_ARG_load ~ BMI_range_new + sex, data = Subset_BMI)
 
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.02651 -0.20462  0.01754  0.20880  1.75810 
+
+Coefficients:
+                                  Estimate Std. Error t value
+(Intercept)                       2.741763   0.007035 389.706
+BMI_range_newUnderweight (<18.5)  0.113370   0.020590   5.506
+BMI_range_newOverweight (25-30)  -0.019072   0.010161  -1.877
+BMI_range_newObese (>30)         -0.009937   0.011676  -0.851
+sexMale                           0.021112   0.008397   2.514
+                                 Pr(>|t|)    
+(Intercept)                       < 2e-16 ***
+BMI_range_newUnderweight (<18.5) 3.84e-08 ***
+BMI_range_newOverweight (25-30)    0.0606 .  
+BMI_range_newObese (>30)           0.3948    
+sexMale                            0.0120 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3011 on 5245 degrees of freedom
+Multiple R-squared:  0.007836,	Adjusted R-squared:  0.007079 
+F-statistic: 10.36 on 4 and 5245 DF,  p-value: 2.366e-08
 
 
 
