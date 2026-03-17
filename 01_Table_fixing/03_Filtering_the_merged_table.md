@@ -626,16 +626,12 @@ Antibiotic_Use
 * No       641
 
 
-#filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
-#filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
-
-filtered_df["Clindamycin"].value_counts(dropna=False)
-
 
 
 ### 7.1 Identify Antibiotic Columns
 
 ```python
+#Get all the antibiotic columns
 antibiotic_cols_w = [c for c in filtered_df.columns if c.startswith("raw_metadata_w_")]
 antibiotic_cols_c = [c for c in filtered_df.columns if c.startswith("raw_metadata_c_")]
 antibiotic_cols_m = [c for c in filtered_df.columns if c.startswith("raw_metadata_m_")]
@@ -649,6 +645,7 @@ antibiotics = [
     "cefoxitin", "sulfamethoxazoletrimethoprim"
 ]
 
+# 3️⃣ Create a column for each antibiotic: "Yes" or "No"
 for ab in antibiotics:
     w_col = f"raw_metadata_w_{ab}"
     c_col = f"raw_metadata_c_{ab}"
@@ -667,31 +664,239 @@ for ab in antibiotics:
 
     filtered_df[new_col] = filtered_df.apply(check_use, axis=1)
 
-# Check result
-filtered_df[[ab.capitalize() for ab in antibiotics]].head()
+# 4️⃣ Make sure the summary column exists
+if 'Antibiotic_Use' not in filtered_df.columns:
+    filtered_df['Antibiotic_Use'] = 'No'
 
-
-antibiotic_cols = [ab.capitalize() for ab in [
-    "clindamycin", "amoxacillin", "cefazolin", "allabx", "vancomycin", "cefotaxime",
-    "oxacillin", "ticarcillinclavulanate", "metronidazole", "penicilling",
-    "ampicillinsulbactam", "gentamicin", "meropenem", "cefepime", "ampicillin",
-    "cefoxitin", "sulfamethoxazoletrimethoprim"
-]]
+# 5️⃣ Update summary column based on individual antibiotics
+antibiotic_cols_cap = [ab.capitalize() for ab in antibiotics]
 
 def update_antibiotics_used(row):
-    # If already 'Yes', keep it
-    if row['Antibiotics_Used'] == 'Yes':
+    if any(row[col] == 'Yes' for col in antibiotic_cols_cap if col in row):
         return 'Yes'
-    # If any antibiotic column is 'Yes', mark 'Yes'
-    elif any(row[col] == 'Yes' for col in antibiotic_cols):
-        return 'Yes'
-    # Otherwise keep current value (or 'No' if missing)
+    return row['Antibiotic_Use']  # keep current value ('No')
+
+filtered_df['Antibiotic_Use'] = filtered_df.apply(update_antibiotics_used, axis=1)
+
+```
+Antibiotic_Use
+* Yes    1128
+* No      641
+
+
+
+
+
+
+
+
+
+
+
+#filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
+#filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
+
+
+---
+## 8 BMI Related columns
+
+### 4.1 keyword "bmi"
+
+```python
+bmi_cols = filtered_df.columns[filtered_df.columns.str.contains("bmi", case=False)]
+
+for col in bmi_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+```
+
+### 4.1 keyword "body"
+```python
+bo_cols = filtered_df.columns[filtered_df.columns.str.contains("body", case=False)]
+
+for col in bo_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+```
+
+
+```
+
+bmi_numeric_cols = [
+    'bmi', 
+    'bmi_sam', 
+    'body_mass_index_sam_s_dpl92', 
+    'host_body_mass_index_sam_s_dpl230'
+]
+
+def clean_numeric_bmi(x):
+    if pd.isna(x):
+        return np.nan
+    try:
+        x = float(str(x).replace(',', '.'))
+    except:
+        return np.nan
+    if x < 10 or x > 60:
+        return np.nan
+    return x
+
+for col in bmi_numeric_cols:
+    if col in filtered_df.columns:
+        filtered_df[col] = filtered_df[col].apply(clean_numeric_bmi)
+
+numeric_cols_available = [c for c in bmi_numeric_cols if c in filtered_df.columns]
+filtered_df['bmi_numeric'] = filtered_df[numeric_cols_available].bfill(axis=1).iloc[:, 0]
+
+def bmi_from_numeric_label(x):
+    if pd.isna(x):
+        return None
+    elif x < 18.5:
+        return "Underweight (<18.5)"
+    elif x < 25:
+        return "Normal (18.5-25)"
+    elif x < 30:
+        return "Overweight (25-30)"
     else:
-        return row['Antibiotics_Used'] if pd.notna(row['Antibiotics_Used']) else 'No'
+        return "Obese (>30)"
 
-filtered_df['Antibiotics_Used'] = filtered_df.apply(update_antibiotics_used, axis=1)
+filtered_df['bmi_category'] = filtered_df['bmi_numeric'].apply(bmi_from_numeric_label)
 
-df['Antibiotics_Used'] = df.apply(update_antibiotics_used, axis=1)
+bmi_cat_cols = [
+    'bmi_range',      # '>30', '<30'
+    'bmi_range.2',    # '>30', '<30'
+    'bmi_range.1',    # '20-25', '25-30'
+    'bmi_range.3'
+]
+
+def map_safe_bmi_category(x):
+    if pd.isna(x):
+        return None
+    
+    x = str(x).strip().lower()
+    
+    if x == '20-25':
+        return "Normal (18.5-25)"
+    elif x == '25-30':
+        return "Overweight (25-30)"
+    elif x in ['>30', 'over 30']:
+        return "Obese (>30)"
+    
+    return None
+
+for col in bmi_cat_cols:
+    if col in filtered_df.columns:
+        filtered_df['bmi_category'] = filtered_df['bmi_category'].combine_first(
+            filtered_df[col].apply(map_safe_bmi_category)
+        )
+
+print(filtered_df[['bmi_numeric', 'bmi_category']].head(20))
+
+filtered_df["bmi_numeric"].value_counts(dropna=False)
+
+filtered_df["bmi_category"].value_counts(dropna=False)
+```
+bmi_category
+
+* None                   18335
+* Normal (18.5-25)        3221
+* Overweight (25-30)      1399
+* Obese (>30)             1232
+* Underweight (<18.5)      418
+
+
+```
+cols_to_drop = [
+    'bmi', 
+    'bmi_sam', 
+    'body_mass_index_sam_s_dpl92', 
+    'host_body_mass_index_sam_s_dpl230',
+    'bmi_range',
+    'bmi_range.2',
+    'bmi_range.1',
+    'bmi_range.3'
+]
+
+filtered_df = filtered_df.drop(columns=[c for c in cols_to_drop if c in filtered_df.columns])
+```
+
+
+
+```
+# 10. Disease Columns 
+
+## 10.1 Inspect Disease Columns
+
+```python
+disease_cols = filtered_df.columns[filtered_df.columns.str.contains("disease", case=False)]
+for col in disease_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+#raw_metadata_Celiac_disease: [nan 'No' 'N' 'Y']
+#raw_metadata_Crohns_disease: [nan 'N' 'Y']
+#raw_metadata_Disease_activity_(Y_or_N): [nan 'Y' 'N']
+#raw_metadata_Intestinal_disease: [nan 'N' 'Y']
+#raw_metadata_diagnosed_with_disease: [nan 'No' 'Yes' 'not provided']
+#raw_metadata_disease_cause: [nan 'HBV,alcohol' 'HBV' 'alcohol' 'Hepatitis C virus related''HBV,Hepatitis E virus related']
+#raw_metadata_disease_group: [nan 'Healthy' 'Stage_III_IV' 'Stage_I_II' 'MP' 'Stage_0' 'HS']
+#raw_metadata_diseases: [nan 'NEC' 'cellulitis,MRSA' 'acinetobacter anitratus' 'sepsis''cellulitis' 'bradycardia']
+#raw_metadata_host_disease: [nan 'Acute Lymphoblastic Leukemia' 'Acute Myeloid Leukemia']
+#raw_metadata_subject_disease_status_full: [nan 'COHORT' 'gestational diabetes mellitus']
+#subject_disease_status: ['CTR' 'atopy' 'COHORT' "Crohn's disease" 'type 2 diabetes' ... many more ]
+#subject_disease_status_full: [nan 'preeclampsia' 'mild preeclampsia' 'oligohydramnios' ... many more]
+```
+
+## 10.2 Drop Selected Disease Columns
+
+```python
+columns_to_drop = [
+    "raw_metadata_Celiac_disease",
+    "raw_metadata_Disease_activity_(Y_or_N)",
+    "raw_metadata_diagnosed_with_disease",
+    "raw_metadata_disease_cause",
+    "raw_metadata_disease_group"
+]
+
+df = df.drop(columns=columns_to_drop)
+```
+---
+
+# 11. Remove Additional Columns
+
+```python
+
+df = df.drop(columns=["raw_metadata_weight_for_age_z_score"])
+print(df.shape)
+# (24605, 63)
+```
+---
+
+# 12. IBD Status
+
+```python
+df["IBD"] = (
+    df["raw_metadata_IBD"]
+    .map({"Y": "Yes", "N": "No"})
+    .astype("category")
+)
+
+df = df.drop(columns=["raw_metadata_IBD"])
+```
+---
+
+# 13. Export Intermediate Table
+```python
+df.to_csv("kesken1.tsv", sep="\t", index=False)
+```
+---
+
+
+#filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
+#filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
+
+
+
+
+filtered_df["Clindamycin"].value_counts(dropna=False)
+
+
 
 
 
@@ -897,124 +1102,6 @@ df["raw_metadata_sexual_orientation"].unique()
 
 
 
-
-
-
-## 4. BMI Cleaning and Categorization
-
-### 4.1 Inspect BMI Columns
-
-```python
-bmi_cols = df.columns[df.columns.str.contains("bmi", case=False)]
-
-for col in bmi_cols:
-    print(f"{col}: {df[col].unique()}")
-
-
-```
-
-### 4.2 Convert BMI to Numeric and Create Categories
-
-* Numeric BMI column
-
-```python
-
-df["bmi"] = pd.to_numeric(df["bmi"], errors="coerce")
-df["bmi_sam"] = pd.to_numeric(df["bmi_sam"], errors="coerce")
-
-df["bmi"] = df["bmi"].round(1)
-df["bmi_sam"] = df["bmi_sam"].round(1)
-
-df["BMI"] = df["bmi"].fillna(df["bmi_sam"])
-
-conflicts = df[
-     df["bmi"].notna() &
-     df["bmi_sam"].notna() &
-     (df["bmi"] != df["bmi_sam"])
-]
- 
-conflicts.shape
-
-df["BMI"].count()
-```
-No conflicts
-
-BMI has 5774 values
-
-
-
-```python
-df["bmi"] = pd.to_numeric(df["bmi"], errors="coerce")
-
-bins = [0, 18.5, 25, 30, float("inf")]
-labels = [
-    "Underweight (<18.5)",
-    "Normal (18.5-25)",
-    "Overweight (25-30)",
-    "Obese (>30)"
-]
-
-df["BMI_range_new"] = pd.cut(df["bmi"], bins=bins, labels=labels)
-
-
-```
-
----
-
-### 4.3 Override Using Text-Based `bmi_range`
-
-```python
-bmi_range_map = {
-    "16-20": "Underweight (<18.5)",
-    "18.5-28": "Normal (18.5-25)",
-    "20-25": "Normal (18.5-25)",
-    "25-30": "Overweight (25-30)",
-    "over 25": "Overweight (25-30)",
-}
-
-mask = df["bmi_range"].notna()
-df.loc[mask, "BMI_range_new"] = df.loc[mask, "bmi_range"].map(bmi_range_map)
-
-filtered_df = df.drop(columns=cols_to_remove)
-```
-
----
-
-### 4.4 Add Additional Categories
-
-```python
-if not pd.api.types.is_categorical_dtype(df["BMI_range_new"]):
-    df["BMI_range_new"] = df["BMI_range_new"].astype("category")
-
-new_categories = ["Obese (>30)", "Normal/Overweight (<30)"]
-existing = df["BMI_range_new"].cat.categories
-
-to_add = [cat for cat in new_categories if cat not in existing]
-
-df["BMI_range_new"] = df["BMI_range_new"].cat.add_categories(to_add)
-```
-
----
-
-### 4.5 Override Using `BMI_range`
-
-```python
-BMI_range_map = {">30": "Obese (>30)", "<30": "Normal/Overweight (<30)"}
-
-mask2 = df["BMI_range"].notna()
-df.loc[mask2, "BMI_range_new"] = df.loc[mask2, "BMI_range"].map(BMI_range_map)
-```
-
----
-
-### 4.6 Review and Cleanup
-
-```python
-print(df["BMI_range_new"].value_counts(dropna=False))
-print(df[["bmi", "bmi_range", "BMI_range", "BMI_range_new"]].head(10))
-
-df = df.drop(columns=bmi_cols)
-```
 
 ---
 
