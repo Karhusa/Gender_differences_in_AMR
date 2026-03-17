@@ -645,7 +645,6 @@ antibiotics = [
     "cefoxitin", "sulfamethoxazoletrimethoprim"
 ]
 
-# 3️⃣ Create a column for each antibiotic: "Yes" or "No"
 for ab in antibiotics:
     w_col = f"raw_metadata_w_{ab}"
     c_col = f"raw_metadata_c_{ab}"
@@ -664,11 +663,7 @@ for ab in antibiotics:
 
     filtered_df[new_col] = filtered_df.apply(check_use, axis=1)
 
-# 4️⃣ Make sure the summary column exists
-if 'Antibiotic_Use' not in filtered_df.columns:
-    filtered_df['Antibiotic_Use'] = 'No'
 
-# 5️⃣ Update summary column based on individual antibiotics
 antibiotic_cols_cap = [ab.capitalize() for ab in antibiotics]
 
 def update_antibiotics_used(row):
@@ -678,24 +673,12 @@ def update_antibiotics_used(row):
 
 filtered_df['Antibiotic_Use'] = filtered_df.apply(update_antibiotics_used, axis=1)
 
+filtered_df = filtered_df.drop(columns=all_antibiotic_cols)
+
 ```
 Antibiotic_Use
 * Yes    1128
 * No      641
-
-
-
-
-
-
-
-
-
-
-
-#filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
-#filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
-
 
 ---
 ## 8 BMI Related columns
@@ -802,7 +785,7 @@ bmi_category
 * Underweight (<18.5)      418
 
 
-```
+```python
 cols_to_drop = [
     'bmi', 
     'bmi_sam', 
@@ -818,345 +801,90 @@ filtered_df = filtered_df.drop(columns=[c for c in cols_to_drop if c in filtered
 ```
 
 
+## 8 IBD Related columns
 
-```
-# 10. Disease Columns 
-
-## 10.1 Inspect Disease Columns
+### 4.1 keyword "ibd"
 
 ```python
-disease_cols = filtered_df.columns[filtered_df.columns.str.contains("disease", case=False)]
-for col in disease_cols:
+ibd_cols = filtered_df.columns[filtered_df.columns.str.contains("IBD", case=False)]
+
+for col in ibd_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
-#raw_metadata_Celiac_disease: [nan 'No' 'N' 'Y']
-#raw_metadata_Crohns_disease: [nan 'N' 'Y']
-#raw_metadata_Disease_activity_(Y_or_N): [nan 'Y' 'N']
-#raw_metadata_Intestinal_disease: [nan 'N' 'Y']
-#raw_metadata_diagnosed_with_disease: [nan 'No' 'Yes' 'not provided']
-#raw_metadata_disease_cause: [nan 'HBV,alcohol' 'HBV' 'alcohol' 'Hepatitis C virus related''HBV,Hepatitis E virus related']
-#raw_metadata_disease_group: [nan 'Healthy' 'Stage_III_IV' 'Stage_I_II' 'MP' 'Stage_0' 'HS']
-#raw_metadata_diseases: [nan 'NEC' 'cellulitis,MRSA' 'acinetobacter anitratus' 'sepsis''cellulitis' 'bradycardia']
-#raw_metadata_host_disease: [nan 'Acute Lymphoblastic Leukemia' 'Acute Myeloid Leukemia']
-#raw_metadata_subject_disease_status_full: [nan 'COHORT' 'gestational diabetes mellitus']
-#subject_disease_status: ['CTR' 'atopy' 'COHORT' "Crohn's disease" 'type 2 diabetes' ... many more ]
-#subject_disease_status_full: [nan 'preeclampsia' 'mild preeclampsia' 'oligohydramnios' ... many more]
+filtered_df = filtered_df.rename(columns={"raw_metadata_ibd": "IBD"})
 ```
 
-## 10.2 Drop Selected Disease Columns
+### 4.1 keyword "crohn"
 
 ```python
-columns_to_drop = [
-    "raw_metadata_Celiac_disease",
-    "raw_metadata_Disease_activity_(Y_or_N)",
-    "raw_metadata_diagnosed_with_disease",
-    "raw_metadata_disease_cause",
-    "raw_metadata_disease_group"
+cro_cols = filtered_df.columns[filtered_df.columns.str.contains("crohn", case=False)]
+
+for col in cro_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+filtered_df.loc[
+    (filtered_df['raw_metadata_crohns_disease'] == 'Y') & 
+    (filtered_df['IBD'] != 'Yes'), 
+    'IBD'
+] = 'Yes'
+
+filtered_df['IBD'].value_counts(dropna=False)
+
+filtered_df = filtered_df.drop(columns=['raw_metadata_crohns_disease'])
+
+filtered_df['IBD'] = filtered_df['IBD'].replace({'Y': 'Yes', 'N': 'No'})
+
+```
+
+
+### 4.1 keyword "colitis"
+
+```python
+col_cols = filtered_df.columns[filtered_df.columns.str.contains("colitis", case=False)]
+
+for col in col_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+filtered_df['raw_metadata_colitis'] = filtered_df['raw_metadata_colitis'].replace({'Y': 'Yes', 'N': 'No'})
+filtered_df['raw_metadata_necrotizingenterocolitis'] = filtered_df['raw_metadata_necrotizingenterocolitis'].replace({'Yes': 'Yes', 'No': 'No'})
+
+for col in ['raw_metadata_colitis', 'raw_metadata_necrotizingenterocolitis']:
+    filtered_df.loc[filtered_df['IBD'].isna() & filtered_df[col].notna(), 'IBD'] = \
+        filtered_df[col]
+
+filtered_df = filtered_df.drop(columns=['raw_metadata_colitis', 'raw_metadata_necrotizingenterocolitis'])
+
+# Check result
+filtered_df['IBD'].value_counts(dropna=False)
+
+```
+
+columns_to_remove = [
+    "raw_metadata_antibiotics_with_admission_days",
+    "env_package_sam",
+    "raw_metadata_childhood_accomodation",
+    "raw_metadata_accomodation",
+    "raw_metadata_x3_in_the_past_2_weeks_have_you_used_an_oral_contrast",
+    "best_response_to_therapy_sam",
+    "raw_metadata_mumps",
+    "raw_metadata_exercise_frequency(n/week",
+    "raw_metadata_relationship_status",
+    "raw_metadata_new_sexual_partner_last6months",
+    "human_gut_environmental_package_sam",
+    "raw_metadata_donor_relationship",
+    "raw_metadata_type_of_exercise",
+    "raw_metadata_average_time_per_time_(min)",
+    "raw_metadata_body_fat_percentage",
+    "raw_metadata_side_of_body_where_symptoms_first_appeared",
+    "primary_search"
 ]
 
-df = df.drop(columns=columns_to_drop)
-```
----
+filtered_df = filtered_df.drop(columns=columns_to_remove)
 
-# 11. Remove Additional Columns
-
-```python
-
-df = df.drop(columns=["raw_metadata_weight_for_age_z_score"])
-print(df.shape)
-# (24605, 63)
-```
----
-
-# 12. IBD Status
-
-```python
-df["IBD"] = (
-    df["raw_metadata_IBD"]
-    .map({"Y": "Yes", "N": "No"})
-    .astype("category")
-)
-
-df = df.drop(columns=["raw_metadata_IBD"])
-```
----
-
-# 13. Export Intermediate Table
-```python
-df.to_csv("kesken1.tsv", sep="\t", index=False)
-```
----
 
 
 #filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
 #filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
-
-
-
-
-filtered_df["Clindamycin"].value_counts(dropna=False)
-
-
-
-
-
-
-
-
-## 9.3 Expand Lists Into Columns
-
-```python
-
-antibiotics_expanded = pd.DataFrame(
-    df["antibiotics_list"].to_list(),
-    index=df.index
-).rename(lambda x: f"antibiotic_{x+1}", axis=1)
-
-df = df.join(antibiotics_expanded)
-df["name_of_antibiotic"] = df.apply(get_antibiotics_list, axis=1)
-
-# Sanity check
-df["name_of_antibiotic"].apply(tuple).unique()
-```
-
-## 9.4 Add Yes/No Column wheter antibiotics are used or not
-
-```python
-df["Antibiotics_used"] = df["antibiotics_list"].apply(lambda x: "Yes" if len(x) > 0 else "No")
-df["Antibiotics_used"].value_counts(dropna=False)
-# Antibiotics_used
-# No     24459
-# Yes      146
-```
----
-
-## 9.5 Remove Raw Antibiotic Columns
-
-```python
-df = df.drop(columns=all_antibiotic_cols)
-```
-# 10. Disease Columns 
-
-## 10.1 Inspect Disease Columns
-
-```python
-disease_cols = df.columns[df.columns.str.contains("disease", case=False)]
-for col in disease_cols:
-    print(f"{col}: {df[col].unique()}")
-
-#raw_metadata_Celiac_disease: [nan 'No' 'N' 'Y']
-#raw_metadata_Crohns_disease: [nan 'N' 'Y']
-#raw_metadata_Disease_activity_(Y_or_N): [nan 'Y' 'N']
-#raw_metadata_Intestinal_disease: [nan 'N' 'Y']
-#raw_metadata_diagnosed_with_disease: [nan 'No' 'Yes' 'not provided']
-#raw_metadata_disease_cause: [nan 'HBV,alcohol' 'HBV' 'alcohol' 'Hepatitis C virus related''HBV,Hepatitis E virus related']
-#raw_metadata_disease_group: [nan 'Healthy' 'Stage_III_IV' 'Stage_I_II' 'MP' 'Stage_0' 'HS']
-#raw_metadata_diseases: [nan 'NEC' 'cellulitis,MRSA' 'acinetobacter anitratus' 'sepsis''cellulitis' 'bradycardia']
-#raw_metadata_host_disease: [nan 'Acute Lymphoblastic Leukemia' 'Acute Myeloid Leukemia']
-#raw_metadata_subject_disease_status_full: [nan 'COHORT' 'gestational diabetes mellitus']
-#subject_disease_status: ['CTR' 'atopy' 'COHORT' "Crohn's disease" 'type 2 diabetes' ... many more ]
-#subject_disease_status_full: [nan 'preeclampsia' 'mild preeclampsia' 'oligohydramnios' ... many more]
-```
-
-## 10.2 Drop Selected Disease Columns
-
-```python
-columns_to_drop = [
-    "raw_metadata_Celiac_disease",
-    "raw_metadata_Disease_activity_(Y_or_N)",
-    "raw_metadata_diagnosed_with_disease",
-    "raw_metadata_disease_cause",
-    "raw_metadata_disease_group"
-]
-
-df = df.drop(columns=columns_to_drop)
-```
----
-
-# 11. Remove Additional Columns
-
-```python
-
-df = df.drop(columns=["raw_metadata_weight_for_age_z_score"])
-print(df.shape)
-# (24605, 63)
-```
----
-
-# 12. IBD Status
-
-```python
-df["IBD"] = (
-    df["raw_metadata_IBD"]
-    .map({"Y": "Yes", "N": "No"})
-    .astype("category")
-)
-
-df = df.drop(columns=["raw_metadata_IBD"])
-```
----
-
-# 13. Export Intermediate Table
-```python
-df.to_csv("kesken1.tsv", sep="\t", index=False)
-```
----
-
-# 14. UTI History
-
-## 14.1 Inspect UTI related columns
-
-
-
----
-
-
-
-#15. Final Antibiotic Harmonization
-
-* Infer antibiotic exposure from multiple metadata sources.
-
-```python
-
-antibiotic_cols = df.columns[df.columns.str.contains("antibiotic", case=False)]
-
-for col in antibiotic_cols:
-    print(f"\n=== {col} ===")
-    print(df[col].value_counts(dropna=False).head(10))
-
-# look through the columns and remove unnecessary columns with non-important information
-exclude_cols = ['antibiotics_list', 'name_of_antibiotic', 'Antibiotics_used'] + [f'antibiotic_{i}' for i in range(1, 10)]
-
-filtered_antibiotic_cols = [col for col in antibiotic_cols if col not in exclude_cols]
-
-for col in filtered_antibiotic_cols:
-    print(f"\n=== {col} ===")
-    print(df[col].value_counts(dropna=False).head(10))
-
-# Drug_antibiotic_last3y
-# days_since_antibiotics
-# range_days_since_antibiotics
-# raw_metadata_Antibiotics_Last3months
-# raw_metadata_Antibiotics_current
-# raw_metadata_Antibiotics_past_3_months
-# raw_metadata_antibiotic_use
-# raw_metadata_antibiotics_at_birth
-# raw_metadata_antibiotics_with_admission_days
-# raw_metadata_total_antibiotic_days
-
-
-df.loc[df["Drug_antibiotic_last3y"] == "2 months", "Antibiotics_used"] = "Yes"
-df.loc[df["days_since_antibiotics"].notna(), "Antibiotics_used"] = "Yes"
-df.loc[df["range_days_since_antibiotics"].notna(), "Antibiotics_used"] = "Yes"
-df.loc[df["raw_metadata_Antibiotics_Last3months"].str.contains("Yes", na=False), "Antibiotics_used"] = "Yes"
-df.loc[df["raw_metadata_Antibiotics_current"] == "Y", "Antibiotics_used"] = "Yes"
-df.loc[df["raw_metadata_Antibiotics_past_3_months"] == "Y", "Antibiotics_used"] = "Yes"
-df.loc[df["raw_metadata_antibiotics_at_birth"].str.upper() == "YES", "Antibiotics_used"] = "Yes"
-df.loc[df["raw_metadata_antibiotics_with_admission_days"].gt(0), "Antibiotics_used"] = "Yes"
-df.loc[df["raw_metadata_total_antibiotic_days"].gt(0), "Antibiotics_used"] = "Yes"
-
-
-# Remove intermediate antibiotic columns:
-
-df = df.drop(columns=[
-    "Drug_antibiotic_last3y",
-    "days_since_antibiotics",
-    "range_days_since_antibiotics",
-    "raw_metadata_Antibiotics_Last3months",
-    "raw_metadata_Antibiotics_current",
-    "raw_metadata_Antibiotics_past_3_months",
-    "raw_metadata_antibiotic_use",
-    "raw_metadata_antibiotics_at_birth",
-    "raw_metadata_antibiotics_with_admission_days",
-    "raw_metadata_total_antibiotic_days",
-])
-```
----
-
-# 17. Final Export
-
-df.to_csv("kesken2.tsv", sep="\t", index=False)
-
----
-
-## Outputs
-
-* Metadata_column_value_summary.tsv
-* `kesken2.tsv`
-
----
-
-df["raw_metadata_sexual_orientation"].unique()
-
-# Antibiotics: 1.1 S01AA
-
-
-
-
-
-
-
-
-
-
-
-
-
-
----
-
-## 5. Drop Additional Unnecessary Metadata Columns
-
-```python
-columns_to_drop = [
-    "raw_metadata_BloodInfection",
-    "raw_metadata_age-block",
-    "raw_metadata_age_of_onset",
-    "raw_metadata_body_fat_percentage",
-    "raw_metadata_height_for_age_z_score",
-    "raw_metadata_maternal_age_at_delivery_years",
-    "raw_metadata_treatment_batch",
-    "raw_metadata_PostmenstrualAgeDays",
-    "raw_metadata_MaternalAgeYears",
-    "raw_metadata_Metagenomic_sequencing________(Y_or_N)",
-    "raw_metadata_age_group_16S",
-    "raw_metadata_storageprotocol",
-    "village",
-    "raw_metadata_AgeDischargedDays",
-    "raw_metadata_Age_at_collection",
-    "raw_metadata_Age_at_diagnosis",
-    "raw_metadata_Condition",
-    "raw_metadata_Drug_insulin",
-    "raw_metadata_Drug_statins",
-    "raw_metadata_Treatment_duration_(months)",
-    "raw_metadata_age_at_diagnosis",
-    "raw_metadata_diagnosis_date",
-    "raw_metadata_disease_duration",
-    "raw_metadata_disease_duration_year",
-    "raw_metadata_disease_duration_years",
-    "raw_metadata_disease_extent",
-    "raw_metadata_housing_condition",
-    "raw_metadata_treatment_group",
-    "raw_metadata_treatment_effect",
-    "raw_metadata_treatment_batch",
-    "raw_metadata_response_to_treatment",
-    "raw_metadata_mental_illness_diagnosis",
-    "raw_metadata_Blood_urea_nitrogen",
-    "raw_metadata_Drug_propranolol",
-    "raw_metadata_NecrotizingEnterocolitis",
-    "raw_metadata_Treatment_(Y_or_N)",
-    "raw_metadata_previous_bilharzia_treatment",
-    "raw_metadata_Anti_inflammatory_drugs",
-]
-
-df = df.drop(columns=columns_to_drop)
-print(f" Shape: {df.shape}")
-```
-
-
-
-
-
 
 
 
