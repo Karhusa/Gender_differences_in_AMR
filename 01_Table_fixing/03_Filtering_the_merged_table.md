@@ -785,7 +785,8 @@ columns_to_remove = [
     "raw_metadata_side_of_body_where_symptoms_first_appeared",
     "primary_search",
     "raw_metadata_bacillus_calmette_guerin_vaccine",
-    "vaccine_name"
+    "vaccine_name",
+    "raw_metadata_oral_medication"
 ]
 
 filtered_df = filtered_df.drop(columns=columns_to_remove)
@@ -795,7 +796,6 @@ filtered_df = filtered_df.drop(columns=columns_to_remove)
 
 ```python
 preg_cols = filtered_df.columns[filtered_df.columns.str.contains("preg", case=False)]
-
 for col in preg_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
@@ -828,6 +828,11 @@ filtered_df.loc[filtered_df[pregnancy_cols].notna().any(axis=1), "Pregnant"] = "
 
 filtered_df.drop(columns=pregnancy_cols, inplace=True)
 
+raw_metadata_gravida
+
+filtered_df['raw_metadata_gravida'].value_counts(dropna=False)
+
+
 filtered_df['Pregnant'].value_counts(dropna=False)
 ```
 Pregnant
@@ -847,12 +852,55 @@ for col in menopau_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
 
-vaccine_name
-
 ````
 
-filtered_df['gender_sam'].value_counts(dropna=False)
+13. Gender
 
+```python
+sex_cols = filtered_df.columns[filtered_df.columns.str.contains("sex", case=False)]
+for col in sex_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+df["host_sex_sam"] = (
+    df["host_sex_sam"]
+    .str.replace(r"[\[\]']", "", regex=True)
+    .replace({
+        "not collected": np.nan
+    })
+)
+
+df["sex_calc"] = df["sex_calc"].replace({
+    "not provided": np.nan})
+
+df["sex"] = (df["sex"]
+    .fillna(df["sex_calc"])
+    .fillna(df["host_sex_sam"]))
+
+df = df.drop(columns=["sex_calc", "host_sex_sam"])
+
+gen_cols = filtered_df.columns[filtered_df.columns.str.contains("gen", case=False)]
+for col in gen_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+df["gender_sam"] = (
+    df["gender_sam"]
+    .str.replace(r"[\[\]']", "", regex=True)
+    .str.strip())
+
+df["sex"] = df["sex"].fillna(df["gender_sam"])
+
+df = df.drop(columns=["gender_sam"])
+
+filtered_df['sex'].value_counts(dropna=False)
+```
+sex
+* NaN       9830
+* female    7426
+* male      7349
+
+raw_metadata_oral_medication
+
+filtered_df['Clindamycin'].value_counts(dropna=False)
 
 #filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
 #filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
