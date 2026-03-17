@@ -9,7 +9,7 @@
 * Produce progressively cleaner TSV outputs (`kesken1.tsv`, `kesken2.tsv`)
 
 Input files:
-* Filtered_Metadata.tsv
+* Metalog_SRA_final_clean.tsv
 
 ---
 
@@ -242,25 +242,16 @@ print(f" Shape: {filtered_df.shape}")
 #filtered_df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
 
 ---
-## 4.UTI-Related Columns
-
-### 4.1 keyword "uti"
+## 5.UTI-Related Columns
 
 * Combine UTI-related columns into one UTI_History column by marking "Yes" if any column indicates a UTI, otherwise "No".
 * Check results
 * Remove unnecessary columns
 
-```
+```python
 uti_cols = filtered_df.columns[filtered_df.columns.str.contains("uti", case=False)]
-
 for col in uti_cols:
     print(f"{col}: {filtered_df[col].unique()}")
-
-# raw_metadata_utis: [nan  0.  3.  1.  4.]
-# raw_metadata_history_of_recurrent_uti: [nan 'Recurrent UTIs']
-# raw_metadata_ecoli_utis: [nan  1.]
-# raw_metadata_diagnosed_utis: [nan  1.]
-# location_resolution: ['city' 'country' 'region' 'site' 'village' 'continent']
 
 filtered_df["UTI_History"] = np.where(
     (filtered_df["raw_metadata_utis"].fillna(0) > 0) |
@@ -271,19 +262,9 @@ filtered_df["UTI_History"] = np.where(
     "No"
 )
 
-filtered_df["UTI_History"].value_counts()
-
 filtered_df.drop(columns=uti_cols, inplace=True)
-```
-UTI_History
-* No     24449
-* Yes      156
 
-### 4.2 keyword "urine"
-
-```python
 uri_cols = filtered_df.columns[filtered_df.columns.str.contains("urine", case=False)]
-
 for col in uri_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
@@ -292,30 +273,22 @@ filtered_df.loc[
     "UTI_History"
 ] = "Yes"
 
+filtered_df.drop(columns=uri_cols, inplace=True)
+
+tract_cols = filtered_df.columns[filtered_df.columns.str.contains("tract", case=False)]
+for col in tract_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+filtered_df.drop(columns=tract_cols, inplace=True)
+
 filtered_df["UTI_History"].value_counts()
 
-filtered_df.drop(columns=uri_cols, inplace=True)
 ```
 UTI_History
 * No     24380
 * Yes      225
-
-
-### 4.3 keyword "tract"
-
-```python
-tract_cols = filtered_df.columns[filtered_df.columns.str.contains("tract", case=False)]
-
-for col in tract_cols:
-    print(f"{col}: {filtered_df[col].unique()}")
-
-filtered_df.drop(columns=tract_cols, inplace=True)
-```
 ---
 
-## 5.Cancer-Related Columns
-
-### 5.1 Keyword Cancer
+## 6.Cancer-Related Columns
 
 ```python
 cancer_cols = filtered_df.columns[filtered_df.columns.str.contains("cancer", case=False)]
@@ -331,10 +304,6 @@ filtered_df["GI_Cancer"] = filtered_df["GI_Cancer"].notna().map({
     False: "No"
 })
 
-```
-### 5.2 Keyword Tumor
-
-```python
 tumor_cols = filtered_df.columns[filtered_df.columns.str.contains("tumor", case=False)]
 
 for col in tumor_cols:
@@ -350,23 +319,22 @@ filtered_df["Colorectal_Cancer"] = filtered_df["Colorectal_Cancer"].notna().map(
     False: "No"
 })
 ```
+
 ---
 
-## 6. Infection-Related Columns
+## 7. Infection-Related Columns
 
 ```python
 infection_cols = filtered_df.columns[filtered_df.columns.str.contains("infection", case=False)]
 for col in infection_cols:
     print(f"{col}: {filtered_df[col].unique()}")
-
 filtered_df = filtered_df.drop(columns=[
     "raw_metadata_otherinfection",
-    "raw_metadata_gi_infection",
-])
+    "raw_metadata_gi_infection",])
 ```
 ---
 
-## 6.Location-Related Columns
+## 8.Location-Related Columns
 
 ### 6.1 Keyword: location
 
@@ -511,13 +479,10 @@ filtered_df["Continent"].value_counts(dropna=False)
 
 ---
 
-## 7. Family-related columns
-
-### 7.1 Keyword: family
+## 9. Family-related columns
 
 ```python
 family_cols = filtered_df.columns[filtered_df.columns.str.contains("family", case=False)]
-
 for col in family_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
@@ -529,24 +494,12 @@ filtered_df["Parent"] = np.select(
 
 filtered_df.drop(columns=["host_family_relationship_sam",], inplace=True)
 
-filtered_df["Parent"].value_counts(dropna=False)
-```
-### 7.1 Keyword: maternal
-```python
-
 maternal_cols = filtered_df.columns[filtered_df.columns.str.contains("maternal", case=False)]
-
 for col in maternal_cols:
     print(f"{col}: {filtered_df[col].unique()}")
-
 filtered_df.drop(columns=maternal_cols, inplace=True)
-```
 
-### 7.2 Keyword: mother
-
-```python
 mo_cols = filtered_df.columns[filtered_df.columns.str.contains("mother", case=False)]
-
 for col in mo_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
@@ -555,14 +508,9 @@ filtered_df.loc[
     (filtered_df["raw_metadata_mother_infant"].str.lower() == "mother"),
     "Parent"
 ] = "Mother"
-
 filtered_df.drop(columns=mo_cols, inplace=True)
-```
-### 7.3 Keyword: Father
 
-```python
 fa_cols = filtered_df.columns[filtered_df.columns.str.contains("father", case=False)]
-
 for col in fa_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
@@ -570,14 +518,13 @@ filtered_df.loc[
     (filtered_df["raw_metadata_father"].notna()),
     "Parent"
 ] = "Father"
-
 filtered_df.drop(columns=fa_cols, inplace=True)
 
 filtered_df["Parent"].value_counts(dropna=False)
 ```
 ---
 
-## 7. Antibiotic Usage Processing 
+## 10. Antibiotic Usage Processing 
 
 ```python
 abx_cols = filtered_df.columns[filtered_df.columns.str.contains("antibio", case=False)]
@@ -701,21 +648,14 @@ Antibiotic_Use
 
 
 ---
-## 8 BMI Related columns
-
-### 4.1 keyword "bmi"
+## 11 BMI Related columns
 
 ```python
 bmi_cols = filtered_df.columns[filtered_df.columns.str.contains("bmi", case=False)]
-
 for col in bmi_cols:
     print(f"{col}: {filtered_df[col].unique()}")
-```
 
-### 4.1 keyword "body"
-```python
 bo_cols = filtered_df.columns[filtered_df.columns.str.contains("body", case=False)]
-
 for col in bo_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 ```
@@ -758,38 +698,15 @@ filtered_df["bmi_numeric"].value_counts(dropna=False)
 
 filtered_df["bmi_category"].value_counts(dropna=False)
 ```
-
-bmi_category
-
-* None                   18335
-* Normal (18.5-25)        3221
-* Overweight (25-30)      1399
-* Obese (>30)             1232
-* Underweight (<18.5)      418
-
-# columns bmi_range and bmi_range.2
-```
-filtered_df.loc[filtered_df['bmi_range'] == '>30', 'bmi_category'] = "Obese (>30)"
-
-filtered_df.loc[filtered_df['bmi_range.2'] == '>30', 'bmi_category'] = "Obese (>30)"
-
-```
-
-# columns bmi_range and bmi_range.1 and bmi_range.3
-
+ columns bmi_range and bmi_range.2
 ```python
-
+filtered_df.loc[filtered_df['bmi_range'] == '>30', 'bmi_category'] = "Obese (>30)"
+filtered_df.loc[filtered_df['bmi_range.2'] == '>30', 'bmi_category'] = "Obese (>30)"
 filtered_df.loc[filtered_df['bmi_range.1'] == '20-25', 'bmi_category'] = "Normal (18.5-25)"
 filtered_df.loc[filtered_df['bmi_range.1'] == '25-30', 'bmi_category'] = "Overweight (25-30)"
-
 filtered_df.loc[filtered_df['bmi_range.3'] == '20-25', 'bmi_category'] = "Normal (18.5-25)"
 filtered_df.loc[filtered_df['bmi_range.3'] == '25-30', 'bmi_category'] = "Overweight (25-30)"
-```
 
-
-
-
-```python
 cols_to_drop = [
     'bmi', 
     'bmi_sam', 
@@ -802,27 +719,27 @@ cols_to_drop = [
 ]
 
 filtered_df = filtered_df.drop(columns=[c for c in cols_to_drop if c in filtered_df.columns])
+filtered_df["bmi_category"].value_counts(dropna=False)
+
 ```
+bmi_category
 
+* None                   18335
+* Normal (18.5-25)        3221
+* Overweight (25-30)      1399
+* Obese (>30)             1232
+* Underweight (<18.5)      418
 
-## 8 IBD Related columns
-
-### 4.1 keyword "ibd"
+## 12 IBD Related columns
 
 ```python
 ibd_cols = filtered_df.columns[filtered_df.columns.str.contains("IBD", case=False)]
-
 for col in ibd_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
 filtered_df = filtered_df.rename(columns={"raw_metadata_ibd": "IBD"})
-```
 
-### 4.1 keyword "crohn"
-
-```python
 cro_cols = filtered_df.columns[filtered_df.columns.str.contains("crohn", case=False)]
-
 for col in cro_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
@@ -832,20 +749,12 @@ filtered_df.loc[
     'IBD'
 ] = 'Yes'
 
-filtered_df['IBD'].value_counts(dropna=False)
-
 filtered_df = filtered_df.drop(columns=['raw_metadata_crohns_disease'])
 
 filtered_df['IBD'] = filtered_df['IBD'].replace({'Y': 'Yes', 'N': 'No'})
+filtered_df['IBD'].value_counts(dropna=False)
 
-```
-
-
-### 4.1 keyword "colitis"
-
-```python
 col_cols = filtered_df.columns[filtered_df.columns.str.contains("colitis", case=False)]
-
 for col in col_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
@@ -885,9 +794,7 @@ columns_to_remove = [
 filtered_df = filtered_df.drop(columns=columns_to_remove)
 ```
 
-## 8. Pregnancy related columns
-
-### 8.1 keyword "pregnant"
+## 13. Pregnancy related columns
 
 ```python
 preg_cols = filtered_df.columns[filtered_df.columns.str.contains("preg", case=False)]
@@ -908,16 +815,8 @@ filtered_df["Pregnant"] = filtered_df["pregnancy_week"].apply(classify_pregnancy
 filtered_df.drop(columns=["pregnancy_week"], inplace=True)
 
 filtered_df['Pregnant'].value_counts(dropna=False)
-```
-Pregnant
-* No     24472
-* Yes      133
 
-### 4.1 keyword "gestational"
-
-```python
 gest_cols = filtered_df.columns[filtered_df.columns.str.contains("gest", case=False)]
-
 for col in gest_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
