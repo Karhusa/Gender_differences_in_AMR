@@ -860,14 +860,12 @@ filtered_df['IBD'].value_counts(dropna=False)
 ```python
 
 columns_to_remove = [
-    "raw_metadata_antibiotics_with_admission_days",
     "env_package_sam",
     "raw_metadata_childhood_accomodation",
     "raw_metadata_accomodation",
     "raw_metadata_x3_in_the_past_2_weeks_have_you_used_an_oral_contrast",
     "best_response_to_therapy_sam",
     "raw_metadata_mumps",
-    "raw_metadata_exercise_frequency(n/week",
     "raw_metadata_relationship_status",
     "raw_metadata_new_sexual_partner_last6months",
     "human_gut_environmental_package_sam",
@@ -882,9 +880,9 @@ columns_to_remove = [
 filtered_df = filtered_df.drop(columns=columns_to_remove)
 ```
 
-## 8 Pregnancy related columns
+## 8. Pregnancy related columns
 
-### 4.1 keyword "pregnant"
+### 8.1 keyword "pregnant"
 
 ```python
 preg_cols = filtered_df.columns[filtered_df.columns.str.contains("preg", case=False)]
@@ -905,16 +903,10 @@ filtered_df["Pregnant"] = filtered_df["pregnancy_week"].apply(classify_pregnancy
 filtered_df.drop(columns=["pregnancy_week"], inplace=True)
 
 filtered_df['Pregnant'].value_counts(dropna=False)
-
-
-
 ```
 Pregnant
-No     24472
-Yes      133
-Name: count, dtype: int64
-
-
+* No     24472
+* Yes      133
 
 ### 4.1 keyword "gestational"
 
@@ -935,13 +927,13 @@ filtered_df.loc[filtered_df[pregnancy_cols].notna().any(axis=1), "Pregnant"] = "
 
 filtered_df.drop(columns=pregnancy_cols, inplace=True)
 
-
 filtered_df['Pregnant'].value_counts(dropna=False)
 ```
 Pregnant
 * No     23125
 * Yes     1480
 
+print(f" Shape: {filtered_df.shape}")
 
 #filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
 #filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
