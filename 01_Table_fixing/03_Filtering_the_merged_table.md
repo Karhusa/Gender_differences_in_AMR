@@ -459,20 +459,16 @@ for col in cont_cols:
 ```python
 
 filtered_df["Continent"] = filtered_df["Continent"].astype("string")
-
 for col in ["geo_loc_name_country_continent_calc_sra", "geo_loc_name_country_continent_calc"]:
     mask = filtered_df["Continent"].isna() | (filtered_df["Continent"] == "")
     filtered_df.loc[mask, "Continent"] = filtered_df.loc[mask, col]
 
-
 filtered_df["Continent"] = filtered_df["Continent"].replace("uncalculated", pd.NA)
-
 filtered_df["Continent"] = filtered_df["Continent"].str.title()
-
-filtered_df.drop(columns=[
+f
+iltered_df.drop(columns=[
     "geo_loc_name_country_continent_calc_sra",
-    "geo_loc_name_country_continent_calc"
-], inplace=True)
+    "geo_loc_name_country_continent_calc"], inplace=True)
 
 filtered_df["Continent"].value_counts(dropna=False)
 ```
@@ -788,7 +784,8 @@ columns_to_remove = [
     "raw_metadata_body_fat_percentage",
     "raw_metadata_side_of_body_where_symptoms_first_appeared",
     "primary_search",
-    "raw_metadata_bacillus_calmette_guerin_vaccine"
+    "raw_metadata_bacillus_calmette_guerin_vaccine",
+    "vaccine_name"
 ]
 
 filtered_df = filtered_df.drop(columns=columns_to_remove)
@@ -849,8 +846,12 @@ menopau_cols = filtered_df.columns[filtered_df.columns.str.contains("menopau", c
 for col in menopau_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 
+
+vaccine_name
+
 ````
 
+filtered_df['gender_sam'].value_counts(dropna=False)
 
 
 #filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
