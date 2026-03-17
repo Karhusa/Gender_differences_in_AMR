@@ -56,7 +56,7 @@ plot_df %>%
 * subjects_with_repeats :0
 
 
-## 2 Basic statistics about the dataset
+## 2 ARG load analyses
 
 ### 2.1 Sample distribution (ARG log10 and sex)
 
@@ -64,7 +64,6 @@ plot_df %>%
 Subset_clean <- Subset %>%
   filter(!is.na(log10_ARG_load), !is.na(sex))
 
-#Plot
 ggplot(Subset_clean, aes(x = log10_ARG_load, fill = sex)) +
   geom_histogram(bins = 30, color = "black", alpha = 0.8, position = "identity") +
   facet_wrap(~ sex) +
@@ -92,81 +91,8 @@ ARG_summary
 ```
 ![Sample distribution ARG Load](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_ARG.png)
 
-### 2.2 Sample distribuotion (ARG Shannon x sex)
 
-```r
-Subset_shan <- Subset %>%
-  filter(!is.na(ARG_div_shan), !is.na(sex))
-
-#plot
-npg_cols <- pal_npg("nrc")(4)[3:4]
-
-ggplot(Subset_shan, aes(x = ARG_div_shan, fill = sex)) +
-  geom_histogram(bins = 30, color = "black", alpha = 0.8, position = "identity") +
-  facet_wrap(~ sex, scales = "fixed") +  # separate panels for each sex
-    scale_fill_manual(values = npg_cols) +
-  labs(
-    title = "Distribution of Shannon Diversity Index by Sex",
-    x = "Shannon Diversity Index",
-    y = "Sample Count"
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
-
-#Statistics summary
-
-Shan_summary <- Subset_clean %>%
-  group_by(sex) %>%
-  summarise(
-    n = n(),                                # sample count
-    mean_shan = mean(ARG_div_shan),        # mean
-    sd_shan = sd(ARG_div_shan),            # standard deviation
-    median_shan = median(ARG_div_shan),    # median
-    min_shan = min(ARG_div_shan),          # minimum
-    max_shan = max(ARG_div_shan)           # maximum
-  )
-Shan_summary
-```
-![Sample distribution ARG diversity](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_ARG_diversity.png)
-
-### 2.3 Sample distribution (ARG log10 x sex x age )
-
-```r
-plot_df <- Subset %>%
-     filter(
-         !is.na(log10_ARG_load),
-         !is.na(sex),
-         !is.na(precise_age_category),
-         precise_age_category != "Unknown"
-     )
-
- table_df <- plot_df %>%
-     count(precise_age_category, sex) %>%
-     tidyr::pivot_wider(names_from = sex, values_from = n)
- 
- table_df
-
-table_df <- table_df %>% mutate(Total = Female + Male)
-table_image <- table_df %>%
-     gt() %>%
-     cols_label(
-         precise_age_category = "Age Category",
-         Female = "Female (n)",
-         Male = "Male (n)",
-         Total = "Total (n)"
-     ) %>%
-     tab_header(
-         title = "Sample Distribution by Age Category and Sex"
-     )
-table_image
-```
-![Sample distribution ARG Load](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_table_Age.png)
-
----
-
-## 3. ARG load x sex analyses
-
-### 3.1 Boxplot of ARGlog10 and sex
+### 2.3 Boxplot of ARGlog10 and sex
 
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -209,7 +135,7 @@ ggsave("Boxplot_log10ARG_by_sex_ready.png", width = 8, height = 6, dpi = 300)
 ```
 ![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Boxplot_log10ARG_by_sex_ready.png)
 
-### 3.2 Linear regression
+### 324.3 Linear regression
 
 ```r
 lm_ARG_sex <- lm(log10_ARG_load ~ sex, data = Subset_clean)
@@ -239,7 +165,7 @@ F-statistic: 47.73 on 1 and 14773 DF,  p-value: 5.099e-12
 
 ## 4 Ananlyses of ARGlog10, sex and age
 
-### 2.3.1 Sample distribution
+### 2.3.1 Sample distribution(ARG x sex x age)
 
 ```r
 plot_df <- Subset %>%
@@ -277,7 +203,7 @@ table_image
 KUVA!!
 
 
-### 2.3.2 Boxplot of ARGlog10, sex and age categories
+### 2.3.2 Boxplot (ARG, sex and age categories)
 
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -406,7 +332,7 @@ n_samples <- Subset %>%
 
 n_samples
 
-lm_full <- lm(log10_ARG_load ~ age_years + sex, data = plot_df)
+lm_full <- lm(log10_ARG_load ~ sex + age_years, data = plot_df)
 summary(lm_full)
 
 ```
@@ -527,11 +453,54 @@ ggsave("GAM_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 
 ![GAM ARG Load by Sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/GAM_log10ARG_by_sex_age_ready.png)
 
-## 2.4 Ananlyses of ARG Load, BMI and sex
 
-### 2.4.1 Boxplot of ARG Load, BMI and sex
+---
+
+## 4 Ananlyses of ARG Load, BMI and sex
+* Remove ages < 18
+
+### 2.4.1. Sample distribution (ARG x BMI x sex)
+
+```
+Subset_BMI <- Subset %>%
+  filter(
+    age_years >= 18,
+    BMI_range_new != "Normal/Overweight (<30)"
+  ) %>%
+  filter(
+    !is.na(log10_ARG_load),
+    !is.na(BMI_range_new),
+    !is.na(sex)
+  )
+
+table_df_B <- Subset_BMI %>%
+  count(BMI_range_new, sex) %>%
+  tidyr::pivot_wider(names_from = sex, values_from = n)
+
+table_df_B <- table_df_B %>%
+  mutate(Total = Female + Male)
+
+table_df_B
+
+table_image <- table_df_B %>%
+  gt() %>%
+  cols_label(
+    BMI_range_new = "BMI Range",
+    Female = "Female (n)",
+    Male = "Male (n)",
+    Total = "Total (n)"
+  ) %>%
+  tab_header(
+    title = "Sample Distribution by Age Category and Sex"
+  )
+
+table_image
+
+```
+
+### 2.4.2 Boxplot of ARG Load, BMI and sex
 ```r
-# Filter dataset
+
 Subset_BMI <- Subset %>%
   filter(
     age_years >= 18,
@@ -550,40 +519,41 @@ Subset_BMI$BMI_range_new <- factor(
   Subset_BMI$BMI_range_new,
   levels = levels_bmi
 )
-
-comparisons <- list(
-  c("Underweight (<18.5)", "Normal (18.5-25)"),
-  c("Underweight (<18.5)", "Overweight (25-30)"),
-  c("Underweight (<18.5)", "Obese (>30)"),
-  c("Normal (18.5-25)", "Overweight (25-30)"),
-  c("Normal (18.5-25)", "Obese (>30)"),
-  c("Overweight (25-30)", "Obese (>30)")
+sex_comparisons <- list(
+  c("Female", "Male")  
 )
 
-ggplot(Subset_BMI, aes(x = BMI_range_new, y = log10_ARG_load, fill = sex)) +
-  geom_jitter(aes(color = sex), width = 0.2, alpha = 0.2, size = 0.5) +
-  geom_boxplot(outlier.shape = NA, alpha = 0.7) +
-  scale_fill_npg() +
-  scale_color_npg() +
+ggplot(Subset_BMI, aes(x = sex, y = log10_ARG_load, fill = sex)) +
+  geom_jitter(aes(color = sex),
+              position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.75),
+              alpha = 0.2, size = 0.5) +
+  geom_boxplot(position = position_dodge(width = 0.75),
+               outlier.shape = NA, alpha = 0.7) +
+  facet_wrap(~ BMI_range_new, nrow = 1) +
+  stat_compare_means(
+    comparisons = sex_comparisons,
+    method = "wilcox.test",
+    label = "p.signif",
+    position = position_dodge(width = 0.75)
+  ) +
+  scale_fill_npg(name = "Sex") +
+  scale_color_npg(guide = "none") +
   labs(
     x = "BMI Category",
     y = "log10 ARG Load",
-    title = "Distribution of ARG Load by BMI Category and Sex"
-  ) +
-  stat_compare_means(
-    comparisons = comparisons, 
-    method = "wilcox.test",      # non-parametric
-    label = "p.signif",          # shows *, **, ***
-    tip.length = 0.03             # length of the connecting lines
+    title = "Sex Differences in ARG Load Across BMI Categories"
   ) +
   theme_minimal() +
   theme(
     text = element_text(size = 12),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    plot.title = element_text(hjust = 0.5)
+    axis.text.x = element_blank(),   # remove sex labels
+    axis.ticks.x = element_blank(),
+    strip.text = element_text(size = 11),
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "right"
   )
 ```
-### 2.4.2 Additive linear model of AGR Load, BMI and sex
+### 2.4.3 Linear model (AGR Load x BMI and sex)
 ```r
 Subset_BMI$BMI_range_new <- relevel(
   Subset_BMI$BMI_range_new, 
@@ -622,12 +592,54 @@ Multiple R-squared:  0.007836,	Adjusted R-squared:  0.007079
 F-statistic: 10.36 on 4 and 5245 DF,  p-value: 2.366e-08
 
 
+---
 
-# 3. Shannon analyses
 
-## 3.1. Analyses of shannon index and sex
+# 5. Shannon analyses
 
-### 3.1.1 Boxplot of shannon index and sex
+## 5.1. ARG diversity and sex
+
+### 2.2 Sample distribution (ARG div x sex)
+
+```r
+Subset_shan <- Subset %>%
+  filter(!is.na(ARG_div_shan), !is.na(sex))
+
+npg_cols <- pal_npg("nrc")(4)[3:4]
+
+ggplot(Subset_shan, aes(x = ARG_div_shan, fill = sex)) +
+  geom_histogram(bins = 30, color = "black", alpha = 0.8, position = "identity") +
+  facet_wrap(~ sex, scales = "fixed") +  # separate panels for each sex
+    scale_fill_manual(values = npg_cols) +
+  labs(
+    title = "Distribution of Shannon Diversity Index by Sex",
+    x = "Shannon Diversity Index",
+    y = "Sample Count"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+Shan_summary <- Subset_clean %>%
+  group_by(sex) %>%
+  summarise(
+    n = n(),                                # sample count
+    mean_shan = mean(ARG_div_shan),        # mean
+    sd_shan = sd(ARG_div_shan),            # standard deviation
+    median_shan = median(ARG_div_shan),    # median
+    min_shan = min(ARG_div_shan),          # minimum
+    max_shan = max(ARG_div_shan)           # maximum
+  )
+Shan_summary
+```
+![Sample distribution ARG diversity](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_ARG_diversity.png)
+
+
+
+
+
+
+
+### 5.1.1 Boxplot of shannon index and sex
 ```r
 
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -692,75 +704,58 @@ ggsave("Boxplot_Shannon_diversity_by_sex_age.png", width = 8, height = 6, dpi = 
 
 ### 3.1.2 Regression analysis of shannon index and sex
 ```r
+plot_df <- Subset %>% filter(!is.na(sex), !is.na(ARG_div_shan))
+
 plot_df$sex <- factor(plot_df$sex, levels = c("Female", "Male"))
+
 lm_sex <- lm(ARG_div_shan ~ sex, data = plot_df)
+
 summary(lm_sex)
 
 ```
-**Results:**
+---
+## 3.2. Analyses of shannon index, sex and categorized age
 
-| Outcome | Predictor | Reference group | Effect estimate | p-value | Variance explained (R²) |
-|--------|-----------|-----------------|-----------------|---------|--------------------------|
-| ARG Shannon diversity | Sex (Male vs Female) | Female | −0.034 | 8.1 × 10⁻⁵ | 0.001 |
-
-
-| Model | Formula | Observations | Residual SE | DF |
-|------|--------|--------------|-------------|----|
-| Linear regression | ARG_div_shan ~ sex | 14,775 | 0.523 | 14,773 |
-
-| Term | Estimate | Std. Error | t value | p-value | Significance |
-|------|---------:|-----------:|--------:|--------:|:------------:|
-| Intercept (Female) | 1.903 | 0.006 | 313.34 | < 2 × 10⁻¹⁶ | *** |
-| Sex (Male vs Female) | −0.034 | 0.009 | −3.94 | 8.12 × 10⁻⁵ | *** |
-
-| Metric | Value |
-|-------|-------|
-| R² | 0.00105 |
-| Adjusted R² | 0.00098 |
-| F-statistic | 15.54 |
-| Model p-value | 8.12 × 10⁻⁵ |
-
-| Min | 1Q | Median | 3Q | Max |
-|----:|---:|-------:|---:|----:|
-| −1.88 | −0.33 | 0.05 | 0.38 | 1.63 |
-
-
-
-### 3.1.3 Cohen's d of shannon index categorized age and, sex
+### 3.2.1 Sample distribution (ARG diveristy x sex x categorized age )
 
 ```r
-group1 <- plot_df$ARG_div_shan[plot_df$sex == "Female"]
-group2 <- plot_df$ARG_div_shan[plot_df$sex == "Male"]
+plot_df_S <- Subset %>%
+  filter(
+    !is.na(ARG_div_shan),
+    !is.na(sex),
+    !is.na(precise_age_category),
+    tolower(sex) != "unknown",
+    tolower(precise_age_category) != "unknown"
+  )
 
-# Means and SDs
-mean1 <- mean(group1, na.rm = TRUE)
-mean2 <- mean(group2, na.rm = TRUE)
-sd1   <- sd(group1, na.rm = TRUE)
-sd2   <- sd(group2, na.rm = TRUE)
-n1    <- length(group1)
-n2    <- length(group2)
+table_df_S <- plot_df_S %>%
+  count(precise_age_category, sex) %>%
+  tidyr::pivot_wider(names_from = sex, values_from = n)
 
-# Pooled SD
-pooled_sd <- sqrt(((n1-1)*sd1^2 + (n2-1)*sd2^2) / (n1 + n2 - 2))
+table_df_S <- table_df_S %>%
+  mutate(Total = Female + Male)
 
-# Cohen's d
-cohen_d <- (mean1 - mean2) / pooled_sd
-cohen_d
+table_df_S
+
+table_image <- table_df_S %>%
+  gt() %>%
+  cols_label(
+    precise_age_category = "Age Category",
+    Female = "Female (n)",
+    Male = "Male (n)",
+    Total = "Total (n)"
+  ) %>%
+  tab_header(
+    title = "Sample Distribution by Age Category and Sex"
+  )
+
+table_image
 ```
-**Results**
-Cohen's d: 0.06485994
-
----
-## 3.2. Analyses of shannon index, sex and, categorized age
-
-### 3.2.1 Boxplot of of shannon index, sex and, categorized age
+### 3.2.2 Boxplot of of shannon index, sex and, categorized age
 
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
-Subset$ARG_div_shan[Subset$ARG_div_shan == "" | Subset$ARG_div_shan == "NA"] <- NA
-Subset$precise_age_category[
-  Subset$precise_age_category == "" | Subset$precise_age_category == "NA"
-] <- NA
+Subset$precise_age_category[Subset$precise_age_category == "" | Subset$precise_age_category == "NA"] <- NA
 
 Subset$sex <- recode(Subset$sex,
                      "female" = "Female",
@@ -795,12 +790,13 @@ plot_df <- Subset %>%
     sex = factor(sex, levels = c("Female", "Male"))
   )
 
-counts <- plot_df %>%
-  group_by(precise_age_category, sex) %>%
-  summarise(
-    N = n(),
-    y_pos = max(ARG_div_shan, na.rm = TRUE) + 0.15,
-    .groups = "drop"
+plot_df <- plot_df %>% filter(precise_age_category != "NA")
+
+plot_df <- plot_df %>%
+  mutate(
+    precise_age_category = factor(precise_age_category,
+                                  levels = age_levels),
+    sex = factor(sex, levels = c("Female", "Male"))
   )
 
 npg_cols <- pal_npg("nrc")(4)[3:4]
@@ -813,16 +809,6 @@ ggplot(plot_df, aes(x = precise_age_category, y = ARG_div_shan, fill = sex)) +
   geom_boxplot(
     width = 0.55, outlier.shape = NA, alpha = 0.8,
     position = position_dodge(width = 0.6)
-  ) +
-  geom_text(
-    data = counts,
-    aes(x = precise_age_category, y = y_pos,
-        label = paste0("N=", N), color = sex),
-    position = position_dodge(width = 0.6),
-    inherit.aes = FALSE,
-    size = 2.0,
-    fontface = "bold",
-    show.legend = FALSE
   ) +
   scale_x_discrete(labels = age_labels) +
   scale_fill_manual(values = npg_cols) +
@@ -846,191 +832,38 @@ ggsave("Boxplot_Shannon_diversity_by_age_categry_sex.png", width = 8, height = 6
 
 ![Shannon diversity by sex by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Boxplot_Shannon_diversity_by_age_categry_sex.png)
 
-### 3.2.2 Regression analysis of shannon index, sex and, categorized age
+### 3.2.2 Regression analysis of shannon index, sex and age
 ```r
 #Additive model
-lm_sex_age <- lm(ARG_div_shan ~ sex + precise_age_category, data = plot_df)
+lm_sex_age <- lm(ARG_div_shan ~ sex + age_years, data = plot_df)
 summary(lm_sex_age)
-
-#Interaction model
-lm_interact <- lm(ARG_div_shan ~ sex * precise_age_category, data = plot_df)
-summary(lm_interact)
 
 ```
 **Results:**
 
-**Table X.** Linear regression analysis of ARG Shannon diversity as a function of sex and age category. Female sex and the youngest age category were used as reference levels.
+lm(formula = ARG_div_shan ~ sex + age_years, data = plot_df)
 
-| Term                              | Estimate (β) | Std. Error | t value | p value        |
-|-----------------------------------|--------------|------------|---------|----------------|
-| Intercept                         | 1.840        | 0.019      | 97.10   | < 2.2 × 10⁻¹⁶ |
-| Sex (Male vs Female)              | −0.057       | 0.010      | −5.92   | 3.24 × 10⁻⁹   |
-| Toddler                           | −0.164       | 0.048      | −3.38   | 7.25 × 10⁻⁴   |
-| Child                             | −0.069       | 0.026      | −2.66   | 7.76 × 10⁻³   |
-| Teenage                           | −0.088       | 0.023      | −3.77   | 1.62 × 10⁻⁴   |
-| Young adult                       | −0.004       | 0.021      | −0.18   | 0.854         |
-| Middle-aged adult                 | 0.211        | 0.020      | 10.46   | < 2.2 × 10⁻¹⁶ |
-| Older adult                       | 0.283        | 0.022      | 13.05   | < 2.2 × 10⁻¹⁶ |
-| Oldest adult                      | 0.394        | 0.038      | 10.31   | < 2.2 × 10⁻¹⁶ |
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.75710 -0.29371  0.03775  0.33452  1.56527 
 
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  1.7122904  0.0103191  165.93  < 2e-16 ***
+sexMale     -0.0612997  0.0096994   -6.32 2.73e-10 ***
+age_years    0.0060274  0.0002022   29.81  < 2e-16 ***
+---
+Signif. codes:  
+0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-| Predictor            | β (Estimate) | p value        |
-|----------------------|--------------|----------------|
-| Sex (Male)           | −0.057       | 3.24 × 10⁻⁹   |
-| Age category         | —            | < 2.2 × 10⁻¹⁶ |
+Residual standard error: 0.4864 on 10066 degrees of freedom
+  (311 observations deleted due to missingness)
+Multiple R-squared:  0.08358,	Adjusted R-squared:  0.0834 
+F-statistic:   459 on 2 and 10066 DF,  p-value: < 2.2e-16
 
-
-**Model statistics**
-
-- Significance codes:  
-  `***` p < 0.001, `**` p < 0.01, `*` p < 0.05, `.` p < 0.1
-
-**Residual standard error:** 0.485 on 103371 degrees of freedom  
-**Multiple R-squared:** 0.084, Adjusted R-squared: 0.084  
-**F-statistic:** 119.6 (df= 15, and 10371), p-value: < 2.2 × 10⁻¹⁶
-
-**Additive model**
-
-| Term                                  | Estimate (β) | Std. Error | t value | p value        |
-|---------------------------------------|--------------|------------|---------|----------------|
-| Intercept                             | 1.827        | 0.026      | 71.32   | < 2.2 × 10⁻¹⁶ |
-| Sex (Male vs Female)                  | −0.030       | 0.036      | −0.82   | 0.411          |
-| Toddler                               | −0.184       | 0.075      | −2.44   | 1.46 × 10⁻²   |
-| Child                                 | −0.081       | 0.037      | −2.17   | 3.03 × 10⁻²   |
-| Teenage                               | −0.031       | 0.033      | −0.96   | 0.339          |
-| Young adult                           | 0.116        | 0.029      | 4.03    | 5.67 × 10⁻⁵   |
-| Middle-aged adult                      | 0.169        | 0.028      | 6.01    | 1.94 × 10⁻⁹   |
-| Older adult                            | 0.222        | 0.031      | 7.19    | 6.84 × 10⁻¹³  |
-| Oldest adult                           | 0.381        | 0.056      | 6.76    | 1.50 × 10⁻¹¹  |
-| SexMale:Toddler                        | 0.028        | 0.098      | 0.29    | 0.773          |
-| SexMale:Child                           | 0.019        | 0.052      | 0.36    | 0.717          |
-| SexMale:Teenage                         | −0.111       | 0.046      | −2.40   | 1.65 × 10⁻²   |
-| SexMale:Young adult                     | −0.258       | 0.041      | −6.27   | 3.81 × 10⁻¹⁰  |
-| SexMale:Middle-Age Adult                | 0.084        | 0.040      | 2.11    | 3.46 × 10⁻²   |
-| SexMale:Older Adult                      | 0.104        | 0.043      | 2.42    | 1.54 × 10⁻²   |
-| SexMale:Oldest Adult                     | 0.020        | 0.076      | 0.26    | 0.796          |
-
-**Significance codes:** 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1  
-
-**Residual standard error:** 0.480 (df = 10,364)  
-**Multiple R²:** 0.104  
-**Adjusted R²:** 0.103  
-**F-statistic:** 80.51 (df = 15, 10,364), p < 2.2 × 10⁻¹⁶
-
-
-
-
-## LOESS curve 
-
-```r
-
-
-N_sex <- colData_sex_clean %>%
-  filter(!is.na(age_years), !is.na(ARG_div_shan)) %>%
-  count(sex)
-
-ggplot(colData_sex_clean,
-       aes(x = age_years, y = log10_ARG_load, color = sex)) +
-  geom_point(alpha = 0.25, size = 1) +
-  geom_smooth(method = "lm", se = TRUE, linewidth = 1.4, alpha = 0.15
-  ) +
-  scale_color_manual(
-    values = c("female" = "#D55E00", "male" = "#0072B2")
-  ) +
-  labs(x = "Age (years)", y = "Log10 ARG load", title = "ARG load vs Age by Sex", color = "Sex"
-  ) +
-  theme_minimal()
-```
-
-
-LOESS
-
-```
-
-Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
-Subset$ARG_div_shan[Subset$ARG_div_shan == "" | Subset$ARG_div_shan == "NA"] <- NA
-Subset$precise_age_category[
-  Subset$precise_age_category == "" | Subset$precise_age_category == "NA"
-] <- NA
-
-plot_df_loess <- Subset %>%
-  dplyr::filter(
-    !is.na(age_years),
-    !is.na(ARG_div_shan),
-    !is.na(sex)
-  )
-npg_cols <- pal_npg("nrc")(4)[3:4]
-
-ggplot(plot_df_loess, aes(x = age_years, y = ARG_div_shan)) +
-  geom_point(alpha = 0.3, size = 1.5, color = "grey50") +  # grey dots
-  geom_smooth(aes(color = sex), method = "loess", span = 0.3, se = TRUE) +
-  scale_color_manual(values = npg_cols) +  # LOESS curves in NPG colors
-  labs(
-    x = "Age (years)",
-    y = "ARG Shannon diversity",
-    title = "LOESS Curve of ARG Shannon diversity across age by sex"
-  ) +
-  theme_minimal(base_size = 13) +
-  theme(
-    legend.position = "right",
-    plot.title = element_text(face = "bold")
-  )
-
-#Without dots:
-
-ggplot(plot_df_loess, aes(x = age_years, y = ARG_div_shan, color = sex, fill = sex)) +
-  geom_smooth(method = "loess", span = 0.3, se = TRUE, size = 1.2) +
-  scale_color_manual(values = npg_cols) +
-  scale_fill_manual(values = npg_cols) +
-  labs(
-    x = "Age (years)",
-    y = "ARG Shannon diversity",
-    title = "LOESS curve of ARG Shannon diversity across age by sex"
-  ) +
-  theme_minimal(base_size = 13) +
-  theme(
-    legend.position = "right",
-    plot.title = element_text(face = "bold")
-  )
-  
-ggsave("Loess_Shannon_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi = 300)
-```
-
-![LOESS curve of Shannon diversity by sex and numeric age](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Shannon_Analyses/Loess_Shannon_by_sex_age_numeric_ready.png)
-
-
-# GAM Model
-
-```r
-
-gam_model <- gam(ARG_div_shan ~ sex + s(age_years, k = 10), 
-                 data = plot_df_loess, 
-                 method = "REML")
-
-# Summary of the model
-summary(gam_model)
 
 
 ```
-
-| Term               | Type       | Estimate / edf | Std. Error / Ref.df | t / F  | p-value       | Significance |
-| ------------------ | ---------- | -------------- | ------------------- | ------ | ------------- | ------------ |
-| (Intercept)        | Parametric | 1.9466         | 0.0069              | 282.43 | < 2.2 × 10⁻¹⁶ | ***          |
-| sexMale            | Parametric | -0.0639        | 0.0097              | -6.60  | 4.47 × 10⁻¹¹  | ***          |
-| s(age_years)       | Smooth     | 7.99 (edf)     | 8.69                | 115.3  | < 2.2 × 10⁻¹⁶ | ***          |
-| **Model fit**      | —          | —              | —                   | —      | —             | —            |
-| Adjusted R²        | Fit        | 0.093          | —                   | —      | —             | —            |
-| Deviance explained | Fit        | 9.38%          | —                   | —      | —             | —            |
-| Scale estimate     | Fit        | 0.234          | —                   | —      | —             | —            |
-| −REML              | Fit        | 7000.7         | —                   | —      | —             | —            |
-| Sample size (n)    | Fit        | 10,069         | —                   | —      | —             | —            |
-
-
-
-
-
-
-
 
 
 
