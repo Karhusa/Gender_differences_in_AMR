@@ -10,16 +10,13 @@ library(ggsci)
 library(mgcv)
 library(ggpubr)
 ```
-
 ### 1.2 Load TSE
-
 ```r
 tse_path <- "/scratch/project_2008149/USER_WORKSPACES/karhula/DATA/TSE.rds"
 TSE <- readRDS(tse_path)
 ```
 
 ### 1.3 Extract colData
-
 ```r
 colData_df <- as.data.frame(colData(TSE))
 
@@ -38,7 +35,6 @@ Subset <- colData_df %>%
   )
 ```
 ### 1.4 Do we have repeated samples?
-
 ```r
 plot_df %>%
   count(acc) %>%
@@ -58,8 +54,9 @@ plot_df %>%
 
 ## 2 ARG load analyses
 
-### 2.1 Sample distribution (ARG log10 and sex)
+### 2.1 ARG log10 and sex
 
+#### 2.1.1 Sample distribution (ARG log10 and sex)
 ```r
 Subset_clean <- Subset %>%
   filter(!is.na(log10_ARG_load), !is.na(sex))
@@ -91,8 +88,7 @@ ARG_summary
 ```
 ![Sample distribution ARG Load](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Sample_distribution_ARG.png)
 
-
-### 2.3 Boxplot of ARGlog10 and sex
+### 2.1.2 Boxplot (ARG x Sex)
 
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -135,8 +131,7 @@ ggsave("Boxplot_log10ARG_by_sex_ready.png", width = 8, height = 6, dpi = 300)
 ```
 ![ARG Load by Sex](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Boxplot_log10ARG_by_sex_ready.png)
 
-### 324.3 Linear regression
-
+### 2.1.3 Linear regression (ARG x sex)
 ```r
 lm_ARG_sex <- lm(log10_ARG_load ~ sex, data = Subset_clean)
 
@@ -160,12 +155,11 @@ Residual standard error: 0.311 on 14773 degrees of freedom
 Multiple R-squared:  0.00322,	Adjusted R-squared:  0.003153 
 F-statistic: 47.73 on 1 and 14773 DF,  p-value: 5.099e-12
 
-
 ---
 
-## 4 Ananlyses of ARGlog10, sex and age
+### 2.2 Ananlyses of ARGlog10, sex and age
 
-### 2.3.1 Sample distribution(ARG x sex x age)
+#### 2.2.1 Sample distribution(ARG x sex x age)
 
 ```r
 plot_df <- Subset %>%
@@ -202,8 +196,7 @@ table_image
 
 KUVA!!
 
-
-### 2.3.2 Boxplot (ARG, sex and age categories)
+#### 2.2.2 Boxplot (ARG, sex and age categories)
 
 ```r
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
@@ -280,8 +273,7 @@ ggsave("Boxplot_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300
 ```
 ![ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/Thesis/Boxplot_ARG_by_sex_age.png)
 
-### 2.3.3 Loess curve of ARG load by sex and numeric age
-
+#### 2.2.3 Loess curve of ARG load by sex and numeric age
 ```
 Subset$sex[Subset$sex == "" | Subset$sex == "NA"] <- NA
 Subset$age_years[Subset$age_years == "" | is.na(Subset$age_years)] <- NA
@@ -320,7 +312,7 @@ ggsave("Loess_log10ARG_by_sex_age_numeric_ready.png", width = 8, height = 6, dpi
 ![LOESS ARG Load by Sex and age categories](https://github.com/Karhusa/F_AMR_project/blob/main/Results/ARG_Load_Analyses/Loess_log10ARG_by_sex_age_numeric_ready(2).png)
 
 
-### 2.3.4 Linear model
+#### 2.3.4 Linear model (ARG x Sex X Age)
 ```
 n_samples <- Subset %>%
   filter(
@@ -456,10 +448,10 @@ ggsave("GAM_log10ARG_by_sex_age_ready.png", width = 8, height = 6, dpi = 300)
 
 ---
 
-## 4 Ananlyses of ARG Load, BMI and sex
+### 2.3 Ananlyses of ARG Load, BMI and sex
 * Remove ages < 18
 
-### 2.4.1. Sample distribution (ARG x BMI x sex)
+#### 2.3.1. Sample distribution (ARG x BMI x sex)
 
 ```
 Subset_BMI <- Subset %>%
@@ -498,9 +490,8 @@ table_image
 
 ```
 
-### 2.4.2 Boxplot of ARG Load, BMI and sex
+#### 2.4.2 Boxplot of ARG Load, BMI and sex
 ```r
-
 Subset_BMI <- Subset %>%
   filter(
     age_years >= 18,
@@ -590,6 +581,121 @@ Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’
 Residual standard error: 0.3011 on 5245 degrees of freedom
 Multiple R-squared:  0.007836,	Adjusted R-squared:  0.007079 
 F-statistic: 10.36 on 4 and 5245 DF,  p-value: 2.366e-08
+
+### 2.3 Ananlyses of ARG Load, antibiotic use and sex
+
+#### 2.3.1. Sample distribution (ARG x ab x sex)
+
+```
+Subset_AB <- Subset %>%
+  filter(
+    !is.na(log10_ARG_load),
+    !is.na(Antibiotics_used),
+    !is.na(sex)
+  )
+
+table_df_AB <- Subset_AB %>%
+  count(Antibiotics_used, sex) %>%
+  tidyr::pivot_wider(names_from = sex, values_from = n)
+
+table_df_AB <- table_df_AB %>%
+  mutate(Total = Female + Male)
+
+table_df_AB
+
+table_image <- table_df_AB %>%
+  gt() %>%
+  cols_label(
+    Antibiotics_used = "Antibiotics used",
+    Female = "Female (n)",
+    Male = "Male (n)",
+    Total = "Total (n)"
+  ) %>%
+  tab_header(
+    title = "Sample Distribution by Antibiotic Use and Sex"
+  )
+
+table_image
+
+```
+
+#### 2.4.2 Boxplot of ARG Load, BMI and sex
+```r
+Subset_BMI <- Subset %>%
+  filter(
+    age_years >= 18,
+    BMI_range_new != "Normal/Overweight (<30)"
+  ) %>%
+  filter(
+    !is.na(log10_ARG_load),
+    !is.na(BMI_range_new),
+    !is.na(sex)
+  )
+
+levels_bmi <- c("Underweight (<18.5)", "Normal (18.5-25)", 
+                "Overweight (25-30)", "Obese (>30)")
+
+Subset_BMI$BMI_range_new <- factor(
+  Subset_BMI$BMI_range_new,
+  levels = levels_bmi
+)
+sex_comparisons <- list(
+  c("Female", "Male")  
+)
+
+ggplot(Subset_BMI, aes(x = sex, y = log10_ARG_load, fill = sex)) +
+  geom_jitter(aes(color = sex),
+              position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.75),
+              alpha = 0.2, size = 0.5) +
+  geom_boxplot(position = position_dodge(width = 0.75),
+               outlier.shape = NA, alpha = 0.7) +
+  facet_wrap(~ BMI_range_new, nrow = 1) +
+  stat_compare_means(
+    comparisons = sex_comparisons,
+    method = "wilcox.test",
+    label = "p.signif",
+    position = position_dodge(width = 0.75)
+  ) +
+  scale_fill_npg(name = "Sex") +
+  scale_color_npg(guide = "none") +
+  labs(
+    x = "BMI Category",
+    y = "log10 ARG Load",
+    title = "Sex Differences in ARG Load Across BMI Categories"
+  ) +
+  theme_minimal() +
+  theme(
+    text = element_text(size = 12),
+    axis.text.x = element_blank(),   # remove sex labels
+    axis.ticks.x = element_blank(),
+    strip.text = element_text(size = 11),
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "right"
+  )
+```
+### 2.4.3 Linear model (AGR Load x BMI and sex)
+```r
+Subset_BMI$BMI_range_new <- relevel(
+  Subset_BMI$BMI_range_new, 
+  ref = "Normal (18.5-25)"
+)
+
+lm_bmi <- lm(log10_ARG_load ~ BMI_range_new + sex, data = Subset_BMI)
+summary(lm_bmi)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ---
