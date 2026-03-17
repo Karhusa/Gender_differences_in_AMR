@@ -854,10 +854,10 @@ for col in ['raw_metadata_colitis', 'raw_metadata_necrotizingenterocolitis']:
 
 filtered_df = filtered_df.drop(columns=['raw_metadata_colitis', 'raw_metadata_necrotizingenterocolitis'])
 
-# Check result
 filtered_df['IBD'].value_counts(dropna=False)
-
 ```
+
+```python
 
 columns_to_remove = [
     "raw_metadata_antibiotics_with_admission_days",
@@ -880,11 +880,68 @@ columns_to_remove = [
 ]
 
 filtered_df = filtered_df.drop(columns=columns_to_remove)
+```
 
+## 8 Pregnancy related columns
+
+### 4.1 keyword "pregnant"
+
+```python
+preg_cols = filtered_df.columns[filtered_df.columns.str.contains("preg", case=False)]
+
+for col in preg_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+def classify_pregnancy(val):
+    if pd.isna(val):
+        return "No"
+    elif isinstance(val, (int, float)):
+        return "Yes"
+    else:
+        return np.nan
+
+filtered_df["Pregnant"] = filtered_df["pregnancy_week"].apply(classify_pregnancy)
+
+filtered_df.drop(columns=["pregnancy_week"], inplace=True)
+
+filtered_df['Pregnant'].value_counts(dropna=False)
+
+
+
+```
+Pregnant
+No     24472
+Yes      133
+Name: count, dtype: int64
+
+
+
+### 4.1 keyword "gestational"
+
+```python
+gest_cols = filtered_df.columns[filtered_df.columns.str.contains("gest", case=False)]
+
+for col in gest_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+pregnancy_cols = [
+    "gestational_age_weeks",
+    "raw_metadata_gestational_age_weeks",
+    "gestational_state",
+    "raw_metadata_gestational_age_category"
+]
+
+filtered_df.loc[filtered_df[pregnancy_cols].notna().any(axis=1), "Pregnant"] = "Yes"
+
+filtered_df.drop(columns=pregnancy_cols, inplace=True)
+
+
+filtered_df['Pregnant'].value_counts(dropna=False)
+```
+Pregnant
+* No     23125
+* Yes     1480
 
 
 #filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
 #filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
-
-
-
