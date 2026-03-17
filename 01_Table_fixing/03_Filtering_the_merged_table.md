@@ -700,82 +700,45 @@ for col in bo_cols:
     print(f"{col}: {filtered_df[col].unique()}")
 ```
 
-
+Convert all of the numeric bmi columns into one
 ```
 
-bmi_numeric_cols = [
-    'bmi', 
-    'bmi_sam', 
-    'body_mass_index_sam_s_dpl92', 
-    'host_body_mass_index_sam_s_dpl230'
-]
+def clean_bmi_column(col):
+    col = col.astype(str).str.replace(',', '.', regex=False)
+    col = pd.to_numeric(col, errors='coerce')
+    col = col.where(col >= 10, np.nan)
+    return col
 
-def clean_numeric_bmi(x):
-    if pd.isna(x):
+filtered_df['bmi_clean'] = clean_bmi_column(filtered_df['bmi'])
+filtered_df['bmi_sam_clean'] = clean_bmi_column(filtered_df['bmi_sam'])
+filtered_df['host_bmi_clean'] = clean_bmi_column(filtered_df['host_body_mass_index_sam_s_dpl230'])
+filtered_df['bmi_dpl92_clean'] = clean_bmi_column(filtered_df['body_mass_index_sam_s_dpl92'])
+
+filtered_df['bmi_numeric'] = filtered_df[['bmi_clean', 'bmi_sam_clean', 
+                                           'host_bmi_clean', 'bmi_dpl92_clean']].bfill(axis=1).iloc[:, 0]
+
+def bmi_category(bmi):
+    if pd.isna(bmi):
         return np.nan
-    try:
-        x = float(str(x).replace(',', '.'))
-    except:
-        return np.nan
-    if x < 10 or x > 60:
-        return np.nan
-    return x
-
-for col in bmi_numeric_cols:
-    if col in filtered_df.columns:
-        filtered_df[col] = filtered_df[col].apply(clean_numeric_bmi)
-
-numeric_cols_available = [c for c in bmi_numeric_cols if c in filtered_df.columns]
-filtered_df['bmi_numeric'] = filtered_df[numeric_cols_available].bfill(axis=1).iloc[:, 0]
-
-def bmi_from_numeric_label(x):
-    if pd.isna(x):
-        return None
-    elif x < 18.5:
+    elif bmi < 18.5:
         return "Underweight (<18.5)"
-    elif x < 25:
+    elif 18.5 <= bmi < 25:
         return "Normal (18.5-25)"
-    elif x < 30:
+    elif 25 <= bmi < 30:
         return "Overweight (25-30)"
     else:
         return "Obese (>30)"
 
-filtered_df['bmi_category'] = filtered_df['bmi_numeric'].apply(bmi_from_numeric_label)
+bmi_range.3: [nan '20-25 = Normal'   '25-30' = overweight]
 
-bmi_cat_cols = [
-    'bmi_range',      # '>30', '<30'
-    'bmi_range.2',    # '>30', '<30'
-    'bmi_range.1',    # '20-25', '25-30'
-    'bmi_range.3'
-]
 
-def map_safe_bmi_category(x):
-    if pd.isna(x):
-        return None
-    
-    x = str(x).strip().lower()
-    
-    if x == '20-25':
-        return "Normal (18.5-25)"
-    elif x == '25-30':
-        return "Overweight (25-30)"
-    elif x in ['>30', 'over 30']:
-        return "Obese (>30)"
-    
-    return None
-
-for col in bmi_cat_cols:
-    if col in filtered_df.columns:
-        filtered_df['bmi_category'] = filtered_df['bmi_category'].combine_first(
-            filtered_df[col].apply(map_safe_bmi_category)
-        )
-
-print(filtered_df[['bmi_numeric', 'bmi_category']].head(20))
+filtered_df['bmi_category'] = filtered_df['bmi_numeric'].apply(bmi_category)
 
 filtered_df["bmi_numeric"].value_counts(dropna=False)
 
 filtered_df["bmi_category"].value_counts(dropna=False)
 ```
+
 bmi_category
 
 * None                   18335
@@ -783,6 +746,27 @@ bmi_category
 * Overweight (25-30)      1399
 * Obese (>30)             1232
 * Underweight (<18.5)      418
+
+# columns bmi_range and bmi_range.2
+```
+filtered_df.loc[filtered_df['bmi_range'] == '>30', 'bmi_category'] = "Obese (>30)"
+
+filtered_df.loc[filtered_df['bmi_range.2'] == '>30', 'bmi_category'] = "Obese (>30)"
+
+```
+
+# columns bmi_range and bmi_range.1 and bmi_range.3
+
+```python
+
+filtered_df.loc[filtered_df['bmi_range.1'] == '20-25', 'bmi_category'] = "Normal (18.5-25)"
+filtered_df.loc[filtered_df['bmi_range.1'] == '25-30', 'bmi_category'] = "Overweight (25-30)"
+
+filtered_df.loc[filtered_df['bmi_range.3'] == '20-25', 'bmi_category'] = "Normal (18.5-25)"
+filtered_df.loc[filtered_df['bmi_range.3'] == '25-30', 'bmi_category'] = "Overweight (25-30)"
+```
+
+
 
 
 ```python
