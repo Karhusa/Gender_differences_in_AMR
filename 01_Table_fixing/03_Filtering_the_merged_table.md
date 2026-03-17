@@ -614,10 +614,10 @@ def antibiotic_status(row):
 
 filtered_df["Antibiotic_Use"] = filtered_df.apply(antibiotic_status, axis=1)
 
+filtered_df.drop(columns=abx_cols, inplace=True)
+
 
 filtered_df["Antibiotic_Use"].value_counts(dropna=False)
-
-filtered_df.drop(columns=abx_cols, inplace=True)
 
 ```
 Antibiotic_Use
@@ -674,11 +674,31 @@ def update_antibiotics_used(row):
 filtered_df['Antibiotic_Use'] = filtered_df.apply(update_antibiotics_used, axis=1)
 
 filtered_df = filtered_df.drop(columns=all_antibiotic_cols)
-
 ```
 Antibiotic_Use
 * Yes    1128
 * No      641
+
+
+### 7.1 Macrolides
+
+```
+filtered_df["received_macrolides_sam"].value_counts(dropna=False)
+
+filtered_df.loc[filtered_df['received_macrolides_sam'] == 'Yes', 'Antibiotic_Use'] = "Yes"
+
+filtered_df.rename(columns={'received_macrolides_sam': 'Macrolides'}, inplace=True)
+
+filtered_df["Antibiotic_Use"].value_counts(dropna=False)
+
+```
+Antibiotic_Use
+* NaN    22737
+* Yes     1227
+* No       641
+
+
+
 
 ---
 ## 8 BMI Related columns
@@ -858,7 +878,8 @@ columns_to_remove = [
     "raw_metadata_average_time_per_time_(min)",
     "raw_metadata_body_fat_percentage",
     "raw_metadata_side_of_body_where_symptoms_first_appeared",
-    "primary_search"
+    "primary_search",
+    "raw_metadata_bacillus_calmette_guerin_vaccine"
 ]
 
 filtered_df = filtered_df.drop(columns=columns_to_remove)
@@ -918,6 +939,20 @@ Pregnant
 * Yes     1480
 
 print(f" Shape: {filtered_df.shape}")
+
+```
+
+# Menopause
+
+```
+menopau_cols = filtered_df.columns[filtered_df.columns.str.contains("menopau", case=False)]
+
+for col in menopau_cols:
+    print(f"{col}: {filtered_df[col].unique()}")
+
+````
+
+
 
 #filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
 #filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
