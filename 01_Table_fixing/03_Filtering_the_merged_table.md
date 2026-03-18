@@ -450,6 +450,7 @@ print("\n")
 print(filtered_df["City"].value_counts(dropna=False))
 ```
 
+Clean the columns
 
 ```python
 
@@ -479,6 +480,23 @@ filtered_df["Country"] = filtered_df["Country"].replace([None, "NaN", "nan"], pd
 # Check results
 filtered_df[["Country", "City", "Continent"]].value_counts(dropna=False)
 
+# Add continents to some countries
+country_continent_map = {
+    "Fiji": "Oceania",
+    "Israel": "Asia",
+    "USA": "North America",
+    "China": "Asia",
+    "Sweden": "Europe",
+    "Italy": "Europe",
+    "Japan": "Asia"}
+
+filtered_df.loc[
+    filtered_df['Continent'].isna() & filtered_df['Country'].isin(country_continent_map.keys()),'Continent'
+] = filtered_df.loc[
+    filtered_df['Continent'].isna() & filtered_df['Country'].isin(country_continent_map.keys()), 'Country'
+].map(country_continent_map)
+
+print(f" Shape: {filtered_df.shape}")
 ```
 
 ---
@@ -525,45 +543,97 @@ filtered_df.loc[
 filtered_df.drop(columns=fa_cols, inplace=True)
 
 filtered_df["Parent"].value_counts(dropna=False)
+
+print(f" Shape: {filtered_df.shape}")
 ```
+Parent
+* None      24398
+* Mother      163
+* Father       44
+
+Shape: (24605, 169)
+
 ---
 
 ## 10. Antibiotic Usage Processing 
 
 ```python
-abx_cols = filtered_df.columns[filtered_df.columns.str.contains("antibio", case=False)]
-
-for col in abx_cols:
-    print(f"{col}: {filtered_df[col].unique()}")
+abc_cols = filtered_df.columns[filtered_df.columns.str.contains("antibio", case=False)]
+for col in abc_cols:print(f"{col}: {filtered_df[col].unique()}")
+abx_cols = filtered_df.columns[filtered_df.columns.str.contains("abx", case=False)]
+for col in abx_cols:print(f"{col}: {filtered_df[col].unique()}")
 
 def antibiotic_status(row):
+    yes = False
+    no = False
 
-    if (
-        row['antibio_flag_6mo_sam'] == 1 or
-        row['antibio_flag_1mo_sam'] == 1 or
-        row['raw_metadata_antibiotics_current'] == 'Y' or
-        str(row['antibiotics_sam']).lower() == 'yes' or
-        row['raw_metadata_antibiotics_past_3_months'] == 'Y' or
-        row['antibiotics_past_3months_sam'] == 'Yes' or
-        (isinstance(row['raw_metadata_antibiotics_last3months'], str) and 'Yes' in row['raw_metadata_antibiotics_last3months']) or
-        pd.notna(row['days_since_antibiotics']) or
-        pd.notna(row['range_days_since_antibiotics'])
-    ):
+    if row.get('antibio_flag_6mo_sam') == 1 or row.get('antibio_flag_1mo_sam') == 1:
+        yes = True
+    if row.get('antibio_flag_6mo_sam') == 0 or row.get('antibio_flag_1mo_sam') == 0:
+        no = True
+
+    if row.get('raw_metadata_antibiotics_current') == 'Y':
+        yes = True
+    elif row.get('raw_metadata_antibiotics_current') == 'N':
+        no = True
+
+    if str(row.get('antibiotics_sam')).lower() == 'yes':
+        yes = True
+    elif str(row.get('antibiotics_sam')).lower() == 'no':
+        no = True
+
+    if row.get('raw_metadata_antibiotics_past_3_months') == 'Y':
+        yes = True
+    elif row.get('raw_metadata_antibiotics_past_3_months') == 'N':
+        no = True
+
+    if row.get('antibiotics_past_3months_sam') == 'Yes':
+        yes = True
+    elif row.get('antibiotics_past_3months_sam') in ['No', 'Not sure']:
+        no = True
+
+    val = row.get('raw_metadata_antibiotics_last3months')
+    if isinstance(val, str):
+        if 'yes' in val.lower():
+            yes = True
+        elif val.lower() == 'no':
+            no = True
+
+    if pd.notna(row.get('days_since_antibiotics')): yes = True
+    if pd.notna(row.get('range_days_since_antibiotics')): yes = True
+
+    if row.get('host_subject_assigned_to_antibiotics_arm_sam') == 'ABX+': yes = True
+    elif row.get('host_subject_assigned_to_antibiotics_arm_sam') == 'ABX-': no = True
+
+    if row.get('raw_metadata_antibiotics_at_birth') == 'YES': yes = True
+    elif row.get('raw_metadata_antibiotics_at_birth') == 'NO': no = True
+
+    if pd.notna(row.get('raw_metadata_antibiotics_with_admission_days')) and row.get('raw_metadata_antibiotics_with_admission_days') > 0: yes = True
+
+    if pd.notna(row.get('raw_metadata_total_antibiotic_days')) and row.get('raw_metadata_total_antibiotic_days') > 0:
+        yes = True
+    elif row.get('raw_metadata_total_antibiotic_days') == 0:
+        no = True
+
+    numeric_abx_cols = [
+        'raw_metadata_w_allabx',
+        'raw_metadata_m_allabx',
+        'raw_metadata_c_allabx',
+        'raw_metadata_days_on_abx_14'
+    ]
+
+    for col in numeric_abx_cols:
+        if pd.notna(row.get(col)) and row[col] > 0:
+            yes = True
+        elif row.get(col) == 0:
+            no = True
+
+    if yes:
         return "Yes"
-
-    if (
-        row['antibio_flag_6mo_sam'] == 0 or
-        row['antibio_flag_1mo_sam'] == 0 or
-        row['raw_metadata_antibiotics_current'] == 'N' or
-        str(row['antibiotics_sam']).lower() == 'no' or
-        row['raw_metadata_antibiotics_past_3_months'] == 'N' or
-        row['antibiotics_past_3months_sam'] in ['No', 'Not sure']
-    ):
+    if no:
         return "No"
 
     return np.nan
-
-filtered_df["Antibiotic_Use"] = filtered_df.apply(antibiotic_status, axis=1)
 
 filtered_df.drop(columns=abx_cols, inplace=True)
 
