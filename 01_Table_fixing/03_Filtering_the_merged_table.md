@@ -641,17 +641,21 @@ def antibiotic_status(row):
 
     return np.nan
 
-filtered_df.drop(columns=abx_cols, inplace=True)
+filtered_df["Antibiotic_Use"] = filtered_df.apply(antibiotic_status, axis=1)
 
+filtered_df.drop(columns=abx_cols, inplace=True)
+filtered_df.drop(columns=abc_cols, inplace=True)
 
 filtered_df["Antibiotic_Use"].value_counts(dropna=False)
 
+print(f" Shape: {filtered_df.shape}")
 ```
 Antibiotic_Use
-* NaN    23080
-* Yes      884
-* No       641
+* NaN    22388
+* No      1273
+* Yes      944
 
+Shape: (24605, 151)
 
 
 
@@ -701,25 +705,33 @@ def update_antibiotics_used(row):
 filtered_df['Antibiotic_Use'] = filtered_df.apply(update_antibiotics_used, axis=1)
 
 filtered_df = filtered_df.drop(columns=all_antibiotic_cols)
+
+
+filtered_df["Antibiotic_Use"].value_counts(dropna=False)
+print(f" Shape: {filtered_df.shape}")
 ```
 Antibiotic_Use
-* Yes    1128
-* No      641
+NaN    22144
+* No      1273
+* Yes     1188
 
+Shape: (24605, 120)
 
 ### 7.1 Macrolides
 
-```
+```python
 filtered_df["received_macrolides_sam"].value_counts(dropna=False)
 filtered_df.loc[filtered_df['received_macrolides_sam'] == 'Yes', 'Antibiotic_Use'] = "Yes"
 filtered_df.rename(columns={'received_macrolides_sam': 'Macrolides'}, inplace=True)
 filtered_df["Antibiotic_Use"].value_counts(dropna=False)
 
+print(f" Shape: {filtered_df.shape}")
 ```
 Antibiotic_Use
-* NaN    22737
-* Yes     1227
-* No       641
+* NaN    22045
+* Yes     1287
+* No      1273
+
 
 ---
 ## 11 BMI Related columns
@@ -727,7 +739,6 @@ Antibiotic_Use
 ```python
 bmi_cols = filtered_df.columns[filtered_df.columns.str.contains("bmi", case=False)]
 for col in bmi_cols: print(f"{col}: {filtered_df[col].unique()}")
-
 bo_cols = filtered_df.columns[filtered_df.columns.str.contains("body", case=False)]
 for col in bo_cols: print(f"{col}: {filtered_df[col].unique()}")
 
@@ -759,17 +770,8 @@ def bmi_category(bmi):
     else:
         return "Obese (>30)"
 
-bmi_range.3: [nan '20-25 = Normal'   '25-30' = overweight]
-
-
 filtered_df['bmi_category'] = filtered_df['bmi_numeric'].apply(bmi_category)
 
-filtered_df["bmi_numeric"].value_counts(dropna=False)
-
-filtered_df["bmi_category"].value_counts(dropna=False)
-```
- columns bmi_range and bmi_range.2
-```python
 filtered_df.loc[filtered_df['bmi_range'] == '>30', 'bmi_category'] = "Obese (>30)"
 filtered_df.loc[filtered_df['bmi_range.2'] == '>30', 'bmi_category'] = "Obese (>30)"
 filtered_df.loc[filtered_df['bmi_range.1'] == '20-25', 'bmi_category'] = "Normal (18.5-25)"
@@ -788,17 +790,19 @@ cols_to_drop = [
     'bmi_range.3'
 ]
 
-filtered_df = filtered_df.drop(columns=[c for c in cols_to_drop if c in filtered_df.columns])
-filtered_df["bmi_category"].value_counts(dropna=False)
+filtered_df = filtered_df.drop(columns=cols_to_drop, errors='ignore')
 
+filtered_df["bmi_category"].value_counts(dropna=False)
+print(f" Shape: {filtered_df.shape}")
 ```
 bmi_category
-
-* None                   18335
+* NaN                    18324
 * Normal (18.5-25)        3221
 * Overweight (25-30)      1399
-* Obese (>30)             1232
+* Obese (>30)             1243
 * Underweight (<18.5)      418
+
+Shape: (24605, 118)
 
 ## 12 IBD Related columns
 
