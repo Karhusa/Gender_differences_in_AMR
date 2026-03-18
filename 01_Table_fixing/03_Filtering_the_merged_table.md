@@ -592,6 +592,13 @@ def antibiotic_status(row):
     elif row.get('antibiotics_past_3months_sam') in ['No', 'Not sure']:
         no = True
 
+    val = row.get('antibiotics_last_6_months__y_n__sam')
+    if isinstance(val, str):
+        if val.lower() == 'yes':
+            yes = True
+        elif val.lower() == 'no':
+            no = True
+
     val = row.get('raw_metadata_antibiotics_last3months')
     if isinstance(val, str):
         if 'yes' in val.lower():
@@ -608,7 +615,9 @@ def antibiotic_status(row):
     if row.get('raw_metadata_antibiotics_at_birth') == 'YES': yes = True
     elif row.get('raw_metadata_antibiotics_at_birth') == 'NO': no = True
 
-    if pd.notna(row.get('raw_metadata_antibiotics_with_admission_days')) and row.get('raw_metadata_antibiotics_with_admission_days') > 0: yes = True
+   
+    if pd.notna(row.get('raw_metadata_antibiotics_with_admission_days')) and row.get('raw_metadata_antibiotics_with_admission_days') > 0:
+        yes = True
 
     if pd.notna(row.get('raw_metadata_total_antibiotic_days')) and row.get('raw_metadata_total_antibiotic_days') > 0:
         yes = True
@@ -619,14 +628,11 @@ def antibiotic_status(row):
         'raw_metadata_w_allabx',
         'raw_metadata_m_allabx',
         'raw_metadata_c_allabx',
-        'raw_metadata_days_on_abx_14'
-    ]
+        'raw_metadata_days_on_abx_14']
 
     for col in numeric_abx_cols:
-        if pd.notna(row.get(col)) and row[col] > 0:
-            yes = True
-        elif row.get(col) == 0:
-            no = True
+        if pd.notna(row.get(col)) and row[col] > 0: yes = True
+        elif row.get(col) == 0: no = True
 
     if yes:
         return "Yes"
