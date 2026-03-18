@@ -165,7 +165,6 @@ Shape: (24605, 316)
 * Too detailed geography/location
 
 ```python
-
 exclude_keywords = [
 
     "16s", "metagenomic_sequencing", "nucleic_acid",
@@ -251,17 +250,16 @@ filtered_df["UTI_History"] = np.where(
     (filtered_df["raw_metadata_diagnosed_utis"].fillna(0) == 1),
     "Yes", "No")
 
-filtered_df.drop(columns=uti_cols, inplace=True)
-
 uri_cols = filtered_df.columns[filtered_df.columns.str.contains("urine", case=False)]
 for col in uri_cols: print(f"{col}: {filtered_df[col].unique()}")
 
 filtered_df.loc[filtered_df["raw_metadata_urineinfection"].fillna(0) == 1, "UTI_History"] = "Yes"
 
-filtered_df.drop(columns=uri_cols, inplace=True)
-
 tract_cols = filtered_df.columns[filtered_df.columns.str.contains("tract", case=False)]
 for col in tract_cols:print(f"{col}: {filtered_df[col].unique()}")
+
+filtered_df.drop(columns=uti_cols, inplace=True)
+filtered_df.drop(columns=uri_cols, inplace=True)
 filtered_df.drop(columns=tract_cols, inplace=True)
 
 filtered_df["UTI_History"].value_counts(dropna=False)
@@ -314,8 +312,7 @@ infection_map = {
     'raw_metadata_trachealinfection': 'Tracheal Infection',
     'raw_metadata_bloodinfection': 'Blood Infection',
     'raw_metadata_gi_infection': 'GI Infection',
-    'raw_metadata_otherinfection': 'Other Infection'
-}
+    'raw_metadata_otherinfection': 'Other Infection'}
 
 def get_infections(row):
     infections = []
@@ -333,8 +330,9 @@ filtered_df["Infection_history"].value_counts(dropna=False)
 filtered_df["Infection"].value_counts(dropna=False)
 
 filtered_df.drop(columns=infection_cols, inplace=True)
-```
 
+print(f" Shape: {filtered_df.shape}")
+```
 Infection_history
 * No     23663
 * Yes      662
@@ -372,22 +370,25 @@ filtered_df["Country"].value_counts(dropna=False)
 # Column name: geographic_location__country_and_or_sea__sam
 filtered_df["geographic_location__country_and_or_sea__sam"] = (
     filtered_df["geographic_location__country_and_or_sea__sam"]
-    .str.strip("[]")
-    .str.replace("'", "", regex=False))
+    .str.strip("[]").str.replace("'", "", regex=False))
 
 filtered_df["Country"] = filtered_df["Country"].fillna(filtered_df["geographic_location__country_and_or_sea__sam"])
 filtered_df.drop(columns=["geographic_location__country_and_or_sea__sam"], inplace=True)
 
 # Column name:raw_metadata_location
-
 filtered_df["raw_metadata_location"] = filtered_df["raw_metadata_location"].replace("missing", pd.NA)
 split_cols = filtered_df["raw_metadata_location"].str.split(":", n=1, expand=True)
 filtered_df["Country"] = filtered_df["Country"].fillna(split_cols[0].str.strip())
 filtered_df["City"] = split_cols[1].str.strip()
+filtered_df["City"] = filtered_df["City"].replace({None: np.nan})
+
+print(filtered_df["Country"].value_counts(dropna=False))
+print("\n")
+print(filtered_df["City"].value_counts(dropna=False))
+
 filtered_df.drop(columns=["raw_metadata_location"], inplace=True)
 
-# Column name: raw_metadata_location
-
+# Column name: location
 filtered_df["Continent"] = pd.NA 
 filtered_df.loc[filtered_df["location"] == "North America", "Continent"] = "North America"
 filtered_df.loc[filtered_df["location"] == "Judah", ["Country", "City"]] = pd.NA # what is "Judah"? lets just put it as NaN
@@ -397,11 +398,13 @@ split_loc = filtered_df.loc[mask, "location"].str.split(":", n=1, expand=True)
 
 filtered_df.loc[mask, "Country"] = split_loc[0].str.strip()
 filtered_df.loc[mask, "City"] = split_loc[1].str.strip()
+filtered_df["City"] = filtered_df["City"].replace({None: np.nan})
+
+print(filtered_df["Country"].value_counts(dropna=False))
+print("\n")
+print(filtered_df["City"].value_counts(dropna=False))
 
 filtered_df.drop(columns=["location"], inplace=True)
-
-filtered_df["Country"].value_counts(dropna=False)
-filtered_df["City"].value_counts(dropna=False)
 
 # Column name: geographic_location__region_and_locality__sam
 filtered_df["geographic_location__region_and_locality__sam"] = filtered_df[
@@ -409,13 +412,16 @@ filtered_df["geographic_location__region_and_locality__sam"] = filtered_df[
 
 filtered_df["geographic_location__region_and_locality__sam"] = (
     filtered_df["geographic_location__region_and_locality__sam"]
-    .str.strip("[]")
-    .str.replace("'", "", regex=False))
+    .str.strip("[]").str.replace("'", "", regex=False))
 
 split_loc = filtered_df["geographic_location__region_and_locality__sam"].str.split(":", n=1, expand=True)
 
 filtered_df["Country"] = filtered_df["Country"].fillna(split_loc[0].str.strip())
-filtered_df["City"] = split_loc[1].str.strip()
+filtered_df["City"] = filtered_df["City"].fillna(split_loc[1].str.strip())
+
+print(filtered_df["Country"].value_counts(dropna=False))
+print("\n")
+print(filtered_df["City"].value_counts(dropna=False))
 
 filtered_df.drop(columns=["geographic_location__region_and_locality__sam"], inplace=True)
 
@@ -426,7 +432,6 @@ cont_cols = filtered_df.columns[filtered_df.columns.str.contains("continent", ca
 for col in cont_cols: print(f"{col}: {filtered_df[col].unique()}")
 
 # Clean and combine three continent related information columns
-
 filtered_df["Continent"] = filtered_df["Continent"].astype("string")
 for col in ["geo_loc_name_country_continent_calc_sra", "geo_loc_name_country_continent_calc"]:
     mask = filtered_df["Continent"].isna() | (filtered_df["Continent"] == "")
@@ -434,10 +439,46 @@ for col in ["geo_loc_name_country_continent_calc_sra", "geo_loc_name_country_con
 
 filtered_df["Continent"] = filtered_df["Continent"].replace("uncalculated", pd.NA)
 filtered_df["Continent"] = filtered_df["Continent"].str.title()
-f
-iltered_df.drop(columns=["geo_loc_name_country_continent_calc_sra", "geo_loc_name_country_continent_calc"], inplace=True)
+filtered_df.drop(columns=["geo_loc_name_country_continent_calc_sra", "geo_loc_name_country_continent_calc"], inplace=True)
 
 filtered_df["Continent"].value_counts(dropna=False)
+
+print(filtered_df["Continent"].value_counts(dropna=False))
+print("\n")
+print(filtered_df["Country"].value_counts(dropna=False))
+print("\n")
+print(filtered_df["City"].value_counts(dropna=False))
+```
+
+
+```python
+
+filtered_df["Country"] = filtered_df["Country"].replace([None, "NaN", "nan"], pd.NA)
+filtered_df["City"] = filtered_df["City"].replace([None, "NaN", "nan"], pd.NA)
+
+# Step 2: Define city -> country mapping
+city_to_country = {
+    "New York": "USA",
+    "Bhopal, Madhya Pradesh": "India",
+    "Nagpur": "India",
+    "Kerala": "India",
+    "Melghat": "India",
+    "Kuala Lumpur": "Malaysia",
+    "Hong Kong": "China",
+    "Legong": "Indonesia",
+    "Rasau": "Brunei"}
+
+for city, country in city_to_country.items():
+    mask = filtered_df["Country"] == city
+    filtered_df.loc[mask, "City"] = city
+    filtered_df.loc[mask, "Country"] = country
+
+filtered_df["City"] = filtered_df["City"].replace([None, "NaN", "nan"], pd.NA)
+filtered_df["Country"] = filtered_df["Country"].replace([None, "NaN", "nan"], pd.NA)
+
+# Check results
+filtered_df[["Country", "City", "Continent"]].value_counts(dropna=False)
+
 ```
 
 ---
