@@ -876,7 +876,7 @@ columns_to_remove = [
 filtered_df = filtered_df.drop(columns=columns_to_remove)
 print(f" Shape: {filtered_df.shape}")
 ```
-Shape: (24605, 97)
+Shape: (24605, 90)
 
 
 ## 13. Pregnancy related columns
@@ -913,12 +913,9 @@ Pregnant
 * No     23125
 * Yes     1480
 
-Shape: (24605, 93)
+Shape: (24605, 86)
 
 ```
-
-# Menopause
-
 
 13. Gender
 
@@ -948,11 +945,16 @@ columns_to_drop = ['host_sex_sam', 'sex_calc', 'sex', 'gender_sam']
 filtered_df.drop(columns=columns_to_drop, inplace=True)
 
 filtered_df['Sex'].value_counts(dropna=False)
+print(f" Shape: {filtered_df.shape}")
+
 ```
 Sex
 * NaN       9824
 * female    7430
 * male      7351
+
+print(f" Shape: {filtered_df.shape}")
+Shape: (24605, 83)
 
 
 filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
