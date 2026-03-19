@@ -2,6 +2,8 @@
 
 This document describes the metadata processing workflow. 
 
+* Input file: Filtered_Metadata.tsv
+
 ---
 
 # 1. Download the file
@@ -11,157 +13,17 @@ import numpy as np
 import pandas as pd
 import re
 
-df = pd.read_csv("kesken2.tsv", sep="\t")
+
+df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
 ```
+filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
+filtered_df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
 
-## 3. Size and names of the columns
-```
-print(df.shape)
-# (24605, 49)
-
-print(df.columns.tolist())
-
-#['acc', 'age_category', 'age_days', 'age_range', 'age_years', 'avgspotlen', 'bioproject', 'biosample', 'collection_date_sam', 'environmental_package', 'geo_loc_name_country_calc', #'geo_loc_name_country_continent_calc', 'instrument', 'location_resolution', 'mbases', 'platform', 'raw_metadata_Asthma', 'raw_metadata_Carbapenemase_bla_Gene', 'raw_metadata_Colitis', #'raw_metadata_Crohns_disease', 'raw_metadata_Drug_antivirus', 'raw_metadata_GI_cancer_past_3_months', 'raw_metadata_GI_infection', 'raw_metadata_Intestinal_disease', #'raw_metadata_MaternalAntimicrobials', 'raw_metadata_TotalAntimicrobialsDays', 'raw_metadata_age_group', 'raw_metadata_diseases', 'raw_metadata_host_disease', #'raw_metadata_multi_drug_resistant_organism_infection', 'raw_metadata_subject_disease_status_full', 'sex', 'spire_sample_name', 'subject_disease_status', 'subject_disease_status_full', #'antibiotics_list', 'antibiotic_1', 'antibiotic_2', 'antibiotic_3', 'antibiotic_4', 'antibiotic_5', 'antibiotic_6', 'antibiotic_7', 'antibiotic_8', 'antibiotic_9', 'name_of_antibiotic', #'Antibiotics_used', 'IBD', 'UTI_history']
-
-```
-
-## 3. Asthma related columns
-```
-df["raw_metadata_Asthma"].value_counts(dropna=False)
-
-#raw_metadata_Asthma
-#NaN    22874
-#No      1729
-#Yes        2
-
-cols_with_asthma = [
-    col for col in df.columns
-    if df[col].astype(str).str.contains("Asthma", case=False, na=False).any()
-]
-
-cols_with_asthma
-
-total_asthma = (
-    df.astype(str)
-      .apply(lambda col: col.str.contains("Asthma", case=False, na=False))
-      .sum()
-      .sum()
-)
-
-total_asthma
-# np.int64(4)
-
-df = df.drop(columns=["raw_metadata_Asthma"])
-```
-## 4. raw_metadata_Carbapenemase_bla_Gene
-```
-df["raw_metadata_Carbapenemase_bla_Gene"].value_counts(dropna=False)
-
-#raw_metadata_Carbapenemase_bla_Gene
-#NaN       24578
-#KPC          17
-#OXA-48        8
-#NDM           2
-```
-
-## 5. Gastrointestinal tract diseases/infections columns
-```
-df["raw_metadata_Intestinal_disease"].value_counts(dropna=False)
-df["raw_metadata_Colitis"].value_counts(dropna=False)
-df["raw_metadata_Crohns_disease"].value_counts(dropna=False)
-df["IBD"].value_counts(dropna=False)
-
-df["GI_disease_history"] = pd.NA
-
-intestinal_mask = (
-    df["raw_metadata_Intestinal_disease"]
-      .astype(str)
-      .str.upper()
-      .isin(["Y", "YES", "1"])
-)
-
-def add_gi_label(existing, new):
-    if pd.isna(existing):
-        return new
-    if new in existing:
-        return existing
-    return f"{existing};{new}"
-
-df.loc[intestinal_mask, "GI_disease_history"] = (
-    df.loc[intestinal_mask, "GI_disease_history"]
-      .apply(add_gi_label, new="Intestinal_disease")
-)
-colitis_mask = (
-    df["raw_metadata_Colitis"]
-      .astype(str)
-      .str.upper()
-      .isin(["Y", "YES", "1"])
-)
-
-df.loc[colitis_mask, "GI_disease_history"] = (
-    df.loc[colitis_mask, "GI_disease_history"]
-      .apply(add_gi_label, new="Colitis")
-)
-
-df["GI_disease_history"].value_counts(dropna=False)
-
-#GI_disease_history
-#<NA>                          24459
-#Intestinal_disease;Colitis       76
-#Intestinal_disease               70
-
-crohns_mask = (
-    df["raw_metadata_Crohns_disease"]
-      .astype(str)
-      .str.upper()
-      .isin(["Y", "YES", "1"])
-)
-
-df.loc[crohns_mask, "GI_disease_history"] = (
-    df.loc[crohns_mask, "GI_disease_history"]
-      .apply(add_gi_label, new="Crohns_disease")
-)
-df["GI_disease_history"].value_counts(dropna=False)
-#GI_disease_history
-#<NA>                                         24459
-#Intestinal_disease;Colitis                      75
-#Intestinal_disease                              69
-#Intestinal_disease;Crohns_disease                1
-#Intestinal_disease;Colitis;Crohns_disease        1
-
-ibd_mask = df["IBD"].str.upper() == "YES"
-
-df.loc[ibd_mask, "GI_disease_history"] = (
-    df.loc[ibd_mask, "GI_disease_history"]
-      .apply(add_gi_label, new="IBD")
-)
-
-df["GI_disease_history"].value_counts(dropna=False)
-
-#GI_disease_history
-#<NA>                                         24459
-#Intestinal_disease;Colitis                      70
-#Intestinal_disease                              59
-#Intestinal_disease;IBD                          10
-#Intestinal_disease;Colitis;IBD                   5
-#Intestinal_disease;Crohns_disease;IBD            1
-#Intestinal_disease;Colitis;Crohns_disease        1
-
-
-df = df.drop(columns=["raw_metadata_Intestinal_disease"])
-df = df.drop(columns=["raw_metadata_GI_infection"])
-df = df.drop(columns=["raw_metadata_Colitis"])
-df = df.drop(columns=["raw_metadata_Crohns_disease"])
-df = df.drop(columns=["IBD"])
-
-df.to_csv("kesken3.tsv", sep="\t", index=False)
-```
 
 ## 6. subject_disease_status_full column
 
 ### 6.1. inspect the values
 ```
-df = pd.read_csv("kesken3.tsv", sep="\t")
 
 df["subject_disease_status_full"].value_counts(dropna=False)
 
@@ -204,9 +66,8 @@ df["subject_disease_status_full"].value_counts(dropna=False)
 Cancer_keywords = [
     "melanoma",
     "adenocarcinoma",
-    "adenoma",  
 ]
-df["Cancers_and_adenomas"] = pd.NA
+df["Cancer"] = pd.NA
 
 def add_label(existing, new):
     if pd.isna(existing):
@@ -217,15 +78,15 @@ def add_label(existing, new):
 
 for keyword in Cancer_keywords:
     mask = df["subject_disease_status_full"].astype(str).str.contains(keyword, case=False, na=False)
-    df.loc[mask, "Cancers_and_adenomas"] = df.loc[mask, "Cancers_and_adenomas"].apply(add_label, new=keyword)
+    df.loc[mask, "Cancer"] = df.loc[mask, "Cancer"].apply(add_label, new=keyword)
 
-df["Cancers_and_adenomas"].value_counts(dropna=False)
-#Cancers_and_adenomas
-#<NA>              24362
-#melanoma            197
-#adenocarcinoma       26
-#adenoma              20
-#Name: count, dtype: int64
+df["Cancer"].value_counts(dropna=False)
+```
+Cancer
+* <NA>              24362
+* melanoma            197
+* adenocarcinoma       26
+
 
 ```
 ## 6.2. Abbrevations
@@ -242,16 +103,14 @@ print(bioprojects)
 ['PRJNA237362' 'PRJDB15956']
 
 ## PRJDB15956 is about parkinsos disease (PD)
-
-
-
+## PRJDB237362 is about Chrohns disease (CD), Ulcerative colitis (UC)
 ```
 ## 7. subject_disease_status column`df["subject_disease_status"].value_counts(dropna=False)
 
 ```
 
-df["subject_disease_status"].value_counts(dropna=False)u
-bject_disease_status
+df["subject_disease_status"].value_counts(dropna=False)
+subject_disease_status
 #COHORT                                                      10713
 #CTR                                                          3651
 #NaN                                                          3096
@@ -319,10 +178,6 @@ new_cancer_keywords = [
     "breast cancer",
     "metastatic renal cell carcinoma",
     "non-small cell lung cancer",
-    "adenoma",
-    "nonadvanced colorectal adenoma",
-    "advanced colorectal adenoma",
-    "familial adenomatous polyposis"
 ]
 
 def add_label(existing, new):
@@ -334,23 +189,20 @@ def add_label(existing, new):
 
 for keyword in new_cancer_keywords:
     mask = df["subject_disease_status"].astype(str).str.contains(keyword, case=False, na=False)
-    df.loc[mask, "Cancers_and_adenomas"] = df.loc[mask, "Cancers_and_adenomas"].apply(add_label, new=keyword)
+    df.loc[mask, "Cancer"] = df.loc[mask, "Cancer"].apply(add_label, new=keyword)
 
-df["Cancers_and_adenomas"].value_counts(dropna=False)
-
-#Cancers_and_adenomas
-#<NA>                                      23398
-#melanoma                                    444
-#colorectal cancer                           430
-#breast cancer                               118
-#adenoma;nonadvanced colorectal adenoma       67
-#metastatic renal cell carcinoma              43
-#non-small cell lung cancer                   29
-#adenoma                                      27
-#adenocarcinoma;colorectal cancer             26
-#adenoma;familial adenomatous polyposis       22
-#adenoma;advanced colorectal adenoma           1
+df["Cancer"].value_counts(dropna=False)
 ```
+
+Cancer
+* <NA>                                23515
+* melanoma                              444
+* colorectal cancer                     430
+* breast cancer                         118
+* metastatic renal cell carcinoma        43
+* non-small cell lung cancer             29
+* adenocarcinoma;colorectal cancer       26
+
 ### 7.2. GI-tract related values 
 
 ```
@@ -358,70 +210,31 @@ gi_inflam_infect_keywords = [
     "Crohn's disease",
     "ulcerative colitis",
     "indeterminate colitis",
-    "Clostridium difficile infection",
-    "cholera",
-    "schistosomiasis",
-    "helminthiasis"
 ]
-def add_label(existing, new):
-    if pd.isna(existing):
-        return new
-    if new in existing:
-        return existing
-    return f"{existing};{new}"
+df['IBD'] = df['subject_disease_status'].apply(
+    lambda x: "Yes" if x in gi_inflam_infect_keywords else "No"
+)
 
-for keyword in gi_inflam_infect_keywords:
-    mask = df["subject_disease_status"].astype(str).str.contains(keyword, case=False, na=False)
-    df.loc[mask, "GI_disease_history"] = df.loc[mask, "GI_disease_history"].apply(add_label, new=keyword)
-
-df["GI_disease_history"].value_counts(dropna=False)
-GI_disease_history
-#<NA>                                         22157
-#Crohn's disease                                936
-#ulcerative colitis                             640
-#helminthiasis                                  298
-#Clostridium difficile infection                292
-#cholera                                         89
-#Intestinal_disease;Colitis                      70
-#Intestinal_disease                              59
-#indeterminate colitis                           29
-#schistosomiasis                                 18
-#Intestinal_disease;IBD                          10
-#Intestinal_disease;Colitis;IBD                   5
-#Intestinal_disease;Crohns_disease;IBD            1
-#Intestinal_disease;Colitis;Crohns_disease        1
-
+df["IBD"].value_counts(dropna=False)
 ```
+IBD
+* No     23000
+* Yes     1605
+
+
 ### 7.3. UTI related values
 ```
 uti_mask = df["subject_disease_status"].astype(str).str.contains("urinary tract infection", case=False, na=False)
 
-df.loc[uti_mask, "UTI_history"] = "Yes"
+df.loc[uti_mask, "UTI_History"] = "Yes"
 
-df["UTI_history"].value_counts(dropna=False)
+df["UTI_History"].value_counts(dropna=False)
+```
+
 #UTI_history
 #No     24355
 #Yes      250
-```
 
-## 7.4 Other viral/bacterial related diseases
-```
-df["HIV_history"] = pd.NA
-df["COVID19_history"] = pd.NA
-df["CPE_infection_history"] = pd.NA  # CPE = Carbapenemase-producing Enterobacteriaceae
-
-# HIV
-df.loc[df["subject_disease_status"].astype(str).str.contains("HIV", case=False, na=False), "HIV_history"] = "Yes"
-
-# COVID-19
-df.loc[df["subject_disease_status"].astype(str).str.contains("COVID-19", case=False, na=False), "COVID19_history"] = "Yes"
-
-# CPE infection
-df.loc[df["subject_disease_status"].astype(str).str.contains("Carbapenemase-producing Enterobacteriaceae infection", case=False, na=False), "CPE_infection_history"] = "Yes"
-
-for col in ["HIV_history", "COVID19_history", "CPE_infection_history"]:
-    df[col] = df[col].fillna("No").astype("category")
-```
 
 ### 7.5. Remove original column and save
 ```
@@ -710,30 +523,32 @@ def age_category_from_years(age):
 
 ```python 
 
-def assign_age_category(row):
-    # Prefer numeric age
-    cat_years = age_category_from_years(row["age_years"])
-    if cat_years is not None:
-        return cat_years
-    cat_range = age_category_from_range(row["age_range"])
-    if cat_range is not None:
-        return cat_range
-    return "Unknown"
+filtered_df['age_years'] = pd.to_numeric(filtered_df['age_years'], errors='coerce')
 
-```
-## 13.7 Apply dataframe
+def age_category_from_years(age):
+    if pd.isna(age):
+        return None
+    if age < 1:
+        return "Infant"
+    elif age < 3:
+        return "Toddler"
+    elif age < 12:
+        return "Child"
+    elif age < 20:
+        return "Teenage"
+    elif age < 35:
+        return "Young adult"
+    elif age < 65:
+        return "Middle-Age Adult"
+    elif age < 80:
+        return "Older Adult"
+    else:
+        return "Oldest Adult"
 
-```python
-df["precise_age_category"] = df.apply(assign_age_category, axis=1)
+filtered_df['age_category'] = filtered_df['age_years'].apply(age_category_from_years)
 
-```
-## 13.8 QC
-```python
-# Distribution
-df["precise_age_category"].value_counts(dropna=False)
 
-# Unmapped ranges
-(df.loc[df["age_category"] == "Unknown", "age_range"].value_counts())
+
 ```
 precise_age_category
 * Unknown             10648
