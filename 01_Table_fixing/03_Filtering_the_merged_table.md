@@ -804,30 +804,26 @@ bmi_category
 
 Shape: (24605, 118)
 
+
+filtered_df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
+
 ## 12 IBD Related columns
 
 ```python
 ibd_cols = filtered_df.columns[filtered_df.columns.str.contains("IBD", case=False)]
 for col in ibd_cols: print(f"{col}: {filtered_df[col].unique()}")
+cro_cols = filtered_df.columns[filtered_df.columns.str.contains("crohn", case=False)]
+for col in cro_cols:print(f"{col}: {filtered_df[col].unique()}")
+col_cols = filtered_df.columns[filtered_df.columns.str.contains("colitis", case=False)]
+for col in col_cols: print(f"{col}: {filtered_df[col].unique()}")
 
 filtered_df = filtered_df.rename(columns={"raw_metadata_ibd": "IBD"})
 
-cro_cols = filtered_df.columns[filtered_df.columns.str.contains("crohn", case=False)]
-for col in cro_cols:
-    print(f"{col}: {filtered_df[col].unique()}")
-
 filtered_df.loc[
     (filtered_df['raw_metadata_crohns_disease'] == 'Y') & 
-    (filtered_df['IBD'] != 'Yes'), 
-    'IBD'] = 'Yes'
-
-filtered_df = filtered_df.drop(columns=['raw_metadata_crohns_disease'])
+    (filtered_df['IBD'] != 'Yes'), 'IBD'] = 'Yes'
 
 filtered_df['IBD'] = filtered_df['IBD'].replace({'Y': 'Yes', 'N': 'No'})
-filtered_df['IBD'].value_counts(dropna=False)
-
-col_cols = filtered_df.columns[filtered_df.columns.str.contains("colitis", case=False)]
-for col in col_cols: print(f"{col}: {filtered_df[col].unique()}")
 
 filtered_df['raw_metadata_colitis'] = filtered_df['raw_metadata_colitis'].replace({'Y': 'Yes', 'N': 'No'})
 filtered_df['raw_metadata_necrotizingenterocolitis'] = filtered_df['raw_metadata_necrotizingenterocolitis'].replace({'Yes': 'Yes', 'No': 'No'})
@@ -836,13 +832,19 @@ for col in ['raw_metadata_colitis', 'raw_metadata_necrotizingenterocolitis']:
     filtered_df.loc[filtered_df['IBD'].isna() & filtered_df[col].notna(), 'IBD'] = \
         filtered_df[col]
 
-filtered_df = filtered_df.drop(columns=['raw_metadata_colitis', 'raw_metadata_necrotizingenterocolitis'])
+filtered_df = filtered_df.drop(columns=['raw_metadata_colitis', 'raw_metadata_necrotizingenterocolitis', 'raw_metadata_crohns_disease'])
 
 filtered_df['IBD'].value_counts(dropna=False)
+print(f" Shape: {filtered_df.shape}")
 ```
+IBD
+* NaN    23523
+* No      1024
+* Yes       58
+
+Shape: (24605, 115)
 
 ```python
-
 columns_to_remove = [
     "env_package_sam",
     "raw_metadata_childhood_accomodation",
@@ -861,124 +863,96 @@ columns_to_remove = [
     "primary_search",
     "raw_metadata_bacillus_calmette_guerin_vaccine",
     "vaccine_name",
-    "raw_metadata_oral_medication"
+    "raw_metadata_oral_medication",
+    "raw_metadata_vaccination_last3weeks",
+    "raw_metadata_postmenstrualagedays",
+    "raw_metadata_carbapenemase_bla_gene",
+    "raw_metadata_totalantimicrobialsdays",
+    "menopausal_status",
+    "raw_metadata_housing_condition",
+    "host_body_product_sam" 
 ]
 
 filtered_df = filtered_df.drop(columns=columns_to_remove)
+print(f" Shape: {filtered_df.shape}")
 ```
+Shape: (24605, 97)
+
 
 ## 13. Pregnancy related columns
 
 ```python
 preg_cols = filtered_df.columns[filtered_df.columns.str.contains("preg", case=False)]
-for col in preg_cols:
-    print(f"{col}: {filtered_df[col].unique()}")
-
-def classify_pregnancy(val):
-    if pd.isna(val):
-        return "No"
-    elif isinstance(val, (int, float)):
-        return "Yes"
-    else:
-        return np.nan
-
-filtered_df["Pregnant"] = filtered_df["pregnancy_week"].apply(classify_pregnancy)
-
-filtered_df.drop(columns=["pregnancy_week"], inplace=True)
-
-filtered_df['Pregnant'].value_counts(dropna=False)
-
+for col in preg_cols: print(f"{col}: {filtered_df[col].unique()}")
 gest_cols = filtered_df.columns[filtered_df.columns.str.contains("gest", case=False)]
-for col in gest_cols:
-    print(f"{col}: {filtered_df[col].unique()}")
+for col in gest_cols: print(f"{col}: {filtered_df[col].unique()}")
+grav_cols = filtered_df.columns[filtered_df.columns.str.contains("grav", case=False)]
+for col in grav_cols: print(f"{col}: {filtered_df[col].unique()}")
 
-pregnancy_cols = [
-    "gestational_age_weeks",
-    "raw_metadata_gestational_age_weeks",
-    "gestational_state",
-    "raw_metadata_gestational_age_category"
-]
 
-filtered_df.loc[filtered_df[pregnancy_cols].notna().any(axis=1), "Pregnant"] = "Yes"
+filtered_df['Pregnant'] = np.nan
 
-filtered_df.drop(columns=pregnancy_cols, inplace=True)
+columns_to_binary = [
+    'raw_metadata_gestational_age_weeks',
+    'pregnancy_week',
+    'gestational_age_weeks',
+    'gestational_state',
+    'raw_metadata_gravida']
 
-raw_metadata_gravida
+filtered_df['Pregnant'] = np.where(
+    filtered_df[columns_to_binary].notna().any(axis=1),
+    'Yes', 'No')
 
-filtered_df['raw_metadata_gravida'].value_counts(dropna=False)
+filtered_df.drop(columns=columns_to_binary, inplace=True)
 
 
 filtered_df['Pregnant'].value_counts(dropna=False)
+print(f" Shape: {filtered_df.shape}")
 ```
 Pregnant
 * No     23125
 * Yes     1480
 
-print(f" Shape: {filtered_df.shape}")
+Shape: (24605, 93)
 
 ```
 
 # Menopause
 
-```
-menopau_cols = filtered_df.columns[filtered_df.columns.str.contains("menopau", case=False)]
-
-for col in menopau_cols:
-    print(f"{col}: {filtered_df[col].unique()}")
-
-
-````
 
 13. Gender
 
 ```python
 sex_cols = filtered_df.columns[filtered_df.columns.str.contains("sex", case=False)]
-for col in sex_cols:
-    print(f"{col}: {filtered_df[col].unique()}")
-
-df["host_sex_sam"] = (
-    df["host_sex_sam"]
-    .str.replace(r"[\[\]']", "", regex=True)
-    .replace({
-        "not collected": np.nan
-    })
-)
-
-df["sex_calc"] = df["sex_calc"].replace({
-    "not provided": np.nan})
-
-df["sex"] = (df["sex"]
-    .fillna(df["sex_calc"])
-    .fillna(df["host_sex_sam"]))
-
-df = df.drop(columns=["sex_calc", "host_sex_sam"])
-
+for col in sex_cols:print(f"{col}: {filtered_df[col].unique()}")
 gen_cols = filtered_df.columns[filtered_df.columns.str.contains("gen", case=False)]
-for col in gen_cols:
-    print(f"{col}: {filtered_df[col].unique()}")
+for col in gen_cols: print(f"{col}: {filtered_df[col].unique()}")
 
-df["gender_sam"] = (
-    df["gender_sam"]
-    .str.replace(r"[\[\]']", "", regex=True)
-    .str.strip())
+for col in ['host_sex_sam', 'gender_sam']:
+    filtered_df[col] = filtered_df[col].str.replace(r"[\[\]']", "", regex=True)
 
-df["sex"] = df["sex"].fillna(df["gender_sam"])
+filtered_df['Sex'] = np.where(
+    filtered_df['sex'].notna(),
+    filtered_df['sex'],
+    np.where(
+        filtered_df['sex_calc'].notna(),
+        filtered_df['sex_calc'],
+        np.where(
+            filtered_df['host_sex_sam'].notna(),
+            filtered_df['host_sex_sam'],
+            np.nan)))
 
-df = df.drop(columns=["gender_sam"])
+filtered_df['Sex'] = filtered_df['Sex'].replace({'not collected': np.nan, 'not provided': np.nan})
 
-filtered_df['sex'].value_counts(dropna=False)
+columns_to_drop = ['host_sex_sam', 'sex_calc', 'sex', 'gender_sam']
+filtered_df.drop(columns=columns_to_drop, inplace=True)
+
+filtered_df['Sex'].value_counts(dropna=False)
 ```
-sex
-* NaN       9830
-* female    7426
-* male      7349
-
-raw_metadata_oral_medication
-
-filtered_df['Clindamycin'].value_counts(dropna=False)
-
-#filtered_df.to_csv("Filtered_Metadata2.tsv", sep="\t", index=False)
-#filtered_df = pd.read_csv("Filtered_Metadata2.tsv", sep="\t")
+Sex
+* NaN       9824
+* female    7430
+* male      7351
 
 
 filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
