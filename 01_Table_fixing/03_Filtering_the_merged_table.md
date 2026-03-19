@@ -787,8 +787,13 @@ cols_to_drop = [
     'bmi_range',
     'bmi_range.2',
     'bmi_range.1',
-    'bmi_range.3'
-]
+    'bmi_range.3',
+    'bmi_clean',
+    'bmi_sam_clean',
+    'host_bmi_clean',
+    'bmi_dpl92_clean']
+
+
 
 filtered_df = filtered_df.drop(columns=cols_to_drop, errors='ignore')
 
