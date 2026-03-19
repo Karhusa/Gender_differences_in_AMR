@@ -956,6 +956,189 @@ Sex
 print(f" Shape: {filtered_df.shape}")
 Shape: (24605, 83)
 
+AGE numeric
+
+```python
+
+age_cols = [col for col in filtered_df.columns if "age" in col.lower()]
+for col in age_cols: print(f"{col}: {filtered_df[col].unique()}")
+
+filtered_df['age_years'] = pd.to_numeric(filtered_df['age_years'], errors='coerce')
+
+filtered_df['raw_metadata_age_at_collection'] = pd.to_numeric(filtered_df['raw_metadata_age_at_collection'], errors='coerce')
+filtered_df.loc[filtered_df['age_years'].isna(), 'age_years'] = \
+    filtered_df.loc[filtered_df['age_years'].isna(), 'raw_metadata_age_at_collection']
+
+
+filtered_df['age_days'] = pd.to_numeric(filtered_df['age_days'], errors='coerce')
+filtered_df.loc[filtered_df['age_years'].isna(), 'age_years'] = \
+    filtered_df.loc[filtered_df['age_years'].isna(), 'age_days'] / 365
+
+def extract_numeric(val):
+    if pd.isna(val):
+        return np.nan
+    # Extract all numbers (integers or floats)
+    numbers = re.findall(r"[-+]?\d*\.?\d+", str(val))
+    return float(numbers[0]) if numbers else np.nan
+
+filtered_df.loc[filtered_df['age_years'].isna(), 'age_years'] = \
+    filtered_df.loc[filtered_df['age_years'].isna(), 'age_sam'].apply(extract_numeric)
+
+filtered_df.loc[filtered_df['age_years'].isna(), 'age_years'] = \
+    filtered_df.loc[filtered_df['age_years'].isna(), 'host_age_sam'].apply(extract_numeric)
+
+filtered_df.loc[filtered_df['age_years'] > 120, 'age_years'] = np.nan
+
+filtered_df['age_years'] = filtered_df['age_years'].round().astype('Int64')
+
+filtered_df['age_years'].value_counts(dropna=False)
+
+filtered_df = filtered_df.drop(columns=[
+    'raw_metadata_age_at_collection', 
+    'age_days', 
+    'age_sam', 
+    'host_age_sam'
+])
+
+Shape: (24605, 79)
+```
+Shape: (24605, 79)
+
+```
+
+AGE_RANGE_MAP = {
+    "baby": "Infant",
+    "child": "Child",
+
+    "0.5 to 0.9167": "Infant",
+    "0.0833 to 0.166": "Infant",
+    "0.166 to 0.249": "Infant",
+    "0.249 to 0.332": "Infant",
+    "0.332 to 0.415": "Infant",
+    "0.415 to 0.498": "Infant",
+    "0.0833 to 0.5": "Infant",
+    "below 0.0821918": "Infant",
+
+    "13 to 17": "Teenage",
+    "15 to 20": "Teenage",
+
+    "20 to 21": "Young adult",
+    "21 to 29": "Young adult",
+    "22 to 30": "Young adult",
+    "22 to 35": "Young adult",
+    "23 to 35": "Young adult",
+    "24 to 33": "Young adult",
+    "25 to 30": "Young adult",
+    "26 to 27": "Young adult",
+    "26 to 29": "Young adult",
+    "27 to 32": "Young adult",
+    "28 to 34": "Young adult",
+    "28 to 35": "Young adult",
+    "31 to 34": "Young adult",
+    "34 to 35": "Young adult",
+
+    "35 to 40": "Middle-Age Adult",
+    "35 to 41": "Middle-Age Adult",
+    "36 to 48": "Middle-Age Adult",
+    "36 to 55": "Middle-Age Adult",
+    "36 to 59": "Middle-Age Adult",
+    "38 to 42": "Middle-Age Adult",
+    "38 to 48": "Middle-Age Adult",
+    "39 to 48": "Middle-Age Adult",
+    "40 to 45": "Middle-Age Adult",
+    "40 to 48": "Middle-Age Adult",
+    "40 to 58": "Middle-Age Adult",
+    "42 to 49": "Middle-Age Adult",
+    "42 to 58": "Middle-Age Adult",
+    "42 to 65": "Middle-Age Adult",
+    "45 to 50": "Middle-Age Adult",
+    "46 to 54": "Middle-Age Adult",
+    "49 to 50": "Middle-Age Adult",
+    "50 to 55": "Middle-Age Adult",
+    "50 to 64": "Middle-Age Adult",
+    "55 to 60": "Middle-Age Adult",
+    "60 to 65": "Middle-Age Adult",
+
+    "65 to 70": "Older Adult",
+    "70 to 75": "Older Adult",
+    "75 to 80": "Older Adult",
+    "over 65": "Older Adult",
+
+    "80 to 85": "Oldest Adult",
+    "85 to 90": "Oldest Adult",
+    "90 to 95": "Oldest Adult",
+    
+    # Added host_age_5yr_bin_sam ranges
+    "15-20": "Teenage",
+    "25-30": "Young adult",
+    "35-40": "Middle-Age Adult",
+    "40-45": "Middle-Age Adult",
+    "45-50": "Middle-Age Adult",
+    "50-55": "Middle-Age Adult",
+    "55-60": "Middle-Age Adult",
+    "60-65": "Middle-Age Adult",
+    "65-70": "Older Adult",
+    "70-75": "Older Adult",
+    "75-80": "Older Adult",
+    "80-85": "Oldest Adult",
+    "85-90": "Oldest Adult",
+    "90-95": "Oldest Adult",
+}
+
+def age_category_from_years(age):
+    if pd.isna(age):
+        return None
+    if age < 1:
+        return "Infant"
+    elif age < 3:
+        return "Toddler"
+    elif age < 12:
+        return "Child"
+    elif age < 20:
+        return "Teenage"
+    elif age < 35:
+        return "Young adult"
+    elif age < 65:
+        return "Middle-Age Adult"
+    elif age < 80:
+        return "Older Adult"
+    else:
+        return "Oldest Adult"
+
+filtered_df['age_category'] = filtered_df['host_age_5yr_bin_sam'].map(AGE_RANGE_MAP)
+
+filtered_df['age_category'] = filtered_df['age_category'].combine_first(
+    filtered_df['age_range'].map(AGE_RANGE_MAP)
+)
+
+filtered_df['age_category'] = filtered_df['age_category'].combine_first(
+    filtered_df['age_years'].apply(age_category_from_years)
+)
+
+filtered_df['age_category'].value_counts(dropna=False)
+
+columns_to_drop = ['host_age_5yr_bin_sam', 'age_range', 'host_age_units_sam', 'raw_metadata_age-block']
+filtered_df = filtered_df.drop(columns=columns_to_drop)
+
+print(f" Shape: {filtered_df.shape}")
+
+```
+
+age_category
+* None                10272
+* Middle-Age Adult     5666
+* Young adult          2583
+* Older Adult          1943
+* Infant               1778
+* Teenage              1127
+* Child                 837
+* Oldest Adult          214
+* Toddler               185
+
+Shape: (24605, 75)
+
+
+
 
 filtered_df.to_csv("Filtered_Metadata.tsv", sep="\t", index=False)
 filtered_df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
