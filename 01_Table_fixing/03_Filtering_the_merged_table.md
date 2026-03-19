@@ -793,8 +793,6 @@ cols_to_drop = [
     'host_bmi_clean',
     'bmi_dpl92_clean']
 
-
-
 filtered_df = filtered_df.drop(columns=cols_to_drop, errors='ignore')
 
 filtered_df["bmi_category"].value_counts(dropna=False)
@@ -807,7 +805,7 @@ bmi_category
 * Obese (>30)             1243
 * Underweight (<18.5)      418
 
-Shape: (24605, 118)
+Shape: (24605, 114)
 
 
 filtered_df = pd.read_csv("Filtered_Metadata.tsv", sep="\t")
@@ -847,7 +845,7 @@ IBD
 * No      1024
 * Yes       58
 
-Shape: (24605, 115)
+Shape: (24605, 111)
 
 ```python
 columns_to_remove = [
@@ -881,7 +879,7 @@ columns_to_remove = [
 filtered_df = filtered_df.drop(columns=columns_to_remove)
 print(f" Shape: {filtered_df.shape}")
 ```
-Shape: (24605, 90)
+Shape: (24605, 86)
 
 
 ## 13. Pregnancy related columns
@@ -893,7 +891,6 @@ gest_cols = filtered_df.columns[filtered_df.columns.str.contains("gest", case=Fa
 for col in gest_cols: print(f"{col}: {filtered_df[col].unique()}")
 grav_cols = filtered_df.columns[filtered_df.columns.str.contains("grav", case=False)]
 for col in grav_cols: print(f"{col}: {filtered_df[col].unique()}")
-
 
 filtered_df['Pregnant'] = np.nan
 
@@ -910,7 +907,6 @@ filtered_df['Pregnant'] = np.where(
 
 filtered_df.drop(columns=columns_to_binary, inplace=True)
 
-
 filtered_df['Pregnant'].value_counts(dropna=False)
 print(f" Shape: {filtered_df.shape}")
 ```
@@ -918,7 +914,7 @@ Pregnant
 * No     23125
 * Yes     1480
 
-Shape: (24605, 86)
+Shape: (24605, 82)
 
 ```
 
@@ -1005,9 +1001,10 @@ filtered_df = filtered_df.drop(columns=[
     'host_age_sam'
 ])
 
-Shape: (24605, 79)
+print(f" Shape: {filtered_df.shape}")
+
 ```
-Shape: (24605, 79)
+Shape: (24605, 75)
 
 ```
 
@@ -1140,7 +1137,7 @@ age_category
 * Oldest Adult          214
 * Toddler               185
 
-Shape: (24605, 75)
+Shape: (24605, 71)
 
 
 
